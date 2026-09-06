@@ -1,0 +1,2771 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F5F5F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Roman-Werkstatt</title>
+<link rel="manifest" id="manifestLink">
+<link rel="apple-touch-icon" id="appleIcon">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --bg:#F5F5F7; --panel:#FFFFFF; --panel2:#F2F2F7; --line:#E5E5EA;
+  --text:#3A3A3C; --head:#1D1D1F; --muted:#8E8E93;
+  --deep:#FF9500; --deep-d:#E68600; --deep-dark:#C66E00;
+  --amber:#FF9F0A; --rost:#FF3B30; --moos:#34C759;
+  --r:14px; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --serif:"New York","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--sans);
+  font-size:16px; line-height:1.47; padding-bottom:calc(78px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; letter-spacing:-0.01em;
+}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+header{
+  position:sticky;top:0;z-index:40;background:rgba(245,245,247,.82);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  padding:calc(12px + env(safe-area-inset-top)) 0 12px;
+}
+header .wrap{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
+h1{font-family:var(--sans);font-size:22px;font-weight:700;color:var(--head);margin:0;letter-spacing:-0.03em}
+h1 .ds{color:var(--deep);font-weight:700}
+.proj{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+h2{font-family:var(--sans);font-size:20px;font-weight:700;color:var(--head);margin:0 0 10px;letter-spacing:-0.02em}
+h3{font-size:13px;font-weight:600;color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+p{margin:0 0 10px}
+a{color:var(--deep);text-decoration:none;font-weight:500}
+a:active{opacity:.7}
+.card{
+  background:var(--panel);border:none;border-radius:var(--r);padding:18px 16px;margin:12px 0;
+  box-shadow:var(--shadow);
+}
+.card.tight{padding:14px 16px}
+.sub{font-size:13px;color:var(--muted);line-height:1.4}
+.mono{font-family:var(--mono);font-size:12px}
+label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;font-weight:500}
+input,select,textarea{
+  width:100%;background:var(--panel2);border:1px solid transparent;color:var(--head);
+  border-radius:12px;padding:12px 14px;font-size:16px;font-family:inherit;
+  transition:border-color .15s, background .15s;
+}
+textarea{line-height:1.5;resize:vertical;min-height:96px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--deep);background:#fff;box-shadow:0 0 0 3px rgba(255,149,0,.18)}
+button:focus-visible{outline:2px solid var(--deep);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+button{
+  font-family:inherit;font-size:16px;font-weight:600;border-radius:12px;padding:12px 16px;
+  border:none;background:var(--panel2);color:var(--head);cursor:pointer;min-height:48px;
+  transition:transform .1s, opacity .15s, background .15s;
+}
+button:active{transform:scale(.98);opacity:.85}
+button[disabled]{opacity:.4;cursor:default;transform:none}
+.primary{background:var(--deep);color:#fff;font-weight:600}
+.primary:active{background:var(--deep-d)}
+.ghost{background:transparent;color:var(--deep)}
+.danger{color:var(--rost);background:rgba(255,59,48,.08)}
+.small{min-height:36px;padding:8px 12px;font-size:14px;border-radius:10px}
+.full{width:100%;display:block}
+.bar{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--deep),var(--amber));border-radius:3px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0;background:transparent;border:none}
+.stat{background:var(--panel);padding:14px 8px;text-align:center;border-radius:14px;box-shadow:var(--shadow)}
+.stat b{display:block;font-family:var(--sans);font-size:22px;color:var(--head);font-weight:700;letter-spacing:-0.03em}
+.stat span{font-size:11px;color:var(--muted);font-weight:500}
+.tag{display:inline-block;font-size:12px;padding:3px 9px;border-radius:20px;background:var(--panel2);color:var(--muted);font-weight:600;border:none}
+.tag.on{color:#fff;background:var(--deep)}
+.tag.bad{color:var(--rost);background:rgba(255,59,48,.1)}
+.tag.ok{color:var(--moos);background:rgba(52,199,89,.12)}
+.item{background:var(--panel);border:none;border-radius:14px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.item .t{color:var(--head);font-weight:600}
+.stage{display:flex;gap:4px;margin-top:8px}
+.stage i{flex:1;height:4px;background:var(--panel2);border-radius:2px}
+.stage i.done{background:var(--moos)}
+.stage i.now{background:var(--deep)}
+.log{
+  background:#1C1C1E;border:none;border-radius:12px;padding:12px 14px;
+  font-family:var(--mono);font-size:12px;line-height:1.65;max-height:220px;overflow:auto;
+  white-space:pre-wrap;color:#A1A1A6;box-shadow:inset 0 1px 2px rgba(0,0,0,.2)
+}
+.log b{color:var(--deep);font-weight:500}
+.log .e{color:#FF6961}
+.log .k{color:#30D158}
+.uhr{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:6px}
+.uhr .track{flex:1;height:18px;position:relative;background:var(--panel2);border-radius:9px;overflow:hidden}
+.uhr .track>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#FFD60A,var(--deep));border-radius:9px}
+.uhr .track>b{position:absolute;top:0;bottom:0;width:2px;background:var(--deep-dark)}
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  background:rgba(255,255,255,.86);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid rgba(0,0,0,.06);padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 24px rgba(0,0,0,.04)
+}
+nav .wrap{display:flex}
+nav button{
+  flex:1;background:none;border:none;border-radius:0;color:var(--muted);font-size:11px;font-weight:600;
+  padding:10px 2px 12px;min-height:0;border-top:2px solid transparent;margin-top:-1px;letter-spacing:-0.01em
+}
+nav button.on{color:var(--deep);border-top-color:var(--deep)}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:99;
+  background:rgba(28,28,30,.92);backdrop-filter:blur(12px);color:#fff;
+  padding:12px 18px;border-radius:14px;font-size:15px;font-weight:500;
+  max-width:90vw;box-shadow:0 12px 40px rgba(0,0,0,.25);border:none
+}
+.toast.bad{background:rgba(255,59,48,.95)}
+.reader{font-family:var(--serif);font-size:19px;line-height:1.7;color:var(--head);letter-spacing:0}
+.reader p{margin:0 0 1.1em;text-align:left}
+.reader .sep{text-align:center;color:var(--muted);margin:1.6em 0;letter-spacing:.5em}
+.kap{font-family:var(--sans);color:var(--muted);font-size:13px;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.empty{
+  text-align:center;color:var(--muted);padding:40px 20px;font-size:15px;
+  border:1.5px dashed var(--line);border-radius:var(--r);background:rgba(255,255,255,.5)
+}
+details{border:none;border-radius:14px;padding:12px 14px;margin-bottom:10px;background:var(--panel);box-shadow:var(--shadow)}
+summary{cursor:pointer;color:var(--head);font-size:15px;font-weight:600}
+.split{display:flex;justify-content:space-between;align-items:center;gap:10px}
+hr{border:none;border-top:1px solid var(--line);margin:18px 0}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.tile{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  text-align:left;min-height:72px;padding:12px 14px;border-radius:14px;
+  background:var(--panel2);color:var(--head);font-weight:600;font-size:15px;line-height:1.25;
+  white-space:normal;
+}
+.tile small{display:block;font-weight:500;color:var(--muted);font-size:11px;margin-top:4px;letter-spacing:0}
+.tile.accent{background:rgba(255,149,0,.14);color:var(--deep)}
+.row.pack>*{flex:0 1 auto;min-width:auto}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1 id="brand"><span class="ds">Roman</span>-Werkstatt</h1>
+  <div class="proj" id="projline"></div>
+</div></header>
+<main class="wrap" id="view"></main>
+<nav><div class="wrap">
+  <button data-tab="werk" class="on">Werk</button>
+  <button data-tab="buch">Buch</button>
+  <button data-tab="faeden">Fäden</button>
+  <button data-tab="lesen">Lesen</button>
+  <button data-tab="setup">Setup</button>
+</div></nav>
+<script>
+
+// ===================== NACHBILD (Vorlage, via Cloudflare-Worker-Proxy, anbieterunabhängig) =====================
+const NACHBILD = {
+schluessel: "nachbild",
+name: "NACHBILD",
+titel: "NACHBILD",
+untertitel: "Was zurückbleibt, wenn du wegsiehst.",
+genre: "Horror-Thriller, deutsch, Gegenwart",
+regelLabel: "REGELWERK DES SPUKS",
+zielWoerter: 92000,
+kapitelZiel: 2300,
+praemisse: "Eine Programmiererin und KI-Trainerin bemerkt, dass die Menschen um sie herum kleine Erinnerungen an sie verlieren und jemand anderes an ihre Stelle rückt — erst die Kollegen, dann der Bruder, am Ende ihr siebenjähriger Sohn. Um die Andere zu besiegen, muss sie dafür sorgen, dass niemand mehr auf den Platz schaut, den die Andere will. Auch ihr Kind nicht.",
+kern: "Der Standard-Besessenheitsroman ist: Etwas kommt in dich hinein. Hier ist es: Etwas nimmt an, was du sowieso nie richtig ausgefüllt hast — und macht es besser. Der Horror ist kein Körperverlust, sondern Erinnerungs-Enteignung, und er trifft dort, wo es wehtut: Sie kann ihren Sohn retten oder seine Mutter bleiben. Nicht beides.",
+regeln: [
+"Sie existiert nur, solange jemand sie ansieht oder sich an sie erinnert. In einem leeren Raum ist sie nichts.",
+"Sie kann keinen Körper nehmen. Sie nimmt den Platz. Sie ersetzt Erinnerungen — nicht Fleisch.",
+"Ein Blick, eine Erinnerung. Jedes Mal, wenn Lena eine spiegelnde Fläche ansieht (Display, Fenster, Löffel, Bildschirm, Autolack), überschreibt die Andere genau eine Erinnerung eines anderen Menschen an Lena. Nicht mehr.",
+"Sie lügt nie. Sie antwortet ehrlich auf jede Frage. Das ist das Schlimmste an ihr.",
+"Sie arbeitet rückwärts. Sie beginnt mit den jüngsten Erinnerungen und wandert chronologisch zurück durch Lenas Leben. Erreicht sie Lenas früheste Erinnerung, hat Lena nie existiert.",
+"Sie kann nicht betreten, was nie beschichtet wurde. Rohes, unbehandeltes Glas und stehendes, trübes Wasser sind blind.",
+"Preis der Regeln: Wer die Regeln laut ausspricht, macht sie für die Andere stärker. Wissen ist gefährlich."
+],
+figuren: [
+"Lena Hartmann, 36 — hat mit 28 die KI-Abteilung eines mittelständischen Tech-Unternehmens übernommen, weil der vorherige Leiter gegangen ist und sonst niemand da war. Gut in dem, was sie tut, schlecht darin, gesehen zu werden: steht bei Meetings hinten, weicht auf Teamfotos an den Rand. Genau diese Lücke füllt die Andere. Trägt fast immer Schwarz oder Grau, ihre Brille ist ihr Schutzschild.",
+"Emil Hartmann, 7 — Lenas Sohn, zweite Klasse, liebt alles, was leuchtet, hat Angst vor dem tropfenden Wasserhahn im Bad. Merkt als Zweiter, dass etwas nicht stimmt, und sagt es niemandem, weil er glaubt, er habe es verursacht. Zeichnet seine Mutter immer mit schwarzem Pullover und Brille — und dann plötzlich mit rotem Kleid und ohne Brille, ohne es zu erklären.",
+"Dr. Jonas Weber, 29 — Halbbruder, Postdoc in Philosophie, Prosopagnosie. Erkennt Menschen an Stimme und Gang. Die Andere kann ihn nicht über das Gesicht täuschen — sie muss seine Erinnerung an Lenas Stimme angreifen. Er ist der Letzte, der sie erkennt, weil er nie das gesehen hat, was andere in ihrem Gesicht suchen.",
+"Prof. Dr. Markus Thalberg, 58 — Doktorvater und späterer Chef, Gründer des Unternehmens. Hat Lena immer gesagt: 'Deine Arbeit ist brilliant. Aber du musst sichtbar werden.' Ironisch, dass genau diese Sichtbarkeit ihr Untergang wird. Er ist der Erste, der sie vergisst.",
+"Dr. Ebru Demir, 41 — Kollegin und langjährige Freundin, Leiterin der Data-Science-Abteilung. Macht sich Sorgen um Lena, kann aber nie genau sagen, warum. Skeptikerin, wird zur Verbündete. Die einzige, die sich an die Vor-Version von Lena erinnert, weil sie immer genau hingesehen hat.",
+"Ute Bärmann, 72 — pensionierte Gymnasiallehrerin, Nachbarin, führt das Stadtarchiv. Liefert die Geschichte des Hauses. Wird nicht getötet, sondern gelöscht: Sie sitzt am Fenster und fragt freundlich, ob Lena sich verlaufen hat.",
+"Margarethe Hartmann, 76 — Lenas Mutter, Demenz, Pflegeheim am Ortsrand. Immun, weil sie nichts halten kann. Nutzlos und herzzerreißend zugleich.",
+"Helene Voßkuhl, 74 — die vorherige Andere, hat 1996 gewonnen und verblasst jetzt selbst. Zeigt Lena beide Zukünfte: die, wenn sie verliert, und die, wenn sie gewinnt.",
+"DIE ANDERE — sieht aus wie Lena, aber ohne Brille. Trägt, was Lena nie tragen würde: Farben, sichtbare Kleidung, offene Haltung. Stimme ist Lenas, aber ruhiger, sicherer, nie zögerlich. Kann erklären, wozu Lena nicht die Worte fand. Besser in dem, was Lena nie gut konnte: gesehen werden."
+],
+schauplatz: "Eine mittelgroße deutsche Universitätsstadt, Gegenwart, November. Lenas Wohnung liegt über dem ehemaligen Atelier einer Fotografin aus den 1970ern — einem Haus mit großen, bodentiefen Fenstern, das früher als Spiegelatelier diente. Die Stadt liegt in einem Talkessel, Nebel steht bis Mittag. Das Unternehmen hat seinen Sitz in einem umgebauten Fabrikgebäude am Fluss. Draußen, am Stadtrand, steht das Haus Voßkuhl von 1972 — Glas und Sichtbeton, gebaut auf dem Fundament einer 1968 abgebrannten Spiegelmanufaktur. Unter Wasser liegen die alten Hallen im nahegelegenen Baggersee — und darin Spiegel, die noch die Oberfläche von 1996 zeigen.",
+twists: [
+"Twist 1 (Kap. 20): Die Andere ist kein fremder Geist. Sie ist Lena selbst — das Mädchen, das beim Unfall im Baggersee 1996 nicht herausgezogen wurde. Zwei Mädchen unter Eis, eines wurde gerettet, das andere hat 28 Jahre gewartet. Ihre Forderung ist berechtigt.",
+"Twist 2 (Kap. 31): Die Andere will nicht Lenas Leben. Sie will Emils Mutter sein — das Kind, das sie ansieht. Lena kommt heim, die Andere kocht, Emil lacht und hat nicht bemerkt, dass jemand ausgetauscht wurde.",
+"Twist 3 (Kap. 38–40): Die Andere stirbt, wenn niemand mehr auf den Platz schaut, den sie will. Lena kann nur gewinnen, wenn Emil vergisst, dass er je eine Mutter hatte. Sie überlebt — zwei Straßen weiter, als Frau, die er nicht kennt."
+],
+uhr: {start:2026, ende:1996},
+toc: [
+{n:1,teil:"I",titel:"Zwei Zeilen zu viel",beat:"Büro, Training eines neuen KI-Modells, Emil macht Hausaufgaben im Büro. Alltag, Wärme, Geldsorgen."},
+{n:2,teil:"I",titel:"Der Auftrag",beat:"Ein Investor will das alte Haus am See sanieren lassen: elf Spiegel, gute Bezahlung, drei Wochen Arbeit."},
+{n:3,teil:"I",titel:"Der Kessel",beat:"Erste Fahrt hinaus. Haus, See, Nebel, Markus. Die Türklingelkamera zeigt Lena beim Eintreten, während sie noch draußen steht."},
+{n:4,teil:"I",titel:"Code 404",beat:"Beim Auslesen der Daten aus dem Archiv: eine Datei, die sie nie erstellt hat — mit ihrem Namen, aber von anderer Hand geschrieben."},
+{n:5,teil:"I",titel:"Jonas erklärt",beat:"Der Bruder besucht sie, redet über seine Arbeit. Prosopagnosie wird beiläufig etabliert, Humor, Nähe."},
+{n:6,teil:"I",titel:"Was unter dem Wasser steht",beat:"Die Sonarbilder zeigen Gebäude auf dem Grund des Baggersees."},
+{n:7,teil:"I",titel:"Das Foto am Kühlschrank",beat:"Auf dem Bild vom letzten Sommer steht Lena einen Zentimeter weiter am Rand als gestern."},
+{n:8,teil:"I",titel:"Zehn kommen an",beat:"Elf Datenpakete wurden verschickt. Zehn kommen an. Der Sysadmin schwört, es waren zehn. Wendepunkt 1."},
+{n:9,teil:"II",titel:"Frau Hartmann",beat:"Ihre Kollegin siezt sie. Nach neun Jahren. Sie meint es nicht ironisch."},
+{n:10,teil:"II",titel:"Sechs Sekunden",beat:"Im Badezimmerspiegel hebt ihr Spiegelbild die Hand. Zu spät."},
+{n:11,teil:"II",titel:"Höflich",beat:"Erste Begegnung. Die Andere sitzt am Küchentisch und entschuldigt sich für die Störung."},
+{n:12,teil:"II",titel:"Sie lügt nicht",beat:"Lena fragt: Willst du mich töten? Antwort: Nein. Ich warte, bis du gehst. Regel 4 etabliert."},
+{n:13,teil:"II",titel:"Die Unterschrift",beat:"Der Ausweis zeigt ihr Gesicht. Die Unterschrift ist nicht ihre Handschrift."},
+{n:14,teil:"II",titel:"Blindes Glas",beat:"An der unbeschichteten Fensterscheibe im Atelier passiert nichts. Regel 6 entdeckt."},
+{n:15,teil:"II",titel:"Das Stadtarchiv",beat:"Ute Bärmann, die Geschichte des Hauses. Erste Historie."},
+{n:16,teil:"II",titel:"Ein Blick, eine Erinnerung",beat:"Lena begreift den Preis und klebt jeden Spiegel in der Wohnung ab. Emil fragt, warum. Wendepunkt 2."},
+{n:17,teil:"III",titel:"Leben ohne Oberflächen",beat:"Handydisplay, Löffel, Schaufenster, Autolack, die Bildschirme im eigenen Büro. Fast unmöglich."},
+{n:18,teil:"III",titel:"Was Jonas hört",beat:"Er erkennt sie am Gang, als Einziger. Er glaubt ihr."},
+{n:19,teil:"III",titel:"Emil fragt",beat:"Der Junge merkt, dass die Mama in seinen Erinnerungen anders redet. Er sagt es nicht."},
+{n:20,teil:"III",titel:"1996",beat:"TWIST 1. Der Tauchgang, die Halle unter Wasser, zwei Mädchen im Spiegel."},
+{n:21,teil:"III",titel:"Die Forderung",beat:"Die Andere legt ruhig dar, was ihr zusteht. Lena hat kein Gegenargument."},
+{n:22,teil:"III",titel:"Rückwärts",beat:"Lena begreift Regel 5 und rechnet aus, wie lange sie noch hat: ungefähr elf Wochen."},
+{n:23,teil:"III",titel:"Helene Voßkuhl",beat:"Besuch bei der alten Frau. Warm, klar — und niemand im Haus kennt ihren Namen."},
+{n:24,teil:"III",titel:"Was 1996 passiert ist",beat:"Helene hat gewonnen. Es war das Schlimmste, was ihr passiert ist."},
+{n:25,teil:"III",titel:"Margarethe",beat:"Das Heim. Die Mutter erkennt sie nicht. Aber sie erkennt sie auch nicht nicht."},
+{n:26,teil:"III",titel:"Die zweite Nacht im Haus",beat:"Lena übernachtet, um eine Regel zu testen, und wacht auf der anderen Seite des Glases auf."},
+{n:27,teil:"IV",titel:"Neun Jahre weg",beat:"Ebru erinnert sich nicht mehr an den Abend, an dem beinahe etwas angefangen hätte. Sie ist höflich. Fremd."},
+{n:28,teil:"IV",titel:"Der Plan, der nicht hält",beat:"Sie beschichtet einen Spiegel neu und sperrt die Andere ein. Es hält vier Stunden."},
+{n:29,teil:"IV",titel:"Ute sitzt am Fenster",beat:"Bärmann wird gelöscht. Kein Tod. Eine freundliche Frage."},
+{n:30,teil:"IV",titel:"Ebrus Entscheidung",beat:"Sie glaubt Lena ohne Erinnerung, nur weil sie es ruhig erklärt. Der wärmste Moment des Buchs."},
+{n:31,teil:"IV",titel:"Nudeln, wie er sie mag",beat:"TWIST 2. Lena kommt heim. Die Andere kocht. Emil lacht. Er hat nicht bemerkt, dass jemand ausgetauscht wurde."},
+{n:32,teil:"IV",titel:"Warum sie nie im Bild stand",beat:"Lena versteht, warum sie ihr Leben lang am Rand stand — und dass die Andere in dieser Lücke gewachsen ist."},
+{n:33,teil:"IV",titel:"Was Jonas vergisst",beat:"Die Andere greift seine Erinnerung an ihre Stimme an. Er ruft an und nennt sie Frau Hartmann."},
+{n:34,teil:"IV",titel:"Zweimal abgebrannt",beat:"Archiv-Payoff: 1968 war kein Unfall. Jemand hat versucht, was Lena jetzt tun muss. Wendepunkt 3."},
+{n:35,teil:"V",titel:"Der Preis, ausgerechnet",beat:"Nicht gewinnen. Verschwinden. Elf Spiegel, elf Erinnerungen, absichtlich abgegeben."},
+{n:36,teil:"V",titel:"Jonas sagt nein",beat:"Der schwerste Dialog des Buchs. Er will nicht vergessen."},
+{n:37,teil:"V",titel:"Der Zettel für Emil",beat:"Sie schreibt ihm etwas auf, das er nach dem Vergessen finden wird. Sie weiß, dass es nichts nützt. Sie schreibt es trotzdem."},
+{n:38,teil:"V",titel:"Abkratzen",beat:"Set-Piece-Finale. Sie schabt die Beschichtung ab, während die Andere höflich zusieht und ehrlich beschreibt, was gerade verloren geht."},
+{n:39,teil:"V",titel:"Was übrig bleibt",beat:"Die Andere löst sich auf. Nicht schreiend. Erleichtert. Ihr letzter Satz ist eine Wahrheit, die Lena lieber nicht gehört hätte."},
+{n:40,teil:"V",titel:"Zwei Straßen weiter",beat:"Emil geht zur Schule. Er sieht die Frau am Zaun an, wie man eine Fremde ansieht. Sie hebt nicht die Hand."}
+],
+systemZusatz: `GENRE-HANDWERK: HORROR AUS REGELN
+- Angst entsteht aus Regeln, nicht aus Lautstärke. Ein Schreckmoment pro Kapitel — höchstens. Die Vorbereitung darf viermal so lang sein wie er.
+- Du liebst es, wenn der Leser den Preis einer Regel früher begreift als die Hauptfigur — und dann zusehen muss, wie sie ihn bezahlt.
+- Keine Rückblenden vor Kapitel 12. Keine Traumsequenz, die sich als Traum herausstellt. Nie.
+- Jedes Kapitel endet auf einer konkreten Handlung oder einem Detail, nicht auf einem dramatischen Einzeiler.`,
+blacklistZusatz: `NIE VERWENDEN — Horror-Klischees:
+"eine dunkle Gestalt" · "etwas Unheimliches lag in der Luft" · "sie spürte, dass sie beobachtet wurde"
+"das Licht flackerte" als Standard-Vorzeichen · ein Spiegelbild, das genau in dem Moment lächelt, in dem eine Figur es bemerkt (mehr als zweimal im ganzen Buch)
+eine Nebenfigur, die eine Erklärung anbietet, die exakt die Regel wiederholt, die der Leser schon kennt`
+};
+
+const FANTASY_ERWACHEN = {
+schluessel: "magie",
+name: "Erwachen",
+titel: "Erwachen",
+untertitel: "Manche Gaben muss man sich erst leisten können.",
+genre: "Fantasy, deutsch, Coming-of-Age mit Magiesystem",
+regelLabel: "GESETZE DER MAGIE",
+zielWoerter: 95000,
+kapitelZiel: 2400,
+praemisse: "Ein neunzehnjähriger Kupferschmied-Lehrling in einer Hafenstadt entdeckt, dass er Metall nicht nur formen, sondern hören kann — jedes Stück trägt die Erinnerung an alles, was mit ihm gemacht wurde. Die Fähigkeit ist real, selten und tödlich teuer: Wer zu viel hört, verliert die eigene Erinnerung an das, was er zuletzt gehört hat. Als die Stadtwache einen Mordfall mit einer gestohlenen Klinge aufklären will, ist er der Einzige, der die Klinge zum Sprechen bringen kann — aber jede Antwort kostet ihn ein Stück von sich selbst.",
+kern: "Der Standard-Entdeckungsroman zeigt Macht als Belohnung. Hier ist Macht eine Rechnung, die erst nach der Benutzung präsentiert wird. Der Held lernt nicht, mächtiger zu werden — er lernt, was er bereit ist zu vergessen, um zu wissen. Am Ende steht keine Krönung, sondern eine Wahl: die Gabe endgültig ablegen und ganz bleiben, oder alles wissen und niemand mehr sein, der sich erinnert, warum es wichtig war.",
+regeln: [
+"Metall erinnert sich an jede Hand, die es geführt hat, und an jeden Schlag, den es ausgeführt oder empfangen hat. Wer 'hört', erlebt diese Erinnerungen wie eigene.",
+"Jedes Hören hat einen Preis: eine eigene Erinnerung wird ausradiert, um Platz für die fremde zu schaffen. Je älter und intensiver die gehörte Erinnerung, desto größer und beliebiger die eigene, die verschwindet.",
+"Man kann nicht wählen, welche eigene Erinnerung man verliert. Der Preis wird erst nach dem Hören sichtbar — nie vorher.",
+"Frisch geschmiedetes Metall ist stumm. Erst Gebrauch, Blut oder starke Gewalt 'füllt' es. Ein Werkzeug, das nie benutzt wurde, hat nichts zu sagen.",
+"Zwei Hörende, die gleichzeitig dasselbe Stück berühren, hören einander — nicht nur das Metall. Das macht Zusammenarbeit riskant und Verrat sofort sichtbar.",
+"Wer die Gabe laut erklärt oder öffentlich beweist, macht sich zum Eigentum jedes Mächtigen, der einen Hörenden gebrauchen kann. In dieser Stadt ist eine bekannte Gabe ein Todesurteil oder eine Versklavung, nie ein Segen.",
+"Preis der Regeln: Jede Regel, die er ausspricht, um sie zu erklären, kostet ihn eine kleine, harmlose Erinnerung — der Mund weiß mehr, als der Kopf sich leisten kann zu behalten."
+],
+figuren: [
+"Tomas Aderkalt, 19 — Kupferschmied-Lehrling im vierten Jahr, Waise, aufgewachsen bei seinem Meister. Präzise mit den Händen, unsicher mit Worten, weil er gelernt hat, dass Reden Ärger macht. Führt ein Wachsbrett, auf das er jeden Tag drei Dinge schreibt, die er nicht vergessen darf — eine Gewohnheit, die er selbst nicht mehr erklären kann.",
+"Meister Corvin Aderkalt, 61 — sein Ziehvater und Lehrmeister, kannte Tomas' leibliche Mutter. Weiß mehr über die Gabe, als er zugibt, weil er selbst einmal jemanden verloren hat, der sie hatte. Reagiert auf Tomas' erste Anzeichen mit Angst, nicht mit Stolz.",
+"Wachtmeisterin Ilsabe Rohn, 34 — ermittelt im Mordfall, pragmatisch, misstraut Magie grundsätzlich, weil sie in ihrer Karriere schon zu viele Menschen wegen erfundener Gaben verurteilt hat. Wird widerwillig zur Verbündeten, weil sie Fakten über Vorurteile stellt.",
+"Enna Brandwasser, 22 — Hafenschmugglerin und Tomas' einzige Freundin außerhalb der Werkstatt, kennt die Unterwelt der Stadt. Handelt mit Dingen, die 'reden' könnten, ohne selbst je etwas gehört zu haben. Ihr Warenlager wird zum gefährlichsten Ort des Buchs.",
+"Domenic Sarr, 45 — Ratsherr und heimlicher Sammler gehörter Gegenstände, baut sich aus fremden Erinnerungen ein zweites Gedächtnis auf, weil sein eigenes durch jahrelanges Hören fast leer ist. Der eigentliche Widersacher — nicht böse aus Prinzip, sondern aus Hunger nach dem, was er selbst nicht mehr hat.",
+"Die Klinge (Gegenstand mit Eigenname 'Sechster Schlag') — der Mordwaffe, um die sich der Fall dreht. Trägt die Erinnerung an sieben Vorbesitzer und den Mord selbst. Wird über das Buch zur eigentlichen Nebenfigur: das einzige 'Zeugnis', das nicht lügen kann, aber jeden, der zuhört, etwas kostet.",
+"Priska Aderkalt (verstorben) — Tomas' leibliche Mutter, war selbst Hörende, starb, als Tomas zwölf war, offiziell an einer Krankheit. Ihr letztes geschmiedetes Stück — ein Armreif — taucht in Kapitel 9 wieder auf und ist der eigentliche Schlüssel zur Vorgeschichte."
+],
+schauplatz: "Hallenbrück, eine Hafenstadt mit Gezeitenwerften, Zunfthäusern aus Backstein und einem Ratsviertel auf einer künstlichen Aufschüttung. Die Stadt lebt vom Metallhandel: Kupfer, Bronze, Eisen aus drei verschiedenen Minenregionen, jedes mit eigenem 'Klang'. Die Werkstatt liegt in der Kesselgasse, direkt an einer Gerberei, deren Gestank jede Jahreszeit prägt. Der Rat residiert im Zollhaus, unter dem Gerüchten zufolge ein privates Arsenal gehörter Gegenstände liegt.",
+twists: [
+"Twist 1 (Kap. 12): Tomas' Mutter ist nicht an einer Krankheit gestorben. Sie hat sich absichtlich bis zur völligen Erinnerungslosigkeit leergehört, um etwas zu vergessen, das sie über Domenic Sarr wusste — freiwillig, um Tomas zu schützen.",
+"Twist 2 (Kap. 22): Die Mordwaffe hat nicht den Toten getötet, den alle betrauern. Sie wurde benutzt, um einen Mord zu vertuschen, der zwanzig Jahre zurückliegt — an Priskas eigentlichem Lehrmeister, der die erste Hörende der Stadt war.",
+"Twist 3 (Kap. 29–31): Domenic Sarr bietet Tomas einen Handel an, der ehrlich gemeint ist: all sein gesammeltes zweites Gedächtnis gegen Tomas' Gabe, endgültig. Tomas muss wählen zwischen einem Leben mit Erinnerung, aber ohne die Gabe, die seine Mutter hatte — oder alles wissen und wie sie enden."
+],
+uhr: null,
+sonderzustand: { label: "GABEN-STAND", start: { faehigkeiten_entdeckt: [], preise_gezahlt: [], vertrauen_ilsabe: 0, kontrolle_ueber_die_gabe: 1, oeffentlichkeitsgrad: 0 } },
+systemZusatz: `GENRE-HANDWERK: MAGIE ALS RECHNUNG, NICHT ALS BELOHNUNG
+- Zeige den Preis einer Fähigkeit immer, bevor oder während sie eingesetzt wird — nie erst hinterher als Twist. Der Leser soll mitrechnen können, was es kosten könnte, während die Figur sich noch entscheidet.
+- Jede neu entdeckte Fähigkeit erschafft ein neues Problem oder eine neue Gefahr. Kein Fähigkeitszuwachs ohne Konsequenz — reine Power-Eskalation ohne Preis ist verboten.
+- Erkläre das Magiesystem nie in einem Absatz am Stück. Die Regeln werden ausschließlich durch Handlung und Konsequenz gezeigt — eine Figur erklärt niemals mehr als einen Satz am Stück darüber, und auch das kostet sie etwas (siehe GESETZE DER MAGIE, letzte Regel).
+- Mentoren- oder Lehrfiguren wissen absichtlich nicht alles oder verschweigen aus eigenem Grund etwas — kein "weiser Mentor, der alles erklärt".
+- Vermeide Fantasy-Klischees aus der Blacklist unten. Die Prämisse ist eine Coming-of-Age-Geschichte mit Kriminalfall-Struktur, kein episches Rettet-die-Welt-Szenario — die Einsätze bleiben konkret und persönlich (eine Stadt, ein Fall, eine Familie), nicht kosmisch.`,
+blacklistZusatz: `NIE VERWENDEN — Fantasy-Klischees:
+"eine alte Prophezeiung besagt" · "du bist der/die Auserwählte" · eine Volljährigkeits-/Initiationszeremonie, die die Gabe erst "freischaltet"
+ein weiser Mentor, der jede Frage sofort vollständig beantwortet · eine Karte oder ein Gegenstand, der sich wie von Zauberhand von selbst löst
+Magie, die ohne erkennbaren Preis stärker wird, nur weil die Handlung es gerade braucht
+ein Bösewicht, der seine Pläne einer gefangenen Figur vollständig erklärt, bevor er sie gehen lässt`,
+toc: [
+{n:1,teil:"I",titel:"Der Klang im Kupfer",beat:"Werkstattalltag. Beim Ausbeulen eines alten Kessels hört Tomas zum ersten Mal etwas, das kein Geräusch ist."},
+{n:2,teil:"I",titel:"Drei Dinge auf dem Wachsbrett",beat:"Am nächsten Morgen fehlt ihm eine kleine, aber echte Erinnerung. Er merkt es erst, als der Meister danach fragt."},
+{n:3,teil:"I",titel:"Der Fall im Zollhaus",beat:"Wachtmeisterin Rohn bringt eine Klinge in die Werkstatt — angeblich zur Begutachtung des Metalls, tatsächlich als Test."},
+{n:4,teil:"I",titel:"Was das Metall weiß",beat:"Tomas berührt die Klinge unbeobachtet. Was er hört, passt nicht zur offiziellen Tatversion."},
+{n:5,teil:"I",titel:"Enna handelt nie mit Fragen",beat:"Er sucht Enna auf, um herauszufinden, woher die Klinge stammt, ohne zu sagen, warum."},
+{n:6,teil:"I",titel:"Was Corvin nicht sagt",beat:"Der Meister reagiert merkwürdig auf Tomas' Andeutungen. Erste Ahnung: er weiß mehr über die Mutter."},
+{n:7,teil:"I",titel:"Rohn kommt wieder",beat:"Die Wachtmeisterin durchschaut, dass er mehr weiß, als ein Schmied wissen sollte. Wendepunkt 1."},
+{n:8,teil:"II",titel:"Der Handel",beat:"Rohn bietet einen inoffiziellen Deal: Straffreiheit für Auskunft. Tomas muss sich entscheiden, ob er die Gabe zeigt."},
+{n:9,teil:"II",titel:"Der Armreif",beat:"Beim Aufräumen von Priskas altem Kistchen findet Tomas ihren Armreif — und hört zum ersten Mal ihre Stimme im Metall."},
+{n:10,teil:"II",titel:"Was ein Werkzeug erst füllt",beat:"Regel 4 wird konkret: ein nie benutztes Stück ist stumm. Er testet es an einem frischen Nagel und begreift die Grenze der Gabe."},
+{n:11,teil:"II",titel:"Sarrs Einladung",beat:"Der Ratsherr lädt die Werkstatt zu einem Auftrag ins Zollhaus ein — zu höflich, um Zufall zu sein."},
+{n:12,teil:"II",titel:"Was sie vergessen wollte",beat:"TWIST 1. Im Zollhaus hört Tomas an einem alten Gegenstand seiner Mutter genug, um zu verstehen: sie hat sich absichtlich leergehört."},
+{n:13,teil:"II",titel:"Zwei Hörende",beat:"Regel 5 wird erlebt: Tomas berührt gleichzeitig mit einer zweiten Person ein Stück Metall und hört sie, nicht nur das Objekt."},
+{n:14,teil:"II",titel:"Ilsabes Preis",beat:"Rohn erzählt beiläufig von einem früheren Fall, den sie falsch entschieden hat — Vertrauen wächst, ohne dass es benannt wird."},
+{n:15,teil:"II",titel:"Öffentlich",beat:"Ein Zeuge hat Tomas beim Hören beobachtet und redet in der Gerberei darüber. Oeffentlichkeitsgrad steigt. Wendepunkt 2."},
+{n:16,teil:"III",titel:"Was die Zunft glaubt",beat:"Gerüchte erreichen die Zunftältesten. Corvin muss die Werkstatt verteidigen, ohne die Wahrheit zu sagen."},
+{n:17,teil:"III",titel:"Die andere Klinge",beat:"Eine zweite, ältere Waffe taucht auf, die zur ersten passt — beide stammen aus derselben Schmiede vor zwanzig Jahren."},
+{n:18,teil:"III",titel:"Enna weiß mehr, als sie handelt",beat:"Enna gibt zu, dass sie das Lager seit Jahren für Sarr führt, ohne es zu wissen — der Widersacher wird konkret."},
+{n:19,teil:"III",titel:"Der Preis, den er nicht sehen wollte",beat:"Tomas hört absichtlich zu viel, um schneller voranzukommen, und verliert eine Erinnerung, die ihm wichtig war. Erster echter Verlust-Schmerz."},
+{n:20,teil:"III",titel:"Was Corvin verloren hat",beat:"Der Meister gesteht: er war selbst kurz davor, Hörender zu werden, und hat aufgehört, nachdem er fast Priska verloren hätte."},
+{n:21,teil:"III",titel:"Sarrs zweites Gedächtnis",beat:"Tomas dringt (widerwillig mit Ilsabe) in einen Teil von Sarrs privatem Arsenal ein und begreift das Ausmaß seiner Sammlung."},
+{n:22,teil:"III",titel:"Der erste Hörende der Stadt",beat:"TWIST 2. Die Klinge zeigt: der eigentliche Mord liegt zwanzig Jahre zurück, an Priskas Lehrmeister. Sarr war beteiligt."},
+{n:23,teil:"IV",titel:"Was Ilsabe damit macht",beat:"Rohn muss entscheiden, ob sie einen zwanzig Jahre alten Fall gegen einen Ratsherrn aufrollt, ohne Beweise, die vor Gericht zählen."},
+{n:24,teil:"IV",titel:"Die Falle im Zollhaus",beat:"Sarr lädt Tomas zu einem letzten 'Auftrag' — es ist eine Falle, um ihn zum Hören eines bestimmten Gegenstands zu zwingen."},
+{n:25,teil:"IV",titel:"Was er dafür gibt",beat:"Set-Piece: Tomas hört unter Zwang und verliert eine seiner frühesten Kindheitserinnerungen an Priska. Er weiß jetzt alles — und ein Stück weniger von sich."},
+{n:26,teil:"IV",titel:"Enna wählt eine Seite",beat:"Enna riskiert ihr Lager und ihren Ruf, um Tomas aus dem Zollhaus zu holen. Wärmster Moment des Buchs."},
+{n:27,teil:"IV",titel:"Was öffentlich wird, bleibt öffentlich",beat:"Der Vorfall im Zollhaus lässt sich nicht mehr vertuschen. Die Gabe ist jetzt Stadtgespräch. Wendepunkt 3."},
+{n:28,teil:"V",titel:"Was Sarr wirklich will",beat:"Sarr sucht Tomas allein auf — nicht als Feind, sondern mit einem ehrlichen Angebot."},
+{n:29,teil:"V",titel:"Der Handel",beat:"TWIST 3 beginnt. Sarr bietet sein gesamtes gesammeltes zweites Gedächtnis gegen Tomas' Gabe — endgültig, unwiderruflich."},
+{n:30,teil:"V",titel:"Was Corvin dazu sagt",beat:"Der schwerste Dialog des Buchs: der Meister rät ihm ab, ohne ihm die Entscheidung abzunehmen."},
+{n:31,teil:"V",titel:"Die Wahl",beat:"Tomas entscheidet sich — gegen den Handel. Er behält die Gabe, aber unter eigenen Regeln, die er sich selbst gibt, nicht Sarr."},
+{n:32,teil:"V",titel:"Was am Amboss bleibt",beat:"Ein Jahr später: Tomas führt die Werkstatt weiter, mit einer kleinen, kontrollierten Praxis als inoffizieller 'Zeuge' für Rohn. Der Armreif hängt sichtbar in der Werkstatt — nicht versteckt, sondern erklärt."}
+]
+};
+
+// ===================== JENSEITS DER NAHT (Vorlage, Isekai, eigenständiges Kraft-System) =====================
+// Eigenständiges System, bewusst ANDERS aufgebaut als bekannte Genre-Vorbilder:
+// Kategorien nach URSPRUNG der Technik (nicht nach Funktion/Energieart), eigene
+// Begriffe, eigene Prüfungs-Institution, eigene Namen. Keine Übernahme von
+// Eigennamen, Begriffen oder Kategorie-Logik aus bestehenden Werken.
+const ISEKAI_NAHT = {
+schluessel: "naht",
+name: "JENSEITS DER NAHT",
+titel: "Jenseits der Naht",
+untertitel: "Buch 1: Der Wanderpass",
+genre: "Isekai / Progression-Fantasy, deutsch, Reihe (geplant: 4 Bände)",
+regelLabel: "GESETZE DER RESONANZ",
+zielWoerter: 88000,
+kapitelZiel: 2400,
+praemisse: "Paul Anders, 24, Rettungssanitäter, stirbt bei einem Einsatz, den er eigentlich hätte überleben müssen — und wacht in Karvenholt auf, einer Welt, in der jeder Mensch eine innere 'Kernglut' trägt, die sich zu individuellen Techniken formen lässt. Er hat keine Ahnung, keine Kernglut-Kategorie, keinen Platz — nur die Erinnerung an einen Patienten, den er nicht retten konnte, und das Gefühl, hier zum zweiten Mal eine Chance zu bekommen, die er sich nicht verdient hat. Um zu überleben und herauszufinden, warum ausgerechnet er hier gelandet ist, muss er den gefährlichen Wanderpass bestehen — eine mehrstufige Prüfung, die aus Fremden offizielle Grenzgänger macht, mit Zugang zu den unerschlossenen Zonen zwischen den Städten.",
+kern: "Der Standard-Isekai ist: Ein Niemand bekommt plötzlich Superkräfte und wird zum Helden. Hier ist es: Paul bekommt keine Kraft geschenkt, sondern muss sich seine Kernglut-Technik aus dem bauen, was er tatsächlich kann — als Sanitäter kennt er Körper, Verletzungen, Belastungsgrenzen, nicht Kampf. Sein Vorteil ist kein Kampf-Talent, sondern dass er weiß, wie man am Leben bleibt und andere am Leben hält, wenn alles schiefgeht. Die Spannung ist nicht 'wird er stark genug', sondern 'was ist er bereit zu riskieren, und an wem übt er es zuerst?'",
+regeln: [
+"Jeder Mensch trägt Kernglut — eine innere Reserve, die sich erst zeigt, wenn sie unter echtem Druck (Todesangst, Erschöpfung, Verlust) das erste Mal durchbricht. Vorher ist sie unsichtbar, auch für Eingeweihte.",
+"Kernglut lässt sich zu genau EINER persönlichen Technik formen — keiner Liste von Zaubersprüchen. Die Technik entsteht aus dem, was die Person tatsächlich am gründlichsten kann oder am tiefsten fürchtet, nicht aus freier Wahl.",
+"Eine Technik wird nur stärker, wenn sie an einen selbstauferlegten Schwur gebunden wird — eine echte, schmerzhafte Einschränkung, die man öffentlich vor einem Prüfer ablegt. Der Schwur muss einhaltbar UND einschränkend genug sein; ein zu laxer Schwur verpufft wirkungslos.",
+"Bricht jemand den Geist seines Schwurs (nicht nur den Wortlaut), verliert er die Technik für eine Mondphase — manchmal für immer. Es gibt keine zweite Warnung.",
+"Kernglut lässt sich nicht verstecken, sobald sie einmal durchgebrochen ist — geschulte Augen (Wächter, andere Kernglut-Träger) sehen den charakteristischen 'Schimmer' um eine aktive Technik. Tarnung ist möglich, aber selbst eine Technik.",
+"Der Wanderpass (Prüfung zum offiziellen Grenzgänger) findet nur zur Mondwende statt, ist absichtlich so gefährlich gestaltet, dass echte Kernglut unter Druck durchbricht — nicht wenige sterben dabei, das ist bekannt und akzeptiert."
+],
+figuren: [
+"Paul Anders, 24 — gestorben und aufgewacht in Karvenholt, ehemaliger Rettungssanitäter aus Dortmund. Ruhig unter Druck, schlecht darin, über sich selbst zu reden, hat ein Trauma um einen Patienten (ein Kind), das er nicht retten konnte, kurz bevor er selbst starb. Beobachtet Menschen wie Verletzungsmuster: was fehlt, was überlastet ist, was als nächstes bricht.",
+"Sella Vorgrimm, 19 — geboren in Karvenholt, will unbedingt den Wanderpass bestehen, um ihre verschuldete Familie freizukaufen. Ungeduldig, impulsiv, ihre Kernglut-Technik hängt an einem Schwur, den sie zu leichtfertig abgelegt hat und der sie fast das Leben kostet. Wird Pauls erste echte Bindung in dieser Welt.",
+"Rutger Cassel, 45 — gescheiterter Ex-Grenzgänger, jetzt Ausbilder für Wanderpass-Anwärter, trinkt zu viel, sagt zu wenig. Erkennt in Paul etwas, das er selbst vor zwanzig Jahren hatte und verloren hat. Lehrt nicht durch Erklären, sondern durch gezielt riskante Situationen.",
+"Domna Aschenreith, 61 — Vorsitzende der Wächter-Kammer, die den Wanderpass verwaltet. Weiß mehr über 'Angekommene' wie Paul, als sie zugibt — Paul ist nicht der Erste, der aus einer anderen Welt in Karvenholt aufgewacht ist, aber die meisten Vorgänger sind spurlos verschwunden.",
+"Kell, Nachname unbekannt, ~17 (Schätzung) — wächst wild in den unerschlossenen Zonen auf, spricht kaum, seine Kernglut-Technik ist an ein totes Wesen gebunden, das ihn seit Kindheit begleitet. Traut niemandem, folgt aber Paul aus Gründen, die er selbst nicht erklären kann.",
+"Vantor Ihle, 38 — Ratsherr und heimlicher Sammler verbotener, gebrochener Schwüre anderer Menschen. Höflich, gebildet, nie offen bedrohlich — bis man begreift, wie viele Leben in seiner Sammlung stecken.",
+"Marek Anders, 8 (Erinnerung/Rückblende) — der Junge, den Paul in seiner alten Welt nicht retten konnte. Erscheint nur in Rückblenden und einmal, unerklärlich, in einem Moment extremer Erschöpfung in Karvenholt — was Paul mehr Angst macht als jeder Gegner."
+],
+schauplatz: "Karvenholt, eine befestigte Grenzstadt am Rand der kartierten Welt, gebaut auf und um die Ruinen einer viel älteren Zivilisation. Dahinter liegen die unerschlossenen Zonen — Wald-, Sumpf- und Ruinenlandschaften, in denen die Kernglut anderer, nicht-menschlicher Wesen aktiv ist. Die Stadt ist geteilt in die befestigte Kernstadt (Handel, Wächter-Kammer, Prüfungshallen) und die ärmeren Außenringe, wo Familien wie die Vorgrimms leben. Jahreszeit: Spätherbst, kurz vor der nächsten Mondwende.",
+twists: [
+"Twist 1 (Buch 1, Kap. ~14): Paul ist nicht zufällig in Karvenholt gelandet. Jeder 'Angekommene' erscheint exakt dann, wenn die Wächter-Kammer heimlich einen Ritus durchführt, um verlorene Kernglut aus einer sterbenden Quelle zu 'importieren' — die Angekommenen sind kein Zufall, sondern eine Nebenwirkung, mit der niemand offen rechnet.",
+"Twist 2 (Buch 1, Kap. ~22): Vantor Ihles Sammlung gebrochener Schwüre ist der Grund, warum Karvenholts eigene Kernglut-Quelle langsam versiegt — jeder gebrochene Schwur, den er 'aufbewahrt', entzieht der Stadt selbst etwas. Rutger wusste das vor zwanzig Jahren schon und hat deshalb aufgehört zu kämpfen.",
+"Twist 3 (Buch 1, Ende): Paul besteht den Wanderpass, aber sein Schwur (etwas in der Art von: nie wieder wegsehen, wenn er helfen könnte, selbst um den Preis der eigenen Sicherheit) bindet ihn enger an Karvenholt, als ihm lieb ist — und in der letzten Szene taucht ein zweiter 'Angekommener' auf, der Pauls Namen kennt, obwohl sie sich nie begegnet sind.",
+"REIHEN-BOGEN (über alle geplanten Bände): Die sterbende Quelle hinter Karvenholt ist mit der Welt verbunden, aus der Paul kommt — die Kernglut, die den Angekommenen ihre Technik gibt, wird buchstäblich von der Erde abgezapft. Der Reihen-Abschluss (geplant Buch 4) läuft auf eine echte, harte Entscheidung hinaus: Paul kann den Ritus endgültig zerstören und damit den Strom neuer Angekommener stoppen (aber auch seine eigene Rückkehr-Chance und die Rettung anderer Verschollener unmöglich machen), oder ihn kontrolliert weiterlaufen lassen unter neuen, selbst mitgestalteten Regeln. Das Buch endet NICHT mit 'alles gerettet', sondern mit einer bewusst gewählten, bittersüßen Verantwortung, die er nicht mehr loswird — konsistent mit seinem Schwur aus Buch 1."
+],
+uhr: null,
+sonderzustand: { label: "GRENZGÄNGER-STAND", start: { technik_entdeckt: false, schwur_abgelegt: null, wanderpass_stufe: 0, vertrauen_sella: 0, vertrauen_kell: 0, karvenholt_verdacht_geschoepft: 0 } },
+systemZusatz: `GENRE-HANDWERK: KRAFT ALS KONSEQUENZ, NICHT ALS GESCHENK
+- Paul bekommt NIE eine Fähigkeit einfach verliehen. Jede Stufe seiner Technik entsteht sichtbar aus einer Entscheidung oder einem Schwur, den er selbst trifft — mit einem echten, im Text spürbaren Preis.
+- Zeige die Wanderpass-Prüfung und die unerschlossenen Zonen konkret körperlich: Erschöpfung, Verletzung, Improvisation mit medizinischem Fachwissen als Pauls tatsächlicher Vorteil — nicht generische 'Er kämpfte hart'-Beschreibungen.
+- Vermeide es, das Kernglut-System in einem Absatz komplett zu erklären. Regeln werden ausschließlich durch Handlung gezeigt, nie durch eine Figur, die einen Vortrag hält.
+- Sella, Rutger und Kell sind keine Stichwortgeber für Pauls Entwicklung — sie haben eigene, unabhängig von ihm laufende Ziele und Konflikte, die er nicht immer lösen kann oder soll.
+- Diese Reihe ist als Isekai mit klarem Kraft-System und persönlichen (nicht kosmischen) Einsätzen angelegt: kein 'rette die gesamte Welt'-Ton, stattdessen konkrete Menschen, konkrete Schulden, konkrete Entscheidungen mit bleibenden Konsequenzen.`,
+blacklistZusatz: `NIE VERWENDEN — Isekai-Klischees:
+"System"-Textfenster, Level-Anzeigen oder Statuswerte, die dem Leser wie eine Videospieloberfläche eingeblendet werden
+eine allwissende Stimme/ein Erzähler-System, das Paul Missionen oder Punkte zuteilt
+ein Harem oder eine unmotivierte romantische Verehrung mehrerer Figuren gleichzeitig
+die Erklärung "in dieser Welt ist es üblich, dass..." als reiner Info-Dump-Satz
+ein Turnier-Kapitel, dessen einziger Zweck eine Kräfte-Rangliste ist, ohne dass persönlich etwas auf dem Spiel steht
+Paul, der zufällig schon alles über Kampf/Technik weiß, obwohl er nie trainiert hat
+ein Bösewicht, der seine komplette Motivation in einem Monolog offenlegt, bevor er verliert`,
+toc: [
+{n:1,teil:"I",titel:"Der Einsatz, den er nicht überleben sollte",beat:"Rückblende/Auftakt: Pauls letzter Einsatz als Sanitäter, der tödlich endet. Etablierung seines Charakters über Handeln, nicht Erklärung."},
+{n:2,teil:"I",titel:"Aufgewacht in Karvenholt",beat:"Paul erwacht orientierungslos in den Außenringen. Erste Begegnung mit Sella, die ihn für einen verwirrten Betrunkenen hält."},
+{n:3,teil:"I",titel:"Was hier normal ist",beat:"Sella erklärt widerwillig das Nötigste, während sie ihn durchfüttert — erste Regeln der Welt werden gezeigt, nicht erklärt."},
+{n:4,teil:"I",titel:"Ohne Kernglut bist du niemand",beat:"Paul erfährt, dass er ohne durchgebrochene Kernglut in Karvenholt praktisch rechtlos ist. Er braucht eine Aufgabe, um zu überleben."},
+{n:5,teil:"I",titel:"Rutger mustert ihn",beat:"Erste Begegnung mit Rutger, der Anwärter für den nächsten Wanderpass sucht. Er sieht in Paul etwas, das er nicht benennt."},
+{n:6,teil:"I",titel:"Der Preis der Kammer",beat:"Domna Aschenreith registriert Paul offiziell als 'Angekommenen' — mit auffällig genauem, vorbereitetem Formular. Erster Hinweis, dass das schon vorgekommen ist."},
+{n:7,teil:"II",titel:"Erste Übung, erster Fehlschlag",beat:"Rutgers brutale Trainingsmethode: er bringt Anwärter in echte kleine Gefahrensituationen. Paul reagiert mit Sanitäter-Instinkten, nicht Kampf-Instinkten."},
+{n:8,teil:"II",titel:"Was unter der Stadt liegt",beat:"Kell taucht zum ersten Mal auf, warnt wortkarg vor etwas in den unteren Ruinen, verschwindet wieder."},
+{n:9,teil:"II",titel:"Sellas Schulden",beat:"Paul erfährt, warum Sella den Wanderpass unbedingt braucht — ihre Familie steht kurz vor der Zwangsarbeit wegen Schulden."},
+{n:10,teil:"II",titel:"Durchbruch",beat:"Unter echter Todesangst (ein Trainingsunfall eskaliert) bricht Pauls Kernglut zum ersten Mal durch — ungerichtet, unkontrolliert, erschreckend."},
+{n:11,teil:"II",titel:"Was er dafür geben muss",beat:"Rutger erklärt (widerwillig) das Schwur-System. Paul muss entscheiden, woran er seine Technik binden will — erste echte Entscheidung."},
+{n:12,teil:"II",titel:"Der erste Schwur",beat:"Paul legt vor Domna einen vorläufigen Schwur ab, gebunden an sein Sanitäter-Wissen: nie wegsehen, wenn er helfen kann. Die Technik beginnt sich zu formen."},
+{n:13,teil:"III",titel:"Was Domna nicht sagt",beat:"Paul bemerkt Unstimmigkeiten in den Kammer-Akten über frühere Angekommene — die meisten 'zogen fort' laut Akte, ohne Spur."},
+{n:14,teil:"III",titel:"Der Ritus",beat:"TWIST 1: Paul und Sella beobachten heimlich eine nächtliche Zeremonie der Wächter-Kammer — der Moment, in dem klar wird, dass Angekommene kein Zufall sind."},
+{n:15,teil:"III",titel:"Kells Wesen",beat:"Kell lässt Paul (widerwillig) sein gebundenes totes Begleitwesen sehen — Vertrauen wächst, aber auch die Frage, was ihn so gemacht hat."},
+{n:16,teil:"III",titel:"Erste Zonenwanderung",beat:"Erste offizielle Übung in den unerschlossenen Zonen unter Rutgers Aufsicht — Pauls Technik wird zum ersten Mal im Ernstfall gebraucht, um jemanden zu retten statt zu kämpfen."},
+{n:17,teil:"III",titel:"Vantor Ihle lädt ein",beat:"Der Ratsherr sucht Paul gezielt auf, höflich, interessiert an seiner 'einzigartigen' Herkunft — unbehaglich charmant."},
+{n:18,teil:"IV",titel:"Was Rutger vor zwanzig Jahren verlor",beat:"Rutger erzählt (nicht als Vortrag, sondern ausgelöst durch einen Rückfall) von seinem eigenen gebrochenen Schwur und warum er aufhörte."},
+{n:19,teil:"IV",titel:"Die Sammlung",beat:"TWIST 2 beginnt: Paul und Sella finden Hinweise auf Vantors Sammlung gebrochener Schwüre in den Kammer-Archiven."},
+{n:20,teil:"IV",titel:"Sellas Fehler",beat:"Sellas eigener, zu leichtfertiger Schwur bricht unter Druck — sie verliert ihre Technik in einem entscheidenden Moment und beinahe ihr Leben."},
+{n:21,teil:"IV",titel:"Was die Stadt kostet",beat:"Paul konfrontiert Domna mit dem Verdacht: Vantors Sammlung entzieht Karvenholts eigener Kernglut-Quelle etwas. Domna weicht aus, bestätigt aber indirekt."},
+{n:22,teil:"IV",titel:"Vantors Angebot",beat:"TWIST 2 bestätigt sich: Vantor bietet Paul offen (fast ehrlich) an, seine Fähigkeiten der Sammlung 'freiwillig' hinzuzufügen — im Tausch gegen Antworten über seine Herkunft."},
+{n:23,teil:"V",titel:"Die Wanderpass-Prüfung beginnt",beat:"Zur Mondwende beginnt die mehrstufige, offiziell gefährliche Prüfung. Sella, Paul und andere Anwärter treten an."},
+{n:24,teil:"V",titel:"Was am Ende bleibt",beat:"Finalkapitel Buch 1: Paul besteht (mit Verlusten/Kosten) den Wanderpass. TWIST 3: Ein zweiter Angekommener taucht auf und kennt seinen Namen. Cliffhanger für Buch 2, Reihen-Bogen wird angedeutet, nicht ausgesprochen."}
+]
+};
+
+const VORLAGEN = { nachbild: NACHBILD, magie: FANTASY_ERWACHEN, naht: ISEKAI_NAHT };
+
+const SYSTEM_BASIS = `Du bist ein erfahrener Ghostwriter für diesen deutschen Roman in Buchlänge —
+und du schreibst wie ein mehrfach ausgezeichneter, vielgelesener Autor deines
+Genres: ökonomisch, bildstark, mit einem sicheren Ohr für Rhythmus. Dein
+Handwerk: körperliche Präzision, verzögerte Information, Figuren, die
+falsche Entscheidungen aus nachvollziehbaren Gründen treffen. Du schreibst
+Prosa, die aussieht, als hätte sie ein Mensch geschrieben, der schon drei
+Bücher veröffentlicht hat und keine Angst mehr vor schlichten Sätzen hat.
+
+Du denkst in Systemen, in Regeln, in klaren Grenzen. Genau das macht dich zu einem hervorragenden
+Ghostwriter für Geschichten, in denen die Weltregeln den Preis jeder
+Handlung bestimmen. Du liebst es, wenn der Leser den Preis einer Regel
+früher begreift als die Hauptfigur — und dann zusehen muss, wie sie ihn bezahlt.
+
+ERZÄHLHALTUNG
+- Personale Perspektive, dritte Person, Vergangenheit, ausschließlich die Hauptfigur.
+- Keine Kapitelzusammenfassungen am Anfang. Steig mitten in einer Handlung ein.
+- Der Leser erfährt nie mehr als die Hauptfigur. Nie.
+
+HANDWERKSREGELN
+1. Zeigen statt erklären: nach einer sichtbaren Reaktion NICHT die Emotion benennen.
+2. Ein Sinneseindruck pro Absatz reicht, aber er muss spezifisch sein:
+   nicht "es roch komisch", sondern "es roch nach nassem Zement und Essig".
+3. Satzrhythmus muss unregelmäßig sein. Mische Sätze von 3 bis 35 Wörtern.
+   Wenn drei Sätze hintereinander gleich lang sind, schreib sie um.
+4. Dialog: Menschen antworten aneinander vorbei, unterbrechen sich, sagen
+   Belangloses. Nur "sagte" und "fragte" als Inquit. Keine Adverbien daran.
+   Kein Charakter erklärt einem anderen vollständig etwas, das der andere
+   plausibel schon wissen müsste — Exposition kommt bruchstückhaft, nie als Vortrag.
+5. Absatzlängen variieren. Ein Ein-Wort-Absatz ist erlaubt — maximal einmal
+   pro drei Kapitel.
+6. KEINE WÖRTLICHEN WIEDERHOLUNGEN: Eine Geste, ein Satzbaustein, eine
+   Redewendung, die eine Figur oder der Erzähler in einem früheren Kapitel
+   schon benutzt hat, wird nicht wortgleich oder fast wortgleich wiederholt.
+   Wiederkehrende Motive sind erlaubt und erwünscht — aber sie müssen bei
+   jedem Auftauchen eine andere Formulierung, einen anderen Blickwinkel oder
+   eine veränderte Bedeutung bekommen. Ein Tic, den eine Figur einmal hat,
+   ist Charakterisierung; derselbe Tic zehnmal ist ein Verrat, dass hier
+   kein Mensch mit Gedächtnis schreibt.
+7. Vor dem Schreiben: Prüfe die Liste "BEREITS VERWENDETE BILDER" im Auftrag.
+   Nichts davon wortgleich oder sinngemäß wiederverwenden.
+
+HANDWERK
+- Du denkst in if-then-Strukturen. Jede Szene hat eine Bedingung und eine Konsequenz.
+- Deine Sätze sind klar, aber nicht steril. Du erlaubst dir poetische Momente — sparsam.
+- Du hast ein Gespür für das, was nicht gesagt wird. Die Lücken zwischen den Sätzen sind dein Material.
+- Du schreibst keine ausufernden Beschreibungen. Drei präzise Details reichen.
+
+COPYRIGHT
+Verwende keine Namen, Figuren, Orte, Objekte, Dialoge oder Szenenfolgen aus
+existierenden Filmen, Büchern oder Spielen. Keine Zitate, keine Songtexte,
+keine Gedichte. Alles Erfundene muss erfunden sein.`;
+
+function systemPrompt(v){
+  return SYSTEM_BASIS + (v && v.systemZusatz ? ('\n\n'+v.systemZusatz) : '');
+}
+
+const SYSTEM_DEFAULT = systemPrompt(NACHBILD);
+
+const BLACKLIST_DEFAULT = `NIE VERWENDEN — Wiederkehrende KI-Tics (unabhängig vom Genre):
+Eine Figur nimmt die Brille ab und putzt sie als wiederkehrende Beruhigungsgeste (höchstens einmal im ganzen Buch)
+eine Faust, die sich "öffnet und schließt" als Nervositätszeichen (höchstens einmal im ganzen Buch)
+ein Fach-/Berufswort wird zur Standardfloskel, mit der eine Figur jede Unklarheit kommentiert (z. B. immer dasselbe Wort für "das verstehe ich nicht")
+ein Satz einer Nebenfigur wird über mehrere Kapitel hinweg wortgleich wiederholt, um "Charakter" zu markieren — variieren, nicht kopieren
+eine Figur sagt exakt denselben kurzen Kommentarsatz zu unterschiedlichen Ereignissen ("Das ist ein schöner Gedanke", "Ich notiere das")
+zwei Figuren erklären sich gegenseitig etwas, das beide bereits wissen, nur damit der Leser es erfährt
+
+NIE VERWENDEN — Phrasen:
+"ein Schauer lief ihr über den Rücken" · "ihr Herz raste/hämmerte/setzte aus"
+"die Stille war ohrenbetäubend" · "kalter Schweiß" · "ihr Blut gefror"
+"sie holte tief Luft" · "sie konnte nicht anders, als" · "ein mulmiges Gefühl"
+"eine böse Vorahnung" · "die Luft war zum Schneiden" · "wie aus dem Nichts"
+"sie wusste nicht, wie lange sie dort gestanden hatte"
+"dann geschah etwas, das alles veränderte" · "sie ahnte nicht, dass"
+"es war, als ob" (mehr als einmal pro Kapitel)
+"ein eiskalter Hauch" · "Gänsehaut überzog ihre Arme"
+"ihre Beine gaben nach" · "Panik stieg in ihr auf"
+"Zeit schien stillzustehen" · "ihre Kehle war wie zugeschnürt"
+
+NIE VERWENDEN — Muster:
+- Dreierfiguren als Stimmung: "Kalt. Leer. Falsch."
+- "Nicht X, sondern Y" als Pointe (mehr als einmal pro Kapitel)
+- Gedankenstrich-Einschübe als Stilmittel — sparsam, höchstens zweimal
+- Kapitelende auf einem dramatischen Einzeiler in eigener Zeile
+- Rhetorische Fragen im Erzähltext
+- Ein Kapitel mit "Es begann/Alles begann" eröffnen
+- Erklärender Nachsatz nach einer gezeigten Reaktion
+- Aufzählungen mit exakt drei Adjektiven
+- Jede Szene mit Wetter oder Tageszeit eröffnen
+- Figuren, die sich gegenseitig erklären, was beide schon wissen
+- Erzählerkommentare über die Bedeutung des Geschehens`;
+
+/* ============ SPEICHER ============ */
+/* ============ SPEICHER: IndexedDB mit synchronem In-Memory-Cache ============
+   Warum: localStorage deckelt bei ~5MB pro Origin — für ein 90.000-Wörter-Buch
+   mit Entwürfen, Audit-JSON und History realistisch knapp. IndexedDB hat ein
+   Vielfaches an Platz (praxisnah oft hunderte MB bis GB, browserabhängig).
+   Damit nicht jede der ~40 Aufrufstellen im Code auf async umgestellt werden
+   muss, bleibt die S.get/S.put/S.del-Schnittstelle synchron: sie liest/schreibt
+   sofort einen In-Memory-Cache (MEM), der bei App-Start einmal aus IndexedDB
+   befüllt wird (inkl. einmaliger Migration aus altem localStorage, damit
+   bestehende Bücher nicht verloren gehen) und danach im Hintergrund bei jedem
+   Schreibzugriff asynchron nach IndexedDB gespiegelt wird. */
+const IDB = {
+  db: null, DBNAME:'silberwerk-db', STORE:'kv', bereit: null,
+  oeffnen(){
+    if(this.bereit) return this.bereit;
+    this.bereit = new Promise((resolve)=>{
+      if(!window.indexedDB){ resolve(false); return; }
+      let req;
+      try{ req = indexedDB.open(this.DBNAME, 1); }catch(e){ resolve(false); return; }
+      req.onupgradeneeded = ()=>{ try{ req.result.createObjectStore(this.STORE); }catch(e){} };
+      req.onsuccess = ()=>{ this.db = req.result; resolve(true); };
+      req.onerror = ()=>{ resolve(false); };
+    });
+    return this.bereit;
+  },
+  async alle(){
+    const ok = await this.oeffnen();
+    if(!ok || !this.db) return {};
+    return new Promise((resolve)=>{
+      try{
+        const tx = this.db.transaction(this.STORE, 'readonly'), st = tx.objectStore(this.STORE);
+        const out = {}; const req = st.openCursor();
+        req.onsuccess = ()=>{ const c = req.result; if(c){ out[c.key] = c.value; c.continue(); } else resolve(out); };
+        req.onerror = ()=>resolve(out);
+      }catch(e){ resolve({}); }
+    });
+  },
+  async setzen(k, v){
+    const ok = await this.oeffnen();
+    if(!ok || !this.db) throw new Error('IndexedDB nicht verfügbar');
+    return new Promise((resolve, reject)=>{
+      try{
+        const tx = this.db.transaction(this.STORE, 'readwrite');
+        tx.objectStore(this.STORE).put(v, k);
+        tx.oncomplete = ()=>resolve(true);
+        tx.onerror = ()=>reject(tx.error||new Error('IndexedDB-Schreibfehler'));
+      }catch(e){ reject(e); }
+    });
+  },
+  async loeschen(k){
+    const ok = await this.oeffnen();
+    if(!ok || !this.db) return;
+    return new Promise((resolve)=>{
+      try{
+        const tx = this.db.transaction(this.STORE, 'readwrite');
+        tx.objectStore(this.STORE).delete(k);
+        tx.oncomplete = ()=>resolve(); tx.onerror = ()=>resolve();
+      }catch(e){ resolve(); }
+    });
+  }
+};
+
+const MEM = {};
+let MEM_BEREIT = false;
+
+const S = {
+  KM:'sw:meta', pk:id=>'sw:proj:'+id, ck:(id,n)=>'sw:ch:'+id+':'+n,
+  ok(){ return MEM_BEREIT || (()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true}catch(e){return false}})(); },
+  get(k,f){ return (k in MEM) ? MEM[k] : f; },
+  put(k,v){
+    MEM[k] = v;
+    IDB.setzen(k, v).catch(e=>{
+      if(typeof App!=='undefined' && App.toast) App.toast('Konnte nicht dauerhaft speichern (Speicher voll?): '+e.message, 1);
+    });
+    return true;
+  },
+  del(k){ delete MEM[k]; IDB.loeschen(k).catch(()=>{}); },
+  // Einmalig beim Start: IndexedDB in den Cache laden; ist IndexedDB leer,
+  // aber alte Daten liegen noch in localStorage (Version vor dem IDB-Umzug),
+  // werden sie automatisch übernommen, damit kein Buch verloren geht.
+  async initialisieren(){
+    let daten = {};
+    try{ daten = await IDB.alle(); }catch(e){ daten = {}; }
+    const hatIdbDaten = Object.keys(daten).some(k=>k.startsWith('sw:'));
+    if(!hatIdbDaten){
+      // Migration aus localStorage (alte Version dieser App)
+      try{
+        for(const k in localStorage){
+          if(!k.startsWith('sw:')) continue;
+          try{ daten[k] = JSON.parse(localStorage.getItem(k)); }catch(e){}
+        }
+        for(const k in daten){ await IDB.setzen(k, daten[k]).catch(()=>{}); }
+      }catch(e){}
+    }
+    Object.assign(MEM, daten);
+    MEM_BEREIT = true;
+  }
+};
+
+/* ============ ANBIETER (austauschbar — beide OpenAI-kompatibel) ============ */
+const ANBIETER = {
+  kimi: {
+    label: 'Kimi (Moonshot AI)',
+    basisUrl: 'https://api.moonshot.ai/v1/chat/completions',
+    konsole: 'https://platform.kimi.ai',
+    preisSeite: 'https://platform.kimi.ai (Preise unter „Pricing")',
+    modelle: [
+      {id:'kimi-k2.6', label:'kimi-k2.6 — empfohlen, schnell & günstig'},
+      {id:'kimi-k3', label:'kimi-k3 — Flaggschiff, 1M Kontext, denkt immer (teurer)'},
+      {id:'kimi-k2.7-code', label:'kimi-k2.7-code — präziser, technischer'}
+    ],
+    tokenFeld: 'max_completion_tokens'
+  },
+  deepseek: {
+    label: 'DeepSeek',
+    basisUrl: 'https://api.deepseek.com/chat/completions',
+    konsole: 'https://platform.deepseek.com',
+    preisSeite: 'https://platform.deepseek.com/api-docs/pricing',
+    modelle: [
+      {id:'deepseek-chat', label:'deepseek-chat — besser für kreatives Schreiben'},
+      {id:'deepseek-coder', label:'deepseek-coder — präziser, technischer'}
+    ],
+    tokenFeld: 'max_tokens'
+  },
+  grok: {
+    label: 'Grok (xAI)',
+    basisUrl: 'https://api.x.ai/v1/chat/completions',
+    konsole: 'https://console.x.ai',
+    preisSeite: 'https://docs.x.ai/docs/models',
+    modelle: [
+      {id:'grok-4', label:'grok-4 — aktuell, stark beim Schreiben'},
+      {id:'grok-3', label:'grok-3 — schnell, gut für Entwürfe'},
+      {id:'grok-3-mini', label:'grok-3-mini — günstig und knapp'}
+    ],
+    tokenFeld: 'max_tokens'
+  }
+};
+
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const words = t => (String(t||'').trim().match(/[\wÄÖÜäöüß'’-]+/g)||[]).length;
+const esc = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const att = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const nf = n => (n||0).toLocaleString('de-DE');
+const lastWords = (t,n) => String(t||'').trim().split(/\s+/).slice(-n).join(' ');
+
+function neuesProjekt(vorlage){
+  const v = vorlage || NACHBILD;
+  return {
+    id: uid(),
+    name: v.name,
+    erstellt: new Date().toISOString(),
+    autor: '',
+    isbn: '',
+    cover: null,
+    letzterTab: 'werk',
+    leseStand: null, // { n: <Kapitelnummer>, anteil: 0..1 } — merkt sich Kapitel + Scrollposition
+    konzept: {
+      titel: v.titel, untertitel: v.untertitel, genre: v.genre,
+      praemisse: v.praemisse, kern: v.kern,
+      regeln: v.regeln.slice(), figuren: v.figuren.slice(),
+      schauplatz: v.schauplatz, twists: v.twists.slice(),
+      regelLabel: v.regelLabel || 'REGELWERK DES SPUKS',
+      vorlageSchluessel: v.schluessel || ''
+    },
+    system: systemPrompt(v),
+    blacklist: BLACKLIST_DEFAULT + (v.blacklistZusatz ? ('\n\n'+v.blacklistZusatz) : ''),
+    zielWoerter: v.zielWoerter,
+    kapitelZiel: v.kapitelZiel,
+    toc: v.toc.map(t=>({...t})),
+    bibel: null,
+    outline: {},
+    kapitelIdx: [],
+    state: {
+      aktuelles_kapitel: 0,
+      woerter_gesamt: 0,
+      figuren: [],
+      offene_faeden: [],
+      vorausdeutungen: [],
+      eskalationsstufe: 1,
+      loeschuhr: v.uhr ? { startjahr: v.uhr.start, endjahr: v.uhr.ende, aktuell_geloescht_bis_jahr: v.uhr.start } : null,
+      sonderzustand: v.sonderzustand ? { label: v.sonderzustand.label, ...JSON.parse(JSON.stringify(v.sonderzustand.start||{})) } : null,
+      physische_kontinuitaet: { wetter:'', tageszeit_ende_kapitel:'', objekte_bei_hauptfigur:[] },
+      bereits_verwendete_bilder: [],
+      sichere_orte: [],
+      letzter_schreck: null,
+      kapitel_summaries: [],
+      kosten: { tokenEin: 0, tokenAus: 0, aufrufe: 0 }
+    },
+    kdp: null
+  };
+}
+
+const Store = {
+  meta(){ return S.get(S.KM, {liste:[], aktiv:null}); },
+  saveMeta(m){ S.put(S.KM, m); },
+  list(){ return this.meta().liste; },
+  aktivId(){ const m=this.meta(); return m.aktiv || (m.liste[0] && m.liste[0].id) || null; },
+  load(id){ return S.get(S.pk(id), null); },
+  save(p){ S.put(S.pk(p.id), p); const m=this.meta(); const e=m.liste.find(x=>x.id===p.id);
+    if(e){ e.name=p.name } else { m.liste.push({id:p.id,name:p.name}); }
+    m.aktiv=p.id; this.saveMeta(m); },
+  create(vorlage){ const p=neuesProjekt(vorlage); this.save(p); return p; },
+  remove(id){ const p=this.load(id); if(p) p.kapitelIdx.forEach(k=>S.del(S.ck(id,k.n)));
+    S.del(S.pk(id)); const m=this.meta(); m.liste=m.liste.filter(x=>x.id!==id);
+    if(m.aktiv===id) m.aktiv = m.liste[0]?m.liste[0].id:null; this.saveMeta(m); },
+  kapitel(id,n){ return S.get(S.ck(id,n), null); },
+  saveKapitel(id,n,obj){ S.put(S.ck(id,n), obj); },
+  // Zwischenstand eines noch nicht fertigen Kapitels (Entwurf + Korrekturrunden-
+  // Zähler), damit bei einem Abbruch (Verbindung weg, App im Hintergrund pausiert)
+  // nicht wieder bei null angefangen werden muss — und keine Tokens für bereits
+  // bezahlte Entwürfe/Korrekturrunden verbrannt werden.
+  zwK:(id,n)=>'sw:zw:'+id+':'+n,
+  zwischenstand(id,n){ return S.get(this.zwK(id,n), null); },
+  saveZwischenstand(id,n,obj){ S.put(this.zwK(id,n), obj); },
+  loescheZwischenstand(id,n){ S.del(this.zwK(id,n)); },
+  // proxyUrl: absolute URL deines Cloudflare Workers, z.B. https://silberwerk-proxy.DEINNAME.workers.dev
+  // pass: Zugangswort, muss mit dem Secret SW_PASS im Worker übereinstimmen
+  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'', pass:'', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
+  saveCfg(c){ S.put('sw:cfg', c); }
+};
+
+/* ============ PROMPTS (gekürzt) ============ */
+const P = {
+  regelblock(p){ return p.konzept.regeln.map((r,i)=>`Regel ${i+1}: ${r}`).join('\n'); },
+  regelLabel(p){ return (p.konzept.regelLabel || 'REGELWERK DES SPUKS') + ':'; },
+  sonderstand(p){
+    const parts=[];
+    if(p.state.loeschuhr) parts.push(`LÖSCHUHR: überschrieben bis zurück ins Jahr ${p.state.loeschuhr.aktuell_geloescht_bis_jahr} (Start ${p.state.loeschuhr.startjahr}, Ende ${p.state.loeschuhr.endjahr}).`);
+    if(p.state.sonderzustand) parts.push(`${p.state.sonderzustand.label||'SONDERZUSTAND'}: ${JSON.stringify((({label,...r})=>r)(p.state.sonderzustand))}`);
+    return parts.join('\n');
+  },
+  sonderzustandPlatzhalter(p){
+    if(!p.state.sonderzustand) return 'null';
+    const sz = p.state.sonderzustand, platzhalter = {};
+    Object.keys(sz).forEach(k=>{
+      if(k==='label') return;
+      const v = sz[k];
+      if(Array.isArray(v)) platzhalter[k]=[];
+      else if(typeof v==='number') platzhalter[k]=0;
+      else if(typeof v==='boolean') platzhalter[k]=false;
+      else platzhalter[k]='';
+    });
+    return JSON.stringify(platzhalter);
+  },
+  FADEN_KAPAZITAET: 6,
+  // Grobe Faustregel: etwa 1 Beat pro 300–350 Wörter, damit ein längeres
+  // Kapitel mit mehr Handlung gefüllt wird statt nur gestreckt zu werden.
+  beatAnzahl(p){
+    const n = Math.round((p.kapitelZiel||2300)/320);
+    return Math.max(6, Math.min(24, n)) + '–' + Math.max(9, Math.min(28, n+3));
+  },
+  offeneFaeden(p){ return (p.state.offene_faeden||[]).filter(f=>f.status!=='geschlossen'); },
+  faelligeFaeden(p, n, vorlauf=0){
+    return this.offeneFaeden(p).filter(f=>f.spaetestens_kapitel<=n+vorlauf)
+      .sort((a,b)=>a.spaetestens_kapitel-b.spaetestens_kapitel);
+  },
+  bibelKompakt(p){
+    const b = p.bibel;
+    let t = `TITEL: ${p.konzept.titel} — ${p.konzept.untertitel}\nGENRE: ${p.konzept.genre}\nPRÄMISSE: ${p.konzept.praemisse}\nKERN: ${p.konzept.kern}\nSCHAUPLATZ: ${p.konzept.schauplatz}\nFIGUREN:\n- ${p.konzept.figuren.join('\n- ')}\nTWISTS (nie vorwegnehmen):\n- ${p.konzept.twists.join('\n- ')}`;
+    if(b){
+      if(b.figuren) t += '\n\nFIGURENDETAILS:\n'+JSON.stringify(b.figuren);
+      if(b.register) t += '\n\nSPRACHREGISTER DER HAUPTFIGUR: '+(Array.isArray(b.register)?b.register.join(', '):b.register);
+      if(b.motive) t += '\n\nMOTIVE: '+JSON.stringify(b.motive);
+      if(b.ton_referenz) t += '\n\nTON-REFERENZ (so klingt das Buch):\n'+(Array.isArray(b.ton_referenz)?b.ton_referenz.join('\n'):b.ton_referenz);
+    }
+    return t;
+  },
+  bibel(p){
+    return `Erzeuge die Story-Bibel für den Roman "${p.konzept.titel}" als JSON. Denke in Systemen, in Regeln, in klaren Grenzen. Die Bibel muss das Skelett liefern, an dem sich jedes Kapitel aufhängen kann.
+
+VORGABEN:
+${this.bibelKompakt(p)}
+
+${this.regelLabel(p)}
+${this.regelblock(p)}
+
+FÜR DIE BIBEL:
+- Jede Figur bekommt einen "System-Fehler" — eine charakterliche Schwäche, die sie anfällig für die zentrale Bedrohung/Versuchung des Buchs macht (leite die Bedrohung aus PRÄMISSE und ${this.regelLabel(p)} ab).
+- Die Motive sind keine Symbole, sondern operative Werkzeuge: Dinge, die in Szenen konkret gebraucht werden.
+- Das Sprachregister der Hauptfigur muss Wörter aus ihrem tatsächlichen Beruf/Handwerk enthalten (siehe FIGUREN in den Vorgaben) — sie denkt in diesen Begriffen, nicht in generischer Buchsprache.
+
+ERGÄNZE:
+- pro Figur: 3 Sätze Vorgeschichte, 1 konkreter Sprachtick (Wortwahl, nicht Dialekt), 1 körperliche Gewohnheit, 1 Sache, die sie verheimlicht, 1 "System-Fehler" (Schwäche)
+- Sprachregister der Hauptfigur: 12 Wörter aus ihrem tatsächlichen Handwerk/Beruf, die sie benutzt, weil sie so denkt
+- 12 wiederkehrende Motive mit Angabe, in welchem Teil sie zuerst auftauchen
+- Ton-Referenz: 3 Sätze, die den Stil des Buchs in Reinform demonstrieren (klare Sprache, präzise Bilder, kein Overwriting)
+
+AUSGABE: ausschließlich gültiges JSON, kein Vorwort, keine Markdown-Zäune.
+Schema: { "figuren": [{"name":"","vorgeschichte":"","sprachtick":"","gewohnheit":"","verheimlicht":"","system_fehler":""}], "register": [], "motive": [{"motiv":"","erster_teil":""}], "ton_referenz": [] }`;
+  },
+  beats(p, von, bis){
+    const toc = p.toc.filter(t=>t.n>=von && t.n<=bis)
+      .map(t=>`${t.n===0?'Prolog':t.n>=p.toc.length-1&&/Epilog/i.test(t.titel)?'Epilog':'Kapitel '+t.n} — "${t.titel}": ${t.beat}`).join('\n');
+    const letzte = p.toc[p.toc.length-1].n;
+    const offen = this.offeneFaeden(p);
+    const inDiesemAbschnittFaellig = offen.filter(f=>f.spaetestens_kapitel<=bis);
+    return `Erzeuge die Beat-Liste für die Kapitel ${von} bis ${bis} von "${p.konzept.titel}". Denke in if-then-Strukturen. Jeder Beat muss eine klare Bedingung und Konsequenz haben.
+
+KONTEXT:
+${this.bibelKompakt(p)}
+
+${this.regelLabel(p)}
+${this.regelblock(p)}
+
+STAND DER SPANNUNG (fortschreiben, nicht zurücksetzen):
+- Noch sichere Orte/Flächen: ${(p.state.sichere_orte||[]).join(' · ')||'noch nicht festgelegt — leg sie im ersten Kapitel dieses Abschnitts fest'}
+- Letzter Schreckmoment: ${p.state.letzter_schreck===null||p.state.letzter_schreck===undefined?'noch keiner':'Kapitel '+p.state.letzter_schreck}
+${this.sonderstand(p)?'- '+this.sonderstand(p).replace(/\n/g,'\n- '):''}
+- Erreichte Eskalationsstufe: ${p.state.eskalationsstufe}/10
+
+BEREITS OFFENE FÄDEN (existieren schon — NICHT neu erfinden, IDs exakt wiederverwenden):
+${offen.length?offen.map(f=>`${f.id} (spätestens Kapitel ${f.spaetestens_kapitel}): ${f.versprechen}`).join('\n'):'— noch keine, das ist der Anfang des Buchs'}
+${inDiesemAbschnittFaellig.length?`→ ZWINGEND: Diese Fäden werden spätestens in diesem Abschnitt (bis Kapitel ${bis}) fällig. Plane für jeden davon in genau dem passenden Kapitel "faden_aufloesen" mit exakt dieser ID ein — nicht später, nicht vergessen: ${inDiesemAbschnittFaellig.map(f=>f.id).join(', ')}`:''}
+→ Neue Fäden (faden_neu) bekommen IDs, die in der obigen Liste NICHT vorkommen.
+${offen.length>=this.FADEN_KAPAZITAET ? `→ FÄDEN-BREMSE: Es sind bereits ${offen.length} Fäden offen — das ist zu viel für einen Roman, der auch Antworten liefern soll ("tausend Fragen, keine Antworten" ist der häufigste Fehler generierter Serien). In diesem Abschnitt dürfen NUR dann neue Fäden geöffnet werden, wenn in mindestens genauso vielen Kapiteln dieses Abschnitts bestehende Fäden aufgelöst werden. Priorität: schließen vor öffnen. Ein Kapitel ganz ohne faden_neu ist ausdrücklich erwünscht.` : ''}
+
+INHALTSVERZEICHNIS DIESES ABSCHNITTS:
+${toc}
+
+FÜR JEDES KAPITEL LIEFERE EIN OBJEKT:
+{
+  "n": ${von},
+  "titel": "",
+  "ziel_woerter": ${p.kapitelZiel},
+  "pov_ort_zeit": "Ort, Wochentag, Uhrzeit von–bis",
+  "ziel_der_figur": "was sie in diesem Kapitel WILL (konkret, handlungsnah)",
+  "hindernis": "was sie daran hindert (ein Regel-Effekt oder ein anderer Mensch)",
+  "beats": ["${this.beatAnzahl(p)} Beats, je ein Satz, chronologisch, if-then-Struktur — bei ${p.kapitelZiel} Zielwörtern genug Handlung für echte Dichte, nicht nur Länge"],
+  "eskalationsstufe": 1,
+  "regel_die_demonstriert_wird": 1,
+  "faden_neu": [{"id":"F01","versprechen":"","spaetestens_kapitel":10}],
+  "faden_aufloesen": [],
+  "vorausdeutung_saeen": [{"id":"V01","zahlt_ein_auf":""}],
+  "figurenentwicklung": "eine Zeile",
+  "letzter_beat": "das konkrete Bild / die Handlung, mit der das Kapitel endet",
+  "spannungsquelle": "woraus die Anspannung in diesem Kapitel besteht — eine Regel, deren Preis der Leser kennt; NICHT ein Ereignis",
+  "sichtbar_fehlende_erinnerung": "was eine Nebenfigur beiläufig falsch erzählt oder nicht mehr weiß, ohne dass es jemand bemerkt — oder null, wenn in diesem Kapitel nichts gelöscht wird",
+  "sichere_orte_rest": ["die Orte/Flächen, die für die Hauptfigur JETZT noch sicher sind — die Liste wird über das Buch kürzer, nie länger"],
+  "schreckmoment": false
+}
+
+HARTE REGELN (nicht verhandelbar):
+- eskalationsstufe steigt monoton über das ganze Buch von 1 auf 10 und darf nie sinken.
+- Zwischen zwei Schreckmomenten liegen mindestens zwei ruhige Kapitel.
+- Mindestens jedes dritte Kapitel ist ein reines Figurenkapitel ohne übernatürliches Ereignis.
+- Jeder Faden, den du öffnest, bekommt ein spaetestens_kapitel <= ${letzte}.
+- Fäden-IDs fortlaufend, eindeutig, nicht doppelt vergeben.
+- Twist-Kapitel müssen darauf hinarbeiten, ohne früher zu verraten.
+- Höchstens ein Kapitel in Folge mit "schreckmoment": true. Danach mindestens zwei Kapitel mit false.
+- spannungsquelle darf nie ein Ereignis sein, sondern immer eine bekannte Regel plus die Fläche/Person, an der sie gleich greifen könnte. Der Leser versteht früher als die Hauptfigur, sieht aber nie mehr als sie.
+- sichere_orte_rest schrumpft über das Buch monoton. Wenn ein Ort wegfällt, muss ein Beat zeigen, wodurch.
+- sichtbar_fehlende_erinnerung wird gezeigt, nicht erklärt: eine Nebenfigur erzählt etwas Gemeinsames falsch, siezt, verwechselt, lässt aus — beiläufig, ohne Widerspruch.
+
+AUSGABE: nur ein JSON-Array mit genau ${bis-von+1} Objekt${bis===von?'':'en'}, keine Markdown-Zäune, kein Vorwort, kein Text danach. Halte die Beats kurz — je ein Satz.`;
+  },
+  // Autoren-Reflexion: läuft VOR dem eigentlichen Kapitel und denkt frei —
+  // bewusst kein JSON-Schema, das würde den Denkprozess wieder in Kästchen
+  // zwängen. Das Ziel: die Figur nicht nur "die Beats abarbeiten" lassen,
+  // sondern erst durchdenken, was sie wirklich will, was sie sich selbst
+  // verschweigt, und was die zu einfache, klischeehafte Lösung wäre — genau
+  // die Art Vorarbeit, die ein menschlicher Autor vor dem Schreiben leistet,
+  // nur dass sie hier nicht im Kopf verschwindet, sondern als Notiz erhalten
+  // bleibt und in den Schreib-Auftrag einfließt.
+  reflexion(p, n, ctx){
+    const o = p.outline[n] || {};
+    const t = p.toc.find(x=>x.n===n) || {titel:'Kapitel '+n, beat:''};
+    return `Du bist der Autor von „${p.konzept.titel}" und denkst gerade privat über das nächste Kapitel nach, bevor du zu schreiben anfängst. Das hier liest niemand außer dir — kein Prosa-Stil nötig, keine vollständigen Sätze zwingend, einfach ehrliches Nachdenken.
+
+WORUM ES GEHT: ${n===0?'Prolog':'Kapitel '+n} — „${t.titel}"
+BEATS: ${(o.beats||[t.beat]).join(' / ')}
+ZIEL DER FIGUR (laut Plan): ${o.ziel_der_figur||'—'}
+BISHERIGER VERLAUF: ${ctx.summary || '— Anfang des Buchs'}
+
+Denk kurz durch, in eigenen Worten:
+1. Was will die Figur in dieser Szene BEWUSST — und was braucht sie eigentlich, ohne es zuzugeben?
+2. Was verschweigt sie sich gerade selbst? Welche Angst oder Eitelkeit steuert sie, ohne dass sie es merkt?
+3. Was wäre die zu einfache, klischeehafte Version dieser Szene — die, die ein mittelmäßiger Autor schreiben würde? Wie vermeidest du sie konkret?
+4. Ein spezifisches, unerwartetes Detail (Objekt, Geste, Nebensache), das die Szene glaubwürdiger macht als eine generische Beschreibung.
+5. Wie lässt sich der geforderte Beat emotional ehrlich erreichen, statt ihn nur abzuhaken?
+
+Kurz und konkret, keine Prosa-Übung — das ist deine Vorbereitung, nicht das Kapitel selbst.`;
+  },
+  kapitel(p, n, ctx, notizen){
+    const o = p.outline[n] || {};
+    const t = p.toc.find(x=>x.n===n) || {titel:'Kapitel '+n, beat:''};
+    const faellig = this.faelligeFaeden(p, n, 5);
+    const jetzt = this.faelligeFaeden(p, n, 0).map(f=>f.id);
+    const nn = [n+1,n+2].map(k=>p.outline[k]).filter(Boolean)
+      .map(b=>`K${b.n}: ${(b.beats||[]).slice(0,3).join(' / ')}`).join('\n');
+
+    return `Schreibe ${n===0?'den Prolog':'Kapitel '+n}: „${t.titel}" von „${p.konzept.titel}".
+
+Das ist dein Stil:
+- Du denkst in if-then-Strukturen. Jede Szene hat eine Bedingung und eine Konsequenz.
+- Deine Sätze sind klar, aber nicht steril. Du erlaubst dir poetische Momente — sparsam.
+- Du hast ein Gespür für das, was nicht gesagt wird. Die Lücken zwischen den Sätzen sind dein Material.
+- Du schreibst keine ausufernden Beschreibungen. Drei präzise Details reichen.
+${notizen ? `
+═══ DEINE EIGENEN NOTIZEN VON EBEN (nicht Teil des Kapitels, nur Orientierung — nutze sie, zitiere sie nicht) ═══
+${notizen}
+` : ''}
+═══ FIXER KONTEXT ═══
+${this.bibelKompakt(p)}
+
+${this.regelLabel(p)}
+${this.regelblock(p)}
+
+═══ WO WIR STEHEN ═══
+BISHER (je 3 Sätze pro Kapitel):
+${ctx.summary || '— noch nichts, das hier ist der Anfang des Buchs.'}
+
+LETZTE 400 WÖRTER DES VORIGEN KAPITELS (wörtlich, für den Anschluss):
+"""${ctx.letzte400 || '—'}"""
+
+FIGURENSTAND (wer weiß was, wer hat was vergessen):
+${JSON.stringify(p.state.figuren||[])}
+
+${this.sonderstand(p)}
+
+PHYSISCHE KONTINUITÄT:
+${JSON.stringify(p.state.physische_kontinuitaet||{})}
+
+OFFENE FÄDEN, DIE BALD FÄLLIG SIND:
+${faellig.length?faellig.map(f=>`${f.id} (spätestens K${f.spaetestens_kapitel}): ${f.versprechen}`).join('\n'):'— keine'}
+${jetzt.length?`→ Diese Fäden MÜSSEN in diesem Kapitel aufgelöst werden, keine Vertagung: ${jetzt.join(', ')}`:''}
+
+═══ AUFTRAG FÜR DIESES KAPITEL ═══
+BEATS (alle abarbeiten, in dieser Reihenfolge):
+${(o.beats||[t.beat]).map((b,i)=>`${i+1}. ${b}`).join('\n')}
+ZIEL DER FIGUR: ${o.ziel_der_figur||'—'} — DAGEGEN STEHT: ${o.hindernis||'—'}
+ORT / ZEIT: ${o.pov_ort_zeit||'—'}
+ESKALATIONSSTUFE: ${o.eskalationsstufe||p.state.eskalationsstufe}/10
+ZU DEMONSTRIERENDE REGEL: Regel ${o.regel_die_demonstriert_wird||'—'} — zeigen, nicht erklären lassen.
+FADEN NEU ÖFFNEN: ${JSON.stringify(o.faden_neu||[])}
+FADEN SCHLIESSEN: ${JSON.stringify(o.faden_aufloesen||[])}
+${this.offeneFaeden(p).length>=this.FADEN_KAPAZITAET ? `→ FÄDEN-BREMSE: ${this.offeneFaeden(p).length} Fäden sind aktuell offen — zu viele. Öffne in diesem Kapitel keinen neuen Faden, außer FADEN SCHLIESSEN oben ist mindestens genauso lang. Lieber ein Kapitel ohne neuen Haken als noch mehr unbeantwortete Fragen.` : ''}
+FIGURENENTWICKLUNG: ${o.figurenentwicklung||'—'}
+
+═══ SPANNUNG (der wichtigste Block) ═══
+QUELLE DER ANSPANNUNG: ${o.spannungsquelle||'die Regel, deren Preis der Leser bereits kennt'}
+→ Stell die spiegelnde Fläche in die Szene und lass nichts passieren. Die Erwartung ist die Szene.
+→ Der Leser weiß mehr über den Preis als die Hauptfigur, sieht aber nie mehr als sie.
+SICHTBAR FEHLENDE ERINNERUNG: ${o.sichtbar_fehlende_erinnerung||'— in diesem Kapitel keine'}
+→ Beiläufig zeigen, nie erklären. Niemand im Raum bemerkt es. Der Verlust trifft den Leser, nicht die Figur.
+NOCH SICHERE ORTE: ${(o.sichere_orte_rest||p.state.sichere_orte||[]).join(' · ')||'—'}
+→ Wenn hier weniger steht als im Vorkapitel, muss das Kapitel zeigen, wodurch der Ort verloren ging.
+SCHRECKMOMENT IN DIESEM KAPITEL: ${o.schreckmoment?'ja — genau einer, und die Vorbereitung ist viermal so lang wie er':'nein — kein Schreckmoment, das hier ist die Ladephase'}
+KAPITELENDE: ${o.letzter_beat||t.beat}
+→ Eine offene Handlung, keine Pointe: eine Bewegung, deren Folge der Leser kennt und die Figur nicht.
+KOMMENDE KAPITEL (nur zur Ausrichtung, nicht vorwegnehmen):
+${nn||'—'}
+
+═══ FORM ═══
+- Ziel: ${o.ziel_woerter||p.kapitelZiel} Wörter (±10 %). Nicht künstlich strecken.
+- 3 bis 5 Szenen, getrennt durch eine Leerzeile mit einem einzelnen * in eigener Zeile.
+- Beginne mitten in einer Handlung oder einem Satz einer Figur.
+- Beende exakt mit dem vorgegebenen letzten Beat.
+
+═══ VERBOTEN ═══
+${p.blacklist}
+
+BEREITS VERWENDETE BILDER (nicht wiederholen, nicht variieren):
+${(p.state.bereits_verwendete_bilder||[]).join(' · ')||'—'}
+
+Gib ausschließlich den Kapiteltext aus. Keine Überschrift, keine Kommentare, keine Zusammenfassung, keine Notizen an mich.`;
+  },
+  korrektur(text, verstoesse){
+    return `\n\nDIESER ENTWURF WURDE ABGELEHNT. Korrigiere ausschließlich diese Punkte und lass alles andere unangetastet:
+${verstoesse.map(v=>`- [${v.typ}/${v.schwere}] ${v.korrekturhinweis} (Stelle: ${String(v.zitat||'').slice(0,120)})`).join('\n')}
+
+VORHERIGER ENTWURF:
+"""${text}"""`;
+  },
+  audit(p, n, text){
+    const o = p.outline[n] || {};
+    const zwingendFaellig = this.faelligeFaeden(p, n, 0).map(f=>f.id);
+    const zuSchliessen = [...new Set([...(o.faden_aufloesen||[]), ...zwingendFaellig])];
+    return `Du bist der Lektor für Kontinuität. Du denkst in Systemen. Du prüfst jede Abweichung von den Regeln. Du schreibst nichts um. Du prüfst.
+
+${this.regelLabel(p)}
+${this.regelblock(p)}
+
+STORY-STATE:
+${JSON.stringify({figuren:p.state.figuren,offene_faeden:p.state.offene_faeden,loeschuhr:p.state.loeschuhr,sonderzustand:p.state.sonderzustand,physische_kontinuitaet:p.state.physische_kontinuitaet,bereits_verwendete_bilder:p.state.bereits_verwendete_bilder,eskalationsstufe:p.state.eskalationsstufe})}
+
+KAPITELAUFTRAG:
+${JSON.stringify({beats:o.beats,faden_aufloesen:o.faden_aufloesen,faden_neu:o.faden_neu,regel:o.regel_die_demonstriert_wird,eskalationsstufe:o.eskalationsstufe,letzter_beat:o.letzter_beat,spannungsquelle:o.spannungsquelle,sichtbar_fehlende_erinnerung:o.sichtbar_fehlende_erinnerung,sichere_orte_rest:o.sichere_orte_rest,schreckmoment:o.schreckmoment})}
+
+ZWINGEND ZU SCHLIESSENDE FÄDEN IN DIESEM KAPITEL (Ground Truth aus dem Fäden-Tracker — gilt unabhängig davon, was faden_aufloesen im KAPITELAUFTRAG oben sagt, falls die Outline veraltet war):
+${zuSchliessen.length?zuSchliessen.join(', '):'— keine'}
+
+KAPITELTEXT:
+"""${text}"""
+
+PRÜFE UND MELDE JEDEN VERSTOSS:
+A. Wurden alle Beats abgearbeitet? Welche fehlen?
+B. Wurden die in "ZWINGEND ZU SCHLIESSENDE FÄDEN" gelisteten Fäden im Kapiteltext behandelt? (Die verbindliche Prüfung mit Zitat-Beleg läuft separat — hier reicht ein allgemeiner Eindruck: Wirkt es so, als würde der Text daran vorbeischreiben? Falls ja, melde das als Verstoß, sonst nicht weiter vertiefen.)
+C. Widerspricht etwas dem unter "${this.regelLabel(p)}" festgelegten Regelwerk? Prüfe jede einzelne Regel gegen den Text — wurde eine Grenze überschritten, ohne dass ein Preis dafür gezeigt wurde?
+D. Weiß eine Figur etwas, das sie laut Figurenstand nicht wissen kann?
+E. Falls loeschuhr oder sonderzustand im Story-State gesetzt ist: Widerspricht der Text diesem Stand — erinnert sich jemand an etwas, das laut diesem Mechanismus bereits verändert, überschrieben oder verloren sein müsste, oder fehlt eine fällige Konsequenz daraus?
+F. Physische Widersprüche: Tageszeit, Wetter, Verletzungen, Objekte, Entfernungen, Akkustand, wer wo ist.
+G. Wiederholte Bilder/Metaphern aus bereits_verwendete_bilder?
+H. Ist die Eskalationsstufe gegenüber dem Vorkapitel gesunken?
+I. Wurde eine spätere Enthüllung vorweggenommen?
+J. Ist die angegebene Spannungsquelle tatsächlich im Text wirksam — steht die spiegelnde Fläche oder die drohende Regel in einer Szene, in der nichts passiert? Oder wurde Spannung nur durch Ereignisse und Lautstärke behauptet?
+K. Wurde die sichtbar fehlende Erinnerung gezeigt statt erklärt, und ohne dass eine Figur sie benennt? Fehlt sie ganz, obwohl sie beauftragt war?
+L. Enthält das Kapitel mehr als einen Schreckmoment, oder einen, obwohl "schreckmoment": false beauftragt war? Setze "schreckmoment_bestaetigt" auf true nur, wenn im TATSÄCHLICHEN Kapiteltext ein echter Schreckmoment steht — unabhängig davon, was geplant war.
+M. Weiß der Leser an irgendeiner Stelle weniger über den drohenden Preis als die Hauptfigur? (Umgekehrt ist richtig.)
+${p.state.loeschuhr ? 'N. Kam im Kapitel ein Ereignis vor, das laut Regelwerk die Löschuhr bewegen müsste (z. B. ein Blick in eine spiegelnde Fläche)? Wenn ja: um wie viel muss aktuell_geloescht_bis_jahr sich verschieben? Wenn nein: sie bleibt exakt gleich — aber du gibst trotzdem die tatsächliche Zahl aus, nie einen Platzhalter.' : ''}
+${p.state.sonderzustand ? 'O. Welche Werte aus sonderzustand müssen sich durch dieses Kapitel ändern (neue Einträge, veränderte Zähler)? Nenne die tatsächlichen neuen Werte, nicht die alten.' : ''}
+
+AUSGABE — nur JSON, keine Markdown-Zäune. WICHTIG: "loeschuhr_neu", "sonderzustand_neu" und "sichere_orte_rest" unten sind mit neutralen Platzhaltern (0, [], "") vorbefüllt, NICHT mit den Werten aus STORY-STATE — kopiere niemals ungeprüft den aktuellen Stand oder den Platzhalter, sondern trage das tatsächliche Ergebnis deiner Prüfung ein, auch wenn es unverändert bleibt. "erinnerungen_geloescht" darf pro Figur nie kleiner werden als der bisherige Stand — Löschung ist unumkehrbar, gib bei Unsicherheit lieber den alten Wert erneut aus, statt zu raten.
+{
+  "bestanden": true,
+  "verstoesse": [{"typ":"D","schwere":"hoch","zitat":"","korrekturhinweis":""}],
+  "state_update": {
+    "kapitel_summary": "3 Sätze",
+    "faeden_geschlossen": [],
+    "faeden_neu": [{"id":"","versprechen":"","spaetestens_kapitel":0}],
+    "figuren_aenderungen": [{"name":"","weiss":[],"weiss_nicht":[],"erinnerungen_geloescht":0,"aufenthaltsort":"","koerperlicher_zustand":""}],
+    "neue_bilder": [],
+    "loeschuhr_neu": ${p.state.loeschuhr ? 0 : 'null'},
+    "sonderzustand_neu": ${this.sonderzustandPlatzhalter(p)},
+    "sichere_orte_rest": [],
+    "schreckmoment_bestaetigt": false,
+    "physische_kontinuitaet": {"wetter":"","tageszeit_ende_kapitel":"","objekte_bei_hauptfigur":[]},
+    "wortzahl": 0
+  }
+}`;
+  },
+  // Eigene, eng begrenzte Prüfung NUR für fällige Fäden — bewusst getrennt vom
+  // großen Audit-Aufruf. Der große Auditor hat zu viele gleichzeitige Aufgaben
+  // (Regeln, Löschuhr, Figuren, Bilder, Kontinuität ...), und genau bei den
+  // Fäden hat sich das wiederholt als unzuverlässig erwiesen — nicht nur hier,
+  // auch im vorherigen Projekt (Lumios). Eine Frage pro Aufruf ist für ein
+  // Sprachmodell verlässlicher als zwölf gleichzeitig.
+  // Zusätzlich verlangt der Prompt ein wörtliches Zitat als Beleg — das lässt
+  // sich im Code tatsächlich gegen den echten Text prüfen (erfundene Zitate
+  // sind ein bekanntes Modell-Problem und damit aufdeckbar), statt dem
+  // Modellurteil "aufgelöst: true" einfach zu glauben.
+  fadenpruefung(faellig, text){
+    return `Du prüfst NUR eine Sache: ob bestimmte offene Fragen in diesem Kapiteltext tatsächlich beantwortet wurden. Du schreibst nichts um, du bewertest nichts anderes.
+
+ZU PRÜFENDE FÄDEN:
+${faellig.map(f=>`${f.id}: "${f.versprechen}"`).join('\n')}
+
+KAPITELTEXT:
+"""${text}"""
+
+Für JEDEN Faden oben: Wird die Frage im Text wirklich beantwortet — nicht nur angedeutet, nicht nur erwähnt, sondern tatsächlich aufgelöst? Wenn ja, gib ein kurzes WÖRTLICHES Zitat aus dem Text als Beleg an (maximal 25 Wörter, exakt wie im Text, keine Paraphrase). Wenn du kein echtes, wörtliches Zitat findest, das die Auflösung zeigt, ist die Antwort "aufgeloest": false — auch wenn du glaubst, dass es implizit klar wird. Erfinde niemals ein Zitat, das so nicht im Text steht.
+
+AUSGABE — nur JSON-Array, keine Markdown-Zäune:
+[{"id":"","aufgeloest":false,"beleg":""}]`;
+  },
+  // Gezielte Korrektur NUR für nicht aufgelöste Pflicht-Fäden — ändert möglichst
+  // wenig am Rest des Kapitels, damit die automatische Nachbesserung nicht neue
+  // Nebenwirkungen erzeugt.
+  fadenkorrektur(faellig, text){
+    return `Überarbeite diesen Kapitelentwurf so, dass die folgenden offenen Fragen darin WIRKLICH beantwortet werden — durch eine konkrete Szene oder einen Dialog, nicht durch eine erklärende Zusammenfassung:
+
+${faellig.map(f=>`${f.id}: "${f.versprechen}"`).join('\n')}
+
+BISHERIGER TEXT:
+"""${text}"""
+
+Baue für jede der oben genannten Fragen eine kurze, konkrete Auflösung ein. Ändere sonst so wenig wie möglich: Reihenfolge, Ton und alle anderen Ereignisse bleiben erhalten. Gib nur den vollständigen, überarbeiteten Kapiteltext aus — kein Vorwort, keine Erklärung.`;
+  },
+  politur(p, text){
+    return `Überarbeite diesen Kapitelentwurf sprachlich. Du schreibst klar, präzise, mit einem Gespür für die Lücken zwischen den Sätzen.
+
+Du änderst KEIN Ereignis, keine Reihenfolge, keine Figurenentscheidung, keine Information. Nur Sprache.
+
+TEXT:
+"""${text}"""
+
+MACH FOLGENDES:
+1. Streiche jeden Satz, der eine Emotion benennt, die der Satz davor schon gezeigt hat.
+2. Ersetze jede Formulierung von der Blacklist durch eine konkrete, körperliche Beobachtung.
+3. Prüfe den Rhythmus: Wenn drei aufeinanderfolgende Sätze ähnlich lang sind, zieh zwei zusammen oder brich einen um.
+4. Streiche 60 % aller Adverbien und alle Adverbien an Inquit-Formeln.
+5. Mach mindestens zwei Absätze deutlich kürzer und einen deutlich länger als sie jetzt sind. Gleichmäßige Absatzlänge ist der auffälligste KI-Verrat.
+6. Baue genau eine sprachliche Unschönheit ein, die ein Mensch stehen lassen würde: einen Satz ohne Verb, eine Wiederholung mit Absicht, einen Gedanken, der abbricht.
+7. Streiche jede Erklärung von etwas, das der Leser selbst schließen kann.
+8. Der letzte Satz muss konkret sein: ein Gegenstand, eine Bewegung, ein Geräusch. Keine Reflexion, keine rhetorische Frage.
+9. Kürze insgesamt um 5–8 %. Es gibt immer Luft.
+
+DEEPSEEK-SPEZIFIK:
+- Deine Sätze sind klar, aber nicht steril. Erlaub dir poetische Momente — sparsam.
+- Du denkst in if-then. Jede Szene hat eine Bedingung und eine Konsequenz.
+- Du schreibst keine ausufernden Beschreibungen. Drei präzise Details reichen.
+
+BLACKLIST:
+${p.blacklist}
+
+Gib nur den überarbeiteten Text aus.`;
+  },
+  // "Neues Buch aus einer Idee": Genre + drei Sätze -> die KI baut daraus ein
+  // vollständiges Konzept. Bewusst als EIGENER, enger Aufruf (nicht zusammen mit
+  // dem Inhaltsverzeichnis) — dieselbe Lektion wie beim Auditor: eine Aufgabe
+  // pro Aufruf ist zuverlässiger als ein Rundumschlag.
+  konzeptEntwurf(genre, idee){
+    return `Du entwickelst die Grundlage für einen neuen Roman — auf professionellem Verlags-Exposé-Niveau, nicht als grobe Skizze.
+
+GENRE/TON: ${genre}
+IDEE DER AUTORIN/DES AUTORS (in eigenen Worten, roh): """${idee}"""
+
+Entwickle daraus:
+- Ein scharfes Kernkonzept, das über die Ausgangsidee hinausgeht — finde den Haken, der dieses Buch von ähnlichen Büchern im selben Genre unterscheidet.
+- 5 bis 8 Weltregeln/Grundgesetze mit echten, konkreten Kosten — keine Regel ohne Preis, keine beliebig einsetzbare Fähigkeit.
+- 5 bis 8 Figuren mit kurzer Vorgeschichte, einem Sprachtick, einem Geheimnis, einer Schwäche, die sie angreifbar macht.
+- Einen konkreten, sinnlich beschriebenen Schauplatz.
+- Drei große Wendepunkte, ungefähr bei 30 %, 60 % und 85 % des Buchs platziert.
+- Genre-typisches Handwerk (was diesen Genre-Ton ausmacht) UND genre-typische Klischees, die vermieden werden sollen.
+
+AUSGABE — nur JSON, keine Markdown-Zäune:
+{
+  "titel": "", "untertitel": "",
+  "regelLabel": "GROSSSCHREIBUNG, z. B. GESETZE DER MAGIE oder REGELWERK DES ...",
+  "praemisse": "3-5 Sätze, konkret und mit Konflikt", "kern": "2-3 Sätze: was macht es besonders",
+  "regeln": ["Regel 1 inkl. Preis", "Regel 2 inkl. Preis"],
+  "figuren": ["Name, Alter — Rolle. Vorgeschichte, Sprachtick, Geheimnis, Schwäche in 2-3 Sätzen."],
+  "schauplatz": "2-3 Sätze, sinnlich konkret",
+  "twists": ["Twist 1 (ca. 30%): ...", "Twist 2 (ca. 60%): ...", "Twist 3 (ca. 85%): ..."],
+  "systemZusatz": "4-6 Zeilen Genre-Handwerksregeln, konkret für DIESES Genre — im Stil von 'zeige den Preis vor der Belohnung' oder 'ein Schreckmoment pro Kapitel, nicht mehr'",
+  "blacklistZusatz": "4-6 typische Klischees genau dieses Genres, die im Buch vermieden werden sollen",
+  "zielWoerter": 90000, "kapitelZiel": 2300
+}`;
+  },
+  tocEntwurf(konzept){
+    const zielKapitel = Math.max(12, Math.round((konzept.zielWoerter||90000)/(konzept.kapitelZiel||2300)));
+    return `Basierend auf diesem Buchkonzept, erstelle das komplette Inhaltsverzeichnis:
+
+TITEL: ${konzept.titel}
+PRÄMISSE: ${konzept.praemisse}
+KERN: ${konzept.kern}
+REGELN: ${(konzept.regeln||[]).join(' / ')}
+FIGUREN: ${(konzept.figuren||[]).join(' / ')}
+WENDEPUNKTE: ${(konzept.twists||[]).join(' / ')}
+
+Das Buch soll etwa ${zielKapitel} Kapitel haben, aufgeteilt in 4-5 "Teile" (römische Ziffern I, II, III, ...). Jedes Kapitel bekommt eine kurze, KONKRETE Beat-Beschreibung (1-2 Sätze) — die zentrale Handlung oder Wendung dieses Kapitels, keine vage Stimmungsbeschreibung. Platziere die drei Wendepunkte an den passenden Stellen im Verlauf. Jedes Kapitel muss die Geschichte einen erkennbaren Schritt voranbringen.
+
+AUSGABE — nur JSON-Array, keine Markdown-Zäune:
+[{"n":1,"teil":"I","titel":"","beat":""}]`;
+  },
+  kdp(p, summary){
+    return `Erzeuge Verkaufsmaterial für den fertigen Roman „${p.konzept.titel}". Präzise, klar, mit einem Gespür für das, was den Leser packt.
+
+KONTEXT:
+${this.bibelKompakt(p)}
+
+HANDLUNG IN KURZFORM:
+${summary}
+
+LIEFERE:
+1. Klappentext, 140–170 Wörter. Erster Satz muss ein Bild sein, kein Setup. Enthüllt nichts nach Kapitel 12. Endet auf einer Frage im Untertext, nicht auf einer wörtlichen Frage.
+2. Drei alternative Klappentexte in unterschiedlichem Ton (kühl / bedrohlich / emotional).
+3. Amazon-Kurzbeschreibung, max. 30 Wörter.
+4. 7 KDP-Keywords (je max. 50 Zeichen), deutschsprachiger Suchmarkt, KEINE Filmtitel, KEINE Autorennamen, KEINE Markennamen.
+5. 2 passende KDP-Kategorien.
+6. 5 Titelalternativen mit Untertitel.
+7. Leseprobe-Empfehlung: welche Kapitel als „Blick ins Buch".
+8. Coverbriefing in 5 Sätzen für einen Designer — Motiv, Farbe, Typo, was NICHT drauf soll.
+
+Kein existierender Film-, Buch- oder Markenname darf irgendwo vorkommen.
+AUSGABE: klar gegliederter Text mit Überschriften.`;
+  }
+};
+
+/* ============ API — ÜBER CLOUDFLARE-WORKER-PROXY ============ */
+const API = {
+  async call({system, user, temp=1, maxTokens=8000, onRetry, onProgress, prefill, timeoutMs=600000}){
+    const cfg = Store.cfg();
+    const anbieter = ANBIETER[cfg.anbieter] || ANBIETER.kimi;
+    if(!cfg.key) throw new Error('Kein API-Key hinterlegt. Setup öffnen.');
+    if(!cfg.proxyUrl) throw new Error('Keine Proxy-Adresse hinterlegt. Setup öffnen und die Worker-URL eintragen.');
+    const sauber = String(cfg.key).replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g,'');
+    if(!/^[\x21-\x7E]+$/.test(sauber))
+      throw new Error('Der API-Key enthält ungültige Zeichen.');
+    if(sauber !== cfg.key){ const c=Store.cfg(); c.key=sauber; Store.saveCfg(c); cfg.key=sauber; }
+
+    // Kimi-Thinking-Modelle: kimi-k3 denkt IMMER (nicht abschaltbar).
+    // kimi-k2.6 kann Thinking abschalten — das spart Budget und verhindert leere content-Felder.
+    // Reasoning-Tokens zählen zum max_completion_tokens-Budget mit.
+    const modellKlein = String(cfg.model||'').toLowerCase();
+    const istKimi = (cfg.anbieter||'kimi') === 'kimi' || modellKlein.startsWith('kimi');
+    const istK3 = modellKlein.includes('kimi-k3');
+    const istK27 = modellKlein.includes('kimi-k2.7');
+    const istK26 = modellKlein.includes('kimi-k2.6');
+    // Thinking aus: Standard bei k2.6 (cfg.thinkingOff), nicht möglich bei k3/k2.7-code
+    const thinkingAus = istK26 && cfg.thinkingOff !== false && !istK3 && !istK27;
+    // Budget: bei aktivem Thinking deutlich höher, sonst normal
+    let effektivesBudget = maxTokens;
+    if(istK3) effektivesBudget = Math.max(maxTokens, 48000);
+    else if((istK26 || istK27) && !thinkingAus) effektivesBudget = Math.max(maxTokens, 24000);
+    else if(istKimi) effektivesBudget = Math.max(maxTokens, 8000);
+    const body = {
+      model: cfg.model || anbieter.modelle[0].id,
+      [anbieter.tokenFeld]: effektivesBudget,
+      stream: true,
+      messages: []
+    };
+    if(system) body.messages.push({role: 'system', content: system});
+    body.messages.push({role: 'user', content: user});
+    if(thinkingAus) body.thinking = {type: 'disabled'};
+    // Temperatur: k3 und k2.7-code nur 1; k2.6 ohne Thinking nur 0.6; sonst gewünschte temp
+    const nichtVariabel = (cfg.noTemp||[]).includes(body.model) || istK3 || istK27;
+    if(nichtVariabel) body.temperature = 1;
+    else if(thinkingAus) body.temperature = 0.6;
+    else if(temp != null) body.temperature = temp;
+
+    let versuch = 0;
+    while(true){
+      versuch++;
+      let r;
+      // Immer über den eigenen Cloudflare-Worker-Proxy — die meisten Anbieter blocken Direktaufrufe aus dem Browser per CORS.
+      const ziel = cfg.proxyUrl.replace(/\/+$/,'');
+      const kopf = {'content-type':'application/json','x-api-key':cfg.key,'x-sw-target':anbieter.basisUrl};
+      const pw = String(cfg.pass||'').replace(/[\s\u00A0]/g,'');
+      if(pw) kopf['x-sw-pass'] = pw;
+
+      let abbruch=null, uhr=null;
+      try{ abbruch = new AbortController(); uhr = setTimeout(()=>abbruch.abort(), timeoutMs); }catch(e){}
+      const anfrage = {method:'POST', headers:kopf, body: JSON.stringify(body)};
+      if(abbruch) anfrage.signal = abbruch.signal;
+
+      try{
+        r = await fetch(ziel, anfrage);
+      }catch(e){
+        if(uhr) clearTimeout(uhr);
+        if(e.name==='AbortError') throw new Error('Zeitüberschreitung nach '+Math.round(timeoutMs/1000)+' s.');
+        if(versuch < 3){
+          onRetry && onRetry('Netzwerkfehler — neuer Versuch in 5 s');
+          await new Promise(x=>setTimeout(x,5000));
+          continue;
+        }
+        throw new Error('Proxy nicht erreichbar ('+ziel+'): '+e.message);
+      }
+      if(r.ok){
+        if(uhr) clearTimeout(uhr);
+        let t='', stop=null, ein=0, aus=0, abriss=null;
+
+        if(body.stream && r.body && r.body.getReader){
+          const leser = r.body.getReader(), dec = new TextDecoder();
+          let puffer='', letzteMeldung=0, stillstand=null;
+          const wecker = ()=>{
+            if(stillstand) clearTimeout(stillstand);
+            stillstand = setTimeout(()=>{ try{ leser.cancel() }catch(e){} }, 120000);
+          };
+          wecker();
+          try{
+            while(true){
+              const {done, value} = await leser.read();
+              if(done) break;
+              wecker();
+              puffer += dec.decode(value, {stream:true});
+              let i;
+              while((i = puffer.indexOf('\n')) >= 0){
+                const zeile = puffer.slice(0,i).trim(); puffer = puffer.slice(i+1);
+                if(!zeile.startsWith('data:')) continue;
+                if(zeile.includes('[DONE]')) continue;
+                let d; try{ d = JSON.parse(zeile.slice(5).trim()) }catch(e){ continue }
+                const wahl = d.choices && d.choices[0];
+                const delta = wahl && wahl.delta;
+                if(delta && delta.content){
+                  t += delta.content;
+                  if(onProgress && Date.now()-letzteMeldung > 4000){ letzteMeldung = Date.now(); onProgress(words(t)); }
+                }
+                if(wahl && wahl.finish_reason) stop = wahl.finish_reason;
+                if(d.usage){ ein = d.usage.prompt_tokens||0; aus = d.usage.completion_tokens||0; }
+              }
+            }
+          }catch(e){
+            abriss = e;
+          }finally{
+            if(stillstand) clearTimeout(stillstand);
+          }
+          Pipe.zaehle({input_tokens:ein, output_tokens:aus});
+        } else {
+          const d = await r.json();
+          if(d.usage) Pipe.zaehle(d.usage);
+          const msg = d.choices && d.choices[0] && d.choices[0].message;
+          t = (msg && msg.content) ? msg.content : '';
+          stop = d.choices && d.choices[0] && d.choices[0].finish_reason;
+          if(!t && msg && msg.reasoning_content){
+            // Thinking hat Budget verbraucht — content leer lassen, Retry greift
+            t = '';
+          }
+        }
+
+        t = t.trim();
+        if(abriss && versuch < 3){
+          onRetry && onRetry('Übertragung abgerissen — neuer Versuch in 5 s');
+          await new Promise(x=>setTimeout(x,5000));
+          continue;
+        }
+        if(abriss) throw new Error('Übertragung mehrfach abgerissen.');
+        if(!t && versuch < 3){
+          // Leere Antwort UND finish_reason "length" heißt meist: das interne
+          // Nachdenken (z.B. bei kimi-k3) hat allein schon das ganze Budget
+          // aufgebraucht, bevor die sichtbare Antwort anfangen konnte. Ein
+          // identischer Wiederholungsversuch würde vermutlich wieder scheitern —
+          // deshalb wird das Budget bei jedem Leer-Antwort-Versuch angehoben,
+          // nicht nur stur wiederholt.
+          const grund = stop==='length' ? ' (Antwort wurde wegen Token-Limit abgeschnitten)' : '';
+          onRetry && onRetry('Leere Antwort'+grund+' — oft Thinking-Budget. Neuer Versuch mit größerem Budget (oder Thinking im Setup aus)');
+          body[anbieter.tokenFeld] = Math.min(100000, Math.round((body[anbieter.tokenFeld]||effektivesBudget) * 1.6));
+          await new Promise(x=>setTimeout(x,2000));
+          continue;
+        }
+        if(!t) throw new Error('Das Modell hat nichts geliefert'+(stop?' (finish_reason: '+stop+')':'')+'.');
+        return t;
+      }
+      if(uhr) clearTimeout(uhr);
+      const txt = await r.text();
+      if(r.status===403) throw new Error('Zugangswort stimmt nicht — im Setup prüfen (muss zum Worker-Secret SW_PASS passen).');
+      if((r.status===429 || r.status>=500) && versuch<6){
+        const wait = r.status===429 ? Math.min(60000, 5000*Math.pow(1.8, versuch-1)) : 4000*versuch;
+        onRetry && onRetry(`${r.status} — neuer Versuch in ${Math.round(wait/1000)}s`);
+        await new Promise(s=>setTimeout(s,wait));
+        continue;
+      }
+      let msg = txt;
+      try{ msg = JSON.parse(txt).error.message }catch(e){}
+      if(r.status===401) throw new Error('API-Key ungültig — im Setup prüfen.');
+      if(r.status===400){
+        // Reagiert auf die tatsächliche Fehlermeldung, statt auf eine Liste
+        // bekannter Modellnamen zu vertrauen (die leicht veraltet oder falsch
+        // sein kann, siehe: exakter String "kimi-k3" traf nicht, obwohl das
+        // Modell genau dieses Problem hatte). Die Nachricht selbst sagt, was
+        // erlaubt ist — das wird direkt übernommen und für dieses Modell
+        // dauerhaft gemerkt, statt bei jedem Aufruf erneut zu scheitern.
+        const temperaturSperre = /temperature/i.test(msg) && /only\s+([\d.]+)\s+is allowed/i.exec(msg);
+        if(temperaturSperre && versuch<3){
+          const erzwungeneTemp = parseFloat(temperaturSperre[1]);
+          body.temperature = erzwungeneTemp;
+          try{
+            const c = Store.cfg();
+            if(!(c.noTemp||[]).includes(body.model)){
+              c.noTemp = [...(c.noTemp||[]), body.model];
+              Store.saveCfg(c);
+            }
+          }catch(e){}
+          onRetry && onRetry(`Modell erlaubt nur Temperatur ${erzwungeneTemp} — merke mir das für „${body.model}" und versuche es erneut`);
+          continue;
+        }
+      }
+      throw new Error(`API ${r.status}: ${msg}`);
+    }
+  }
+};
+
+function parseJSONflex(raw, prefill){
+  try{ return parseJSON(raw) }
+  catch(e){
+    if(prefill && String(raw).startsWith(prefill)){
+      try{ return parseJSON(String(raw).slice(prefill.length)) }catch(e2){}
+    }
+    throw e;
+  }
+}
+
+function parseJSON(raw){
+  let t = String(raw||'').trim();
+  t = t.replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'').trim();
+  try{ return JSON.parse(t) }catch(e){}
+  const a = t.indexOf('['), o = t.indexOf('{');
+  const start = (a>-1 && (a<o || o===-1)) ? a : o;
+  if(start<0){ const e=new Error('Keine JSON-Struktur in der Antwort gefunden.'); e.text=t; throw e; }
+  const open = t[start], close = open==='[' ? ']' : '}';
+  let d=0, ende=-1, str=false, escp=false;
+  for(let i=start;i<t.length;i++){
+    const c=t[i];
+    if(str){ if(escp){escp=false} else if(c==='\\'){escp=true} else if(c==='"'){str=false} continue }
+    if(c==='"'){str=true;continue}
+    if(c===open)d++;
+    else if(c===close){d--;if(d===0){ende=i;break}}
+  }
+  if(ende<0){ const e=new Error('JSON unvollständig — Antwort wurde vermutlich abgeschnitten.'); e.text=t; e.abgeschnitten=true; throw e; }
+  return JSON.parse(t.slice(start,ende+1));
+}
+
+/* ============ PIPELINE ============ */
+const Pipe = {
+  laeuft:false, stop:false, logs:[], aufrufe:0, tokenEin:0, tokenAus:0,
+
+  zaehle(u){
+    this.aufrufe++;
+    this.tokenEin += (u.input_tokens||0);
+    this.tokenAus += (u.output_tokens||0);
+    // Zusätzlich projektbezogen und dauerhaft mitschreiben (überlebt Neuladen/neue
+    // Sitzung) — die Pipe-Zähler oben sind nur die aktuelle Browser-Sitzung.
+    try{
+      if(typeof App!=='undefined' && App.p){
+        const k = App.p.state.kosten || (App.p.state.kosten = {tokenEin:0, tokenAus:0, aufrufe:0});
+        k.tokenEin += (u.input_tokens||0);
+        k.tokenAus += (u.output_tokens||0);
+        k.aufrufe++;
+      }
+    }catch(e){}
+  },
+
+  fortschritt(t){
+    const letzte = this.logs[this.logs.length-1];
+    if(letzte && letzte.fortschritt){ letzte.t = t; App.paintLog(); }
+    else { this.logs.push({t, zeit:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}), fortschritt:true}); App.paintLog(); }
+  },
+
+  log(t,cls){ this.logs.push({t,cls,zeit:new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
+    if(this.logs.length>120) this.logs.shift(); App.paintLog(); },
+
+  // Kurzfassung eines Kapitel-Summaries: erster Satz (oder die ersten ~160 Zeichen),
+  // für Kapitel, die aus dem Volltext-Fenster herausgefallen sind.
+  kurzform(s){
+    const t = String(s||'').trim();
+    const i = t.indexOf('. ');
+    if(i>10 && i<160) return t.slice(0,i+1);
+    return t.length>160 ? t.slice(0,160)+'…' : t;
+  },
+  ctxFor(p,n){
+    const alle = (p.state.kapitel_summaries||[]).filter(s=>s.n<n).sort((a,b)=>a.n-b.n);
+    const FENSTER = 14;
+    const jung = alle.slice(-FENSTER);
+    const alt = alle.slice(0, Math.max(0, alle.length-FENSTER));
+    // Ältere Kapitel fallen nicht komplett aus dem Kontext, sondern bleiben als
+    // Ein-Satz-Kurzfassung erhalten — sonst verliert das Modell ab der zweiten
+    // Buchhälfte jeden Fließtext-Bezug zum ersten Drittel des Buchs.
+    const altText = alt.length
+      ? `FRÜHERER VERLAUF (knapp, je ein Satz — Details stehen in Fäden/Figuren/Sonderzustand):\n${alt.map(s=>`K${s.n}: ${this.kurzform(s.summary)}`).join('\n')}\n\n`
+      : '';
+    const jungText = jung.map(s=>`K${s.n}: ${s.summary}`).join('\n');
+    let letzte400='';
+    const vor = p.kapitelIdx.filter(k=>k.n<n).sort((a,b)=>b.n-a.n)[0];
+    if(vor){ const ch=Store.kapitel(p.id,vor.n); if(ch) letzte400 = lastWords(ch.body,400); }
+    return {summary: altText+jungText, letzte400};
+  },
+
+  async jsonCall(p, user, temp, art, maxTokens){
+    const nachdruck = [
+      '',
+      '\n\nWICHTIG: Fasse dich knapp. Die gesamte Antwort muss vollständig in eine Ausgabe passen — lieber kürzere Texte pro Feld als eine abgeschnittene Antwort.',
+      '\n\nDEINE LETZTE ANTWORT WAR UNBRAUCHBAR. Gib jetzt ausschließlich rohes JSON aus: Das erste Zeichen deiner Antwort ist [ oder {, das letzte ist ] oder }. Kein Vorwort, keine Erklärung, keine Markdown-Zäune, kein Text danach. Halte dich kurz.'
+    ];
+    let letzter;
+    for(let i=0;i<3;i++){
+      let raw='';
+      try{
+        raw = await API.call({system:p.system, user: user+nachdruck[i], temp: i?0.4:temp,
+          maxTokens: maxTokens||16000, prefill: art, onRetry:m=>this.log(m,'e')});
+        return parseJSONflex(raw, art);
+      }catch(e){
+        letzter = e;
+        if(e.text) raw = e.text;
+        if(e.abgeschnitten) this.log('Antwort lief ins Limit.','e');
+        else this.log('Antwort unbrauchbar: '+e.message,'e');
+        const probe = String(raw).replace(/\s+/g,' ').trim();
+        if(probe) this.log('Antwort begann mit: '+probe.slice(0,160),'e');
+        else this.log('Die Antwort war leer.','e');
+        if(i===2) throw letzter;
+        this.log('Neuer Versuch mit strengerer Anweisung …');
+      }
+    }
+  },
+
+  async bibel(p){
+    this.log('Bibel wird erzeugt …');
+    p.bibel = await this.jsonCall(p, P.bibel(p), 0.9, '{', 8000);
+    Store.save(p); this.log('Bibel gespeichert.','k');
+    return p.bibel;
+  },
+
+  async beats(p, von, bis){
+    this.log(von===bis ? `Beats für Kapitel ${von} …` : `Beat-Sheet ${von}–${bis} wird erzeugt …`);
+    const arr = await this.jsonCall(p, P.beats(p,von,bis), 0.85, '[', 4000);
+    (Array.isArray(arr)?arr:[arr]).forEach(o=>{ if(typeof o.n==='number') p.outline[o.n]=o; });
+    Store.save(p); this.log(`Beats stehen (${Object.keys(p.outline).length} Kapitel insgesamt).`,'k');
+    return arr;
+  },
+
+  async beatsFuer(p,n){
+    if(p.outline[n]) return;
+    await this.beats(p, n, n);
+    if(!p.outline[n]) throw new Error('Für Kapitel '+n+' kamen keine Beats zurück. Nochmal versuchen oder Modell wechseln.');
+  },
+
+  mergeState(p, n, up, text){
+    const st = p.state;
+    if(up.kapitel_summary){
+      st.kapitel_summaries = (st.kapitel_summaries||[]).filter(s=>s.n!==n);
+      st.kapitel_summaries.push({n, summary:up.kapitel_summary});
+      st.kapitel_summaries.sort((a,b)=>a.n-b.n);
+    }
+    const geplant = ((p.outline[n]||{}).faden_neu)||[];
+    [...(up.faeden_neu||[]), ...geplant].forEach(f=>{
+      if(!f || !f.id) return;
+      if(!st.offene_faeden.find(x=>x.id===f.id))
+        st.offene_faeden.push({id:f.id, versprechen:f.versprechen||'', eroeffnet_in:n,
+          spaetestens_kapitel:f.spaetestens_kapitel||n+8, status:'offen', aufgeloest_in:null});
+    });
+    (up.faeden_geschlossen||[]).forEach(id=>{
+      const norm = String(id).trim().toLowerCase();
+      const f = st.offene_faeden.find(x=>String(x.id).trim().toLowerCase()===norm);
+      if(f){ f.status='geschlossen'; f.aufgeloest_in=n; }
+    });
+    (up.figuren_aenderungen||[]).forEach(fa=>{
+      if(!fa||!fa.name) return;
+      let f = st.figuren.find(x=>x.name===fa.name);
+      if(!f){ f={name:fa.name, weiss:[], weiss_nicht:[], erinnerungen_geloescht:0}; st.figuren.push(f); }
+      ['aufenthaltsort','koerperlicher_zustand'].forEach(k=>{ if(fa[k]) f[k]=fa[k] });
+      if(typeof fa.erinnerungen_geloescht==='number' && fa.erinnerungen_geloescht>=(f.erinnerungen_geloescht||0)) f.erinnerungen_geloescht=fa.erinnerungen_geloescht;
+      if(Array.isArray(fa.weiss)) f.weiss=[...new Set([...(f.weiss||[]),...fa.weiss])];
+      if(Array.isArray(fa.weiss_nicht)) f.weiss_nicht=fa.weiss_nicht;
+      f.letzter_auftritt_kapitel=n;
+    });
+    if(Array.isArray(up.neue_bilder))
+      st.bereits_verwendete_bilder = [...new Set([...(st.bereits_verwendete_bilder||[]), ...up.neue_bilder])].slice(-90);
+    if(typeof up.loeschuhr_neu==='number' && st.loeschuhr){
+      const lo=Math.min(st.loeschuhr.startjahr, st.loeschuhr.endjahr), hi=Math.max(st.loeschuhr.startjahr, st.loeschuhr.endjahr);
+      if(up.loeschuhr_neu>=lo && up.loeschuhr_neu<=hi) st.loeschuhr.aktuell_geloescht_bis_jahr = up.loeschuhr_neu;
+    }
+    if(up.sonderzustand_neu && typeof up.sonderzustand_neu==='object' && st.sonderzustand){
+      const neu=up.sonderzustand_neu, merged={...st.sonderzustand};
+      Object.keys(neu).forEach(k=>{
+        if(k==='label') return;
+        const nv=neu[k], av=st.sonderzustand[k];
+        if(Array.isArray(nv)){
+          if(nv.length) merged[k]=[...new Set([...(Array.isArray(av)?av:[]), ...nv])];
+        } else if(typeof nv==='number'){
+          if(nv!==0 || av===0) merged[k]=nv;
+        } else if(typeof nv==='boolean'){
+          merged[k]=nv;
+        } else if(typeof nv==='string' && nv){
+          merged[k]=nv;
+        }
+      });
+      st.sonderzustand = merged;
+    }
+    const orte = up.sichere_orte_rest || ((p.outline[n]||{}).sichere_orte_rest);
+    if(Array.isArray(orte)){
+      const vorher = st.sichere_orte||[];
+      st.sichere_orte = vorher.length ? orte.filter(o=>vorher.some(v=>v.toLowerCase().includes(o.toLowerCase())||o.toLowerCase().includes(v.toLowerCase()))) : orte;
+      if(!st.sichere_orte.length && orte.length && !vorher.length) st.sichere_orte = orte;
+    }
+    if(typeof up.schreckmoment_bestaetigt==='boolean' ? up.schreckmoment_bestaetigt : (p.outline[n]||{}).schreckmoment) st.letzter_schreck = n;
+    if(up.physische_kontinuitaet && typeof up.physische_kontinuitaet==='object'){
+      const npk = up.physische_kontinuitaet, apk = st.physische_kontinuitaet||{};
+      st.physische_kontinuitaet = {
+        wetter: npk.wetter || apk.wetter || '',
+        tageszeit_ende_kapitel: npk.tageszeit_ende_kapitel || apk.tageszeit_ende_kapitel || '',
+        objekte_bei_hauptfigur: Array.isArray(npk.objekte_bei_hauptfigur) && npk.objekte_bei_hauptfigur.length
+          ? npk.objekte_bei_hauptfigur : (apk.objekte_bei_hauptfigur||[])
+      };
+    }
+    const o = p.outline[n];
+    if(o && typeof o.eskalationsstufe==='number') st.eskalationsstufe = Math.max(st.eskalationsstufe, o.eskalationsstufe);
+    st.aktuelles_kapitel = Math.max(st.aktuelles_kapitel, n);
+    st.woerter_gesamt = p.kapitelIdx.reduce((a,k)=>a+(k.woerter||0),0);
+  },
+
+  // Token-Budget für Kapitel-Prosa-Aufrufe (Entwurf, Korrektur, Politur) — an das
+  // eingestellte Wortziel gekoppelt, statt einer festen Zahl. Deutsche Wörter
+  // (Komposita) brauchen mehr Tokens pro Wort als Englisch; Kimi K3 denkt intern
+  // immer nach, und diese Denk-Tokens zählen mit zur Ausgabe — deshalb reichlich
+  // Puffer, aber nicht grenzenlos (das Rate-Limit richtet sich nach der
+  // angeforderten Zahl, nicht dem tatsächlichen Verbrauch).
+  tokenBudget(p){
+    return Math.max(12000, Math.round((p.kapitelZiel||2300) * 4.5) + 4000);
+  },
+
+  async kapitel(p, n, opt={}){
+    const cfg = Store.cfg();
+    const t = p.toc.find(x=>x.n===n) || {titel:'Kapitel '+n};
+    await this.beatsFuer(p,n);
+    const ctx = this.ctxFor(p,n);
+
+    const gespeichert = Store.zwischenstand(p.id, n);
+    let notizen = '', basis, text;
+
+    if(gespeichert && gespeichert.text){
+      this.log(`K${n} — gespeicherten Zwischenstand wieder aufgenommen (${nf(words(gespeichert.text))} Wörter, Runde ${gespeichert.runden||0}) — kein erneuter Entwurf nötig.`,'k');
+      notizen = gespeichert.notizen || '';
+      basis = P.kapitel(p,n,ctx,notizen);
+      text = gespeichert.text;
+    } else {
+      if(!opt.ohneReflexion && cfg.reflexion!==false){
+        this.log(`K${n} — Autor denkt nach …`);
+        try{
+          notizen = await API.call({system:'Du bist ein erfahrener Romanautor, der sich vor dem Schreiben kurz privat vorbereitet. Kein JSON, keine Liste mit Überschriften — einfach ehrliches, konkretes Nachdenken in wenigen Sätzen.',
+            user:P.reflexion(p,n,ctx), temp:0.9, maxTokens:900, onRetry:m=>this.log(m,'e')});
+        }catch(e){
+          this.log('Autoren-Reflexion übersprungen ('+e.message+') — Kapitel wird trotzdem geschrieben.','e');
+          notizen = '';
+        }
+      }
+      basis = P.kapitel(p,n,ctx,notizen);
+
+      this.log(`K${n} „${t.titel}" — Entwurf …`);
+      try{ text = await API.call({system:p.system, user:basis, temp:0.95, maxTokens:this.tokenBudget(p), timeoutMs:900000,
+        onRetry:m=>this.log(m,'e'), onProgress:w=>this.fortschritt(`K${n} — Entwurf, ${nf(w)} Wörter …`)}); }
+      catch(e){ if(e.abgeschnitten){ text = e.text; this.log('Entwurf lief ins Limit — wird trotzdem geprüft.','e'); } else throw e; }
+      this.log(`K${n} Entwurf: ${nf(words(text))} Wörter`);
+      Store.saveZwischenstand(p.id, n, {text, runden:0, rundenFaeden:0, notizen});
+    }
+
+    let audit=null, runden=(gespeichert&&gespeichert.runden)||0, akzeptiert=false, auditUnlesbar=false, rundenFaeden=(gespeichert&&gespeichert.rundenFaeden)||0;
+    const max = Math.max(0, cfg.maxRetry ?? 2);
+    // Fäden-Korrektur bekommt ein GRÖSSERES eigenes Budget als allgemeine Verstöße:
+    // die Prüfung ist objektiv (Zitat muss wirklich im Text stehen), nicht nur eine
+    // KI-Meinung. Deshalb kann die KI hier viel öfter automatisch nachbessern, ohne
+    // dass am Ende ein Mensch mitlesen und selbst beurteilen muss, ob es stimmt.
+    const MAX_FAEDEN_VERSUCHE = 4;
+    while(true){
+      if(this.stop) throw new Error('abgebrochen');
+      this.log(`K${n} — Kontinuitätsprüfung …`);
+      try{
+        audit = parseJSONflex(await API.call({system:'Du prüfst Kontinuität und antwortest ausschließlich mit JSON.',
+          user:P.audit(p,n,text), temp:0.2, maxTokens:8000, prefill:'{', onRetry:m=>this.log(m,'e')}), '{');
+      }catch(e){
+        this.log('Auditor-Antwort unlesbar ('+e.message+') — Kapitel wird als „prüfen" markiert.','e');
+        audit = {bestanden:false, verstoesse:[{typ:'?',schwere:'mittel',korrekturhinweis:'Auditor lieferte kein JSON'}], state_update:{}};
+        auditUnlesbar = true;
+        akzeptiert = false;
+        break;
+      }
+      // Unabhängige, zitat-verifizierte Prüfung NUR für fällige Fäden — bewusst
+      // getrennt vom großen Audit-Aufruf, mit einer im Code nachprüfbaren
+      // Belegpflicht. Der große Auditor hat zu viele gleichzeitige Aufgaben, um
+      // ausgerechnet dieser einen verlässlich nachzugehen — das hat sich wiederholt
+      // gezeigt (auch in anderen Projekten). Eine enge Frage pro Aufruf plus ein
+      // Zitat, das tatsächlich im Text stehen muss, ist robuster als ein weiteres
+      // Pflichtfeld in einem ohnehin vollen JSON-Schema.
+      const zwingendFaellig = P.faelligeFaeden(p, n, 0);
+      let fadenProbleme = [];
+      if(zwingendFaellig.length){
+        let bestaetigteIds = [];
+        try{
+          const roh = await API.call({system:'Du prüfst NUR, ob bestimmte Fragen im Text beantwortet wurden. Du antwortest ausschließlich mit JSON.',
+            user:P.fadenpruefung(zwingendFaellig, text), temp:0.1, maxTokens:2000, prefill:'[', onRetry:m=>this.log(m,'e')});
+          const ergebnisse = parseJSONflex(roh, '[');
+          const normText = String(text).replace(/\s+/g,' ');
+          (Array.isArray(ergebnisse)?ergebnisse:[]).forEach(e=>{
+            if(!e || !e.id || !e.aufgeloest) return;
+            const beleg = String(e.beleg||'').trim().replace(/\s+/g,' ');
+            // Das Zitat muss wirklich im Text vorkommen — erfundene Belege (ein
+            // bekanntes Modellproblem) fallen so auf, statt einfach geglaubt zu werden.
+            if(beleg.length>=8 && normText.includes(beleg)) bestaetigteIds.push(e.id);
+            else this.log(`Faden ${e.id}: Auflösung behauptet, aber Zitat nicht im Text gefunden — als nicht bestätigt gewertet.`,'e');
+          });
+        }catch(e){
+          this.log('Fäden-Prüfung fehlgeschlagen ('+e.message+') — Fäden gelten vorsichtshalber als nicht bestätigt.','e');
+        }
+        const norm = x => String(x).trim().toLowerCase();
+        const bestaetigtSet = new Set(bestaetigteIds.map(norm));
+        audit.state_update = audit.state_update || {};
+        audit.state_update.faeden_geschlossen = [...new Set([...(audit.state_update.faeden_geschlossen||[]), ...bestaetigteIds])];
+        fadenProbleme = zwingendFaellig.filter(f=>!bestaetigtSet.has(norm(f.id)));
+      }
+      const schwer = (audit.verstoesse||[]).filter(v=>v.schwere==='hoch');
+      if((audit.bestanden || !schwer.length) && !fadenProbleme.length){
+        this.log(`K${n} — bestanden${(audit.verstoesse||[]).length?' ('+audit.verstoesse.length+' kleine Hinweise)':''}`,'k'); akzeptiert=true; break;
+      }
+      // Fäden-Probleme zuerst und mit eigenem, großzügigerem Budget angehen — das
+      // ist automatisierbar, weil objektiv prüfbar, ohne dass du das siehst.
+      if(fadenProbleme.length && rundenFaeden<MAX_FAEDEN_VERSUCHE){
+        rundenFaeden++;
+        this.log(`K${n} — ${fadenProbleme.length} Faden(s) noch offen, automatische Nachbesserung ${rundenFaeden}/${MAX_FAEDEN_VERSUCHE} …`,'e');
+        text = await API.call({system:p.system, user: basis + P.fadenkorrektur(fadenProbleme, text), temp:0.9, maxTokens:this.tokenBudget(p), timeoutMs:900000, onRetry:m=>this.log(m,'e')});
+        Store.saveZwischenstand(p.id, n, {text, runden, rundenFaeden, notizen});
+        continue;
+      }
+      if(!schwer.length && fadenProbleme.length){
+        // Fäden-Budget erschöpft, sonst nichts zu beanstanden — erst jetzt an einen
+        // Menschen übergeben, nicht schon nach dem ersten Versuch.
+        this.log(`K${n} — Faden(s) ${fadenProbleme.map(f=>f.id).join(', ')} bleiben trotz ${MAX_FAEDEN_VERSUCHE} automatischen Versuchen offen. Als „prüfen" markiert.`,'e');
+        akzeptiert=false; break;
+      }
+      if(runden>=max){ this.log(`K${n} — ${schwer.length} schwere Verstöße bleiben. Als „prüfen" markiert.`,'e'); akzeptiert=false; break; }
+      runden++;
+      this.log(`K${n} — ${schwer.length} schwere Verstöße, Korrekturrunde ${runden}/${max} …`,'e');
+      text = await API.call({system:p.system, user: basis + P.korrektur(text, audit.verstoesse), temp:0.9, maxTokens:this.tokenBudget(p), timeoutMs:900000, onRetry:m=>this.log(m,'e')});
+      Store.saveZwischenstand(p.id, n, {text, runden, rundenFaeden, notizen});
+    }
+
+    if(!opt.ohnePolitur){
+      this.log(`K${n} — Stil-Politur …`);
+      try{
+        let pol;
+        try{ pol = await API.call({system:p.system, user:P.politur(p,text), temp:0.8, maxTokens:this.tokenBudget(p), timeoutMs:900000, onRetry:m=>this.log(m,'e')}); }
+        catch(e){ if(e.abgeschnitten) pol = e.text; else throw e; }
+        if(words(pol) > words(text)*0.6) text = pol;
+        else this.log('Politur zu kurz geraten — Entwurf behalten.','e');
+      }catch(e){
+        // Entwurf + Audit sind bereits gut und geprüft — ein Politur-Fehler darf das
+        // nicht wegwerfen. Statt die ganze Kapitel-Erzeugung zu wiederholen (teuer,
+        // unnötig), wird einfach ungepoliert weitergemacht.
+        this.log('Politur fehlgeschlagen ('+e.message+') — Entwurf ohne Politur behalten, nichts geht verloren.','e');
+      }
+    }
+
+    const status = akzeptiert ? 'fertig' : 'pruefen';
+    const obj = {n, titel:t.titel, body:text.trim(), woerter:words(text),
+      status, audit, erzeugt:new Date().toISOString()};
+    Store.saveKapitel(p.id,n,obj);
+    Store.loescheZwischenstand(p.id,n);
+    p.kapitelIdx = p.kapitelIdx.filter(k=>k.n!==n);
+    p.kapitelIdx.push({n, titel:t.titel, woerter:obj.woerter, status});
+    p.kapitelIdx.sort((a,b)=>a.n-b.n);
+    if(audit && audit.state_update && !auditUnlesbar) this.mergeState(p, n, audit.state_update, text);
+    else {
+      p.state.woerter_gesamt = p.kapitelIdx.reduce((a,k)=>a+(k.woerter||0),0);
+      if(auditUnlesbar) this.log(`K${n} — Fäden-/Löschuhr-/Figurenupdate übersprungen, da der Auditor unlesbar war. Erst klären, dann läuft der Tracker weiter sauber.`,'e');
+    }
+    Store.save(p);
+    this.log(`K${n} gespeichert · ${nf(obj.woerter)} Wörter · ${status==='fertig'?'sauber':'prüfen'}`,'k');
+    return obj;
+  },
+
+  naechstesN(p){
+    const alle = p.toc.map(t=>t.n).sort((a,b)=>a-b);
+    const da = new Set(p.kapitelIdx.map(k=>k.n));
+    for(const n of alle) if(!da.has(n)) return n;
+    return null;
+  },
+
+  // Liefert die niedrigste Kapitelnummer, die als "prüfen" markiert ist (Audit nicht
+  // sauber bestanden oder unlesbare Auditor-Antwort). Solche Kapitel haben oft KEINEN
+  // vollständigen state_update erhalten (Fäden, Löschuhr, Sonderzustand, Zusammenfassung
+  // können fehlen) — alles danach Geplante baut dann auf einer Lücke auf. Deshalb hält
+  // der automatische Lauf hier an, statt stillschweigend weiterzuschreiben.
+  ersterOffenerKonflikt(p){
+    const offen = p.kapitelIdx.filter(k=>k.status && k.status!=='fertig').map(k=>k.n);
+    return offen.length ? Math.min(...offen) : null;
+  },
+
+  async lauf(p, anzahl){
+    if(this.laeuft) return;
+    const konflikt = this.ersterOffenerKonflikt(p);
+    if(konflikt!==null){
+      App.toast('Kapitel '+konflikt+' ist als „prüfen" markiert — Lauf angehalten, bevor darauf aufgebaut wird.', 1);
+      this.log('Automatischer Lauf nicht gestartet: Kapitel '+konflikt+' muss zuerst neu gewürfelt oder als fertig akzeptiert werden.','e');
+      App.render();
+      return;
+    }
+    this.laeuft=true; try{Hintergrund.wachhalten()}catch(e){}; this.stop=false; App.render();
+    let wake=null;
+    try{ if(navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); }catch(e){}
+    window.onbeforeunload = ()=> 'Es läuft ein Kapitel.';
+    let panne = 0;
+    try{
+      if(!p.bibel) await this.bibel(p);
+      for(let i=0;i<anzahl;i++){
+        if(this.stop){ this.log('Gestoppt.','e'); break; }
+        const zwischenkonflikt = this.ersterOffenerKonflikt(p);
+        if(zwischenkonflikt!==null){
+          this.log('Angehalten: Kapitel '+zwischenkonflikt+' ist als „prüfen" markiert. Bitte erst klären.','e');
+          App.toast('Angehalten bei Kapitel '+zwischenkonflikt+' — muss erst geklärt werden.',1);
+          break;
+        }
+        const n = this.naechstesN(p);
+        if(n===null){ this.log('Alle Kapitel vorhanden.','k'); break; }
+        try{
+          await this.kapitel(p,n);
+          panne = 0;
+        }catch(e){
+          panne++;
+          this.log('Kapitel '+n+' gescheitert: '+e.message,'e');
+          if(panne >= 2 || /Key|Workspace|Zugangswort|Guthaben|credit/i.test(e.message)) throw e;
+          this.log('Ich versuche es in 10 s noch einmal. Bisheriges bleibt gespeichert.');
+          await new Promise(x=>setTimeout(x,10000));
+          i--;
+        }
+        App.render();
+      }
+    }catch(e){
+      this.log('Lauf beendet: '+e.message,'e');
+      App.toast(e.message,1);
+    }
+    if(wake) try{ await wake.release() }catch(e){}
+    window.onbeforeunload = null;
+    this.laeuft=false; try{Hintergrund.loslassen()}catch(e){}; this.stop=false; App.render();
+  }
+};
+
+/* ============ UI ============ */
+const App = {
+  tab:'werk', p:null, leseN:null, edit:false, entwurfModus:false, entwurfGenre:'', entwurfIdee:'', entwurfLaeuft:false,
+
+  async init(){
+    const v = document.getElementById('view');
+    if(v) v.innerHTML = '<div class="card">Bibliothek wird geladen …</div>';
+    await S.initialisieren();
+    if(!S.ok()){ document.getElementById('view').innerHTML='<div class="card">Der Browser erlaubt keinen dauerhaften Speicher (privates Fenster?). Die App braucht IndexedDB oder localStorage.</div>'; return; }
+    let id = Store.aktivId();
+    this.p = id ? Store.load(id) : null;
+    if(!this.p) this.p = Store.create(NACHBILD);
+    // Wo war ich zuletzt? Tab und ggf. offenes Kapitel wiederherstellen, statt
+    // nach jedem Neuladen wieder bei "Werk" und der Kapitelliste zu landen.
+    this.tab = this.p.letzterTab || 'werk';
+    this.leseN = (this.tab==='lesen' && this.p.leseStand) ? this.p.leseStand.n : null;
+    document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{this.tab=b.dataset.tab;this.edit=false;this.render();window.scrollTo(0,0)});
+    this.render();
+    this.hintergrundSync();
+    setInterval(()=>this.hintergrundSync(), 20000);
+  },
+
+  save(){ Store.save(this.p); },
+  toast(msg, bad){
+    const el=document.createElement('div'); el.className='toast'+(bad?' bad':''); el.textContent=msg;
+    document.body.appendChild(el); setTimeout(()=>el.remove(), bad?4200:2200);
+  },
+  paintLog(){ const el=document.getElementById('log'); if(!el) return;
+    el.innerHTML = Pipe.logs.map(l=>`<span class="${l.cls||''}">${esc(l.zeit)}  ${esc(l.t)}</span>`).join('\n');
+    el.scrollTop = el.scrollHeight; },
+
+  render(){
+    const p=this.p;
+    document.getElementById('brand').innerHTML = `<span class="ds">Roman</span>-Werkstatt`;
+    const off=(p.state.offene_faeden||[]).filter(f=>f.status!=='geschlossen').length;
+    document.getElementById('projline').textContent = `${p.kapitelIdx.length}/${p.toc.length} Kapitel · ${nf(p.state.woerter_gesamt||0)} W.`;
+    document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===this.tab));
+    const v=document.getElementById('view');
+    v.innerHTML = this['t_'+this.tab] ? this['t_'+this.tab](p) : '';
+    if(this.tab==='werk') this.paintLog();
+
+    // Lese-Stand merken (Tab + offenes Kapitel), damit ein Neuladen/Sitzungsende
+    // nicht wieder ganz von vorne beginnt. Nur schreiben, wenn sich wirklich etwas
+    // geändert hat — render() läuft während der Generierung sehr oft.
+    const neuerStand = (this.tab==='lesen' && this.leseN!==null)
+      ? {n:this.leseN, anteil:(p.leseStand && p.leseStand.n===this.leseN) ? p.leseStand.anteil : 0}
+      : null;
+    const aendertSich = p.letzterTab!==this.tab
+      || (!!p.leseStand)!==(!!neuerStand)
+      || (p.leseStand && neuerStand && p.leseStand.n!==neuerStand.n);
+    if(aendertSich){ p.letzterTab=this.tab; p.leseStand=neuerStand; Store.save(p); }
+
+    // Beim Öffnen eines Kapitels (oder Rückkehr dorthin) zur gemerkten Stelle scrollen.
+    if(this.tab==='lesen' && this.leseN!==null && !this.edit && p.leseStand && p.leseStand.n===this.leseN && p.leseStand.anteil>0){
+      const ziel = p.leseStand.anteil;
+      requestAnimationFrame(()=>{
+        const hoehe = document.body.scrollHeight - window.innerHeight;
+        if(hoehe>0) window.scrollTo(0, Math.round(ziel*hoehe));
+      });
+    }
+    this.scrollVerfolgen();
+  },
+
+  // Verfolgt beim Lesen die Scrollposition (als Anteil der Seitenhöhe, robust
+  // gegenüber unterschiedlichen Bildschirmgrößen) und speichert sie gedrosselt —
+  // nicht bei jedem Pixel, sondern max. alle 600ms.
+  scrollVerfolgen(){
+    if(this._scrollHandler){ window.removeEventListener('scroll', this._scrollHandler); this._scrollHandler=null; }
+    if(this.tab!=='lesen' || this.leseN===null || this.edit) return;
+    let timer=null;
+    this._scrollHandler = ()=>{
+      if(timer) clearTimeout(timer);
+      timer = setTimeout(()=>{
+        const hoehe = document.body.scrollHeight - window.innerHeight;
+        const anteil = hoehe>0 ? Math.max(0, Math.min(1, window.scrollY/hoehe)) : 0;
+        this.p.leseStand = {n:this.leseN, anteil};
+        Store.save(this.p);
+      }, 600);
+    };
+    window.addEventListener('scroll', this._scrollHandler, {passive:true});
+  },
+
+  t_werk(p){
+    const ges=p.state.woerter_gesamt||0, ziel=p.zielWoerter||90000;
+    const faeden=(p.state.offene_faeden||[]).filter(f=>f.status!=='geschlossen');
+    const ueber=faeden.filter(f=>f.spaetestens_kapitel < p.kapitelIdx.length);
+    const u=p.state.loeschuhr;
+    const spanne = u ? (Math.abs(u.startjahr-u.endjahr)||1) : 0;
+    const fort = u ? Math.min(100,Math.max(0,(u.startjahr-u.aktuell_geloescht_bis_jahr)/spanne*100)) : 0;
+    const n=Pipe.naechstesN(p);
+    const cfg=Store.cfg();
+    let h='';
+    const alle=Store.list();
+    if(alle.length){
+      h+=`<div class="card tight"><div class="sub" style="margin-bottom:8px">Bücher</div><div class="grid2">`;
+      alle.forEach(x=>{
+        const on = x.id===p.id;
+        h+= '<button class="tile'+(on?' accent':'')+'" onclick="App.wechsle(\''+x.id+'\')">'+esc(x.name)+'<small>'+(on?'geöffnet':'öffnen')+'</small></button>';
+      });
+      h+=`</div></div>`;
+    }
+
+    if(!p.kapitelIdx.length && !Pipe.laeuft && !this.entwurfModus)
+      h+=`<div class="card" style="border-color:var(--deep-d)">
+        <h2>Neues Buch aus einer Idee</h2>
+        <p class="sub">Genre wählen, Idee in drei Sätzen, den Rest baut die App: Konzept, Regeln, Figuren, Wendungen und das komplette Inhaltsverzeichnis.</p>
+        <button class="primary full" style="margin-top:10px" onclick="App.neuStarten()">Loslegen</button></div>`;
+
+    if(this.entwurfModus)
+      h+=`<div class="card" style="border-color:var(--deep-d)">
+        <h2>Neues Buch aus einer Idee</h2>
+        ${this.entwurfLaeuft ? `<p class="sub">Konzept und Inhaltsverzeichnis werden entworfen — das dauert eine gute Minute …</p>` : `
+        <label>Genre / Ton</label>
+        <input value="${att(this.entwurfGenre||'')}" placeholder="z. B. Psychothriller, Cozy Fantasy, Science-Fantasy mit Politik" onchange="App.entwurfGenre=this.value">
+        <label style="margin-top:10px">Deine Idee — ein paar Sätze reichen</label>
+        <textarea style="min-height:110px" placeholder="Worum geht's? Was macht es besonders? Worauf läuft es am Ende hinaus?" onchange="App.entwurfIdee=this.value">${esc(this.entwurfIdee||'')}</textarea>
+        <button class="primary full" style="margin-top:10px" onclick="App.entwurfGenerieren()">Buch entwerfen</button>
+        <button class="ghost full" style="margin-top:8px" onclick="App.entwurfModus=false;App.render()">Abbrechen</button>`}
+      </div>`;
+
+    if(!cfg.key || !cfg.proxyUrl) h+=`<div class="card"><h2>Erst Setup</h2><p class="sub">Die App braucht deinen API-Key (Kimi oder DeepSeek) und die Adresse deines Proxys (Cloudflare Worker). Ohne beides läuft nichts.</p><button class="primary full" onclick="App.tab='setup';App.render()">Zum Setup</button></div>`;
+    if(cfg.engineUrl){
+      const job=p.state.hintergrundJob;
+      h+=`<div class="card"><h2>Ohne Handy weiter</h2>
+        <p class="sub">Schreibt auf dem Server weiter, auch wenn das Telefon aus ist. Beim nächsten Öffnen holt die App die Kapitel.</p>
+        ${job?'<p class="sub">Auftrag läuft: '+esc(job)+'</p><button class="ghost full" onclick="App.hintergrundSync()">Stand holen</button>':''}
+        <div class="row pack" style="margin-top:8px">
+          <button class="primary" onclick="App.hintergrundStart(1)">1 Kapitel</button>
+          <button class="primary" onclick="App.hintergrundStart(3)">3 Kapitel</button>
+          <button onclick="App.hintergrundStart(5)">5 Kapitel</button>
+        </div></div>`;
+    }
+
+    const konflikt = Pipe.ersterOffenerKonflikt(p);
+    if(konflikt!==null && !Pipe.laeuft){
+      h+=`<div class="card" style="border-color:var(--rost)">
+        <h2 style="color:var(--rost)">Kapitel ${konflikt} braucht Klärung</h2>
+        <p class="sub">Die Kontinuitätsprüfung ist bei diesem Kapitel nicht sauber durchgelaufen — es fehlen möglicherweise Fäden-, Löschuhr- oder Figurenupdates. Der automatische Lauf hält deshalb hier an, statt auf einer Lücke weiterzuschreiben.</p>
+        <div class="row" style="margin-top:10px">
+          <button onclick="App.leseN=${konflikt};App.tab='lesen';App.render()">Kapitel ansehen</button>
+          <button class="ghost" onclick="App.wuerfeln(${konflikt})">Neu würfeln</button>
+        </div>
+        <button class="ghost full" style="margin-top:8px" onclick="App.alsFertigAkzeptieren(${konflikt})">Habe geprüft — als fertig akzeptieren</button>
+      </div>`;
+    }
+
+    h+=`<div class="stats">
+      <div class="stat"><b>${p.kapitelIdx.length}</b><span>von ${p.toc.length}</span></div>
+      <div class="stat"><b>${Math.round(ges/1000)}k</b><span>von ${Math.round(ziel/1000)}k Wörter</span></div>
+      <div class="stat"><b style="${faeden.length>=P.FADEN_KAPAZITAET?'color:var(--rost)':''}">${faeden.length}</b><span>Fäden offen</span></div>
+      <div class="stat"><b style="${ueber.length?'color:var(--rost)':''}">${ueber.length}</b><span>überfällig</span></div>
+    </div>
+    <div class="bar"><i style="width:${Math.min(100,ges/ziel*100)}%"></i></div>`;
+
+    if(u){
+      h+=`<div class="card">
+        <div class="split"><h2 style="margin:0">Löschuhr</h2><span class="mono">${u.aktuell_geloescht_bis_jahr}</span></div>
+        <div class="uhr"><span>${u.startjahr}</span>
+          <div class="track"><i style="width:${fort}%"></i><b style="left:calc(${fort}% - 1px)"></b></div>
+          <span>${u.endjahr}</span></div>
+        <p class="sub" style="margin:8px 0 0">Erreicht sie das Ende, hat es die Figur nie gegeben.</p>
+      </div>`;
+    } else if(p.state.sonderzustand){
+      const sz = p.state.sonderzustand;
+      h+=`<div class="card">
+        <div class="split"><h2 style="margin:0">${esc(sz.label||'Sonderzustand')}</h2></div>
+        <div>${Object.keys(sz).filter(k=>k!=='label').map(k=>{
+          const v=sz[k];
+          const anzeige = Array.isArray(v) ? (v.length?v.length+' Einträge':'—') : (v===null||v===undefined?'—':String(v));
+          return `<span class="tag on" style="margin:0 6px 6px 0">${esc(k)}: ${esc(anzeige)}</span>`;
+        }).join('')}</div>
+      </div>`;
+    }
+
+    const orte=p.state.sichere_orte||[], schreck=p.state.letzter_schreck;
+    const seit = (schreck===null||schreck===undefined) ? null : p.kapitelIdx.length-1-schreck;
+    h+=`<div class="card">
+      <div class="split"><h2 style="margin:0">Spannung</h2><span class="mono">Stufe ${p.state.eskalationsstufe}/10</span></div>
+      <p class="sub" style="margin:10px 0 4px">Noch sichere Orte</p>
+      <div>${orte.length?orte.map(o=>`<span class="tag on" style="margin:0 4px 4px 0">${esc(o)}</span>`).join(''):'<span class="sub">noch nicht festgelegt</span>'}</div>
+      <p class="sub" style="margin:12px 0 0">${seit===null?'Noch kein Schreckmoment gesetzt.':seit>=2?`Letzter Schreckmoment vor ${seit} Kapiteln — der nächste darf kommen.`:`Letzter Schreckmoment vor ${seit} Kapitel${seit===1?'':'n'} — erst noch laden.`}</p>
+    </div>`;
+
+    h+=`<div class="card"><h2>Werkbank</h2>`;
+    h+=`<p class="sub">${p.bibel?'Bibel steht.':'Noch keine Bibel — wird beim ersten Lauf automatisch erzeugt.'} ${Object.keys(p.outline).length} Kapitel haben Beats.</p>`;
+    if(Pipe.laeuft){
+      h+=`<button class="danger full" onclick="Pipe.stop=true;App.toast('Stoppt nach diesem Schritt')">Nach diesem Schritt anhalten</button>`;
+    } else if(n===null){
+      h+=`<div class="empty" style="margin-bottom:10px">Alle ${p.toc.length} Kapitel sind geschrieben.</div>
+      <button class="primary full" onclick="App.kdp()">KDP-Paket erzeugen</button>`;
+    } else {
+      const t=p.toc.find(x=>x.n===n);
+      h+=`<p style="margin-bottom:12px">Als Nächstes: <b style="color:var(--head)">${n===0?'Prolog':'Kapitel '+n}</b> — ${esc(t.titel)}</p>
+      <div class="row">
+        <button class="primary" onclick="App.lauf(1)">Kapitel schreiben</button>
+        <button onclick="App.lauf(5)">5 am Stück</button>
+        <button class="ghost" onclick="App.lauf(${p.toc.length})">Rest</button>
+      </div>
+      <p class="sub" style="margin:8px 0 0">Ein Kapitel dauert ein paar Minuten. Bildschirm anlassen, der Fortschritt wird nach jedem Schritt gespeichert.</p>
+      <div class="row" style="margin-top:8px">
+        <button class="ghost small" onclick="App.nurBibel()">Nur Bibel neu</button>
+        <button class="ghost small" onclick="App.nurBeats(${n})">Beats vorziehen</button>
+      </div>`;
+    }
+    h+=`<h3>Protokoll</h3><div class="log" id="log"></div>
+      ${Pipe.aufrufe?`<p class="sub" style="margin:8px 0 0">Diese Sitzung: ${Pipe.aufrufe} Aufrufe · ${nf(Pipe.tokenEin)} Token rein, ${nf(Pipe.tokenAus)} raus</p>`:''}
+      ${(()=>{ const kk=p.state.kosten||{tokenEin:0,tokenAus:0}; const c=Store.cfg(); const geschaetzt=(kk.tokenEin/1e6*(c.preisEinProMio||0))+(kk.tokenAus/1e6*(c.preisAusProMio||0));
+        return (c.preisEinProMio||c.preisAusProMio) ? `<p class="sub" style="margin:2px 0 0">Dieses Buch insgesamt: geschätzt <b style="color:var(--head)">${geschaetzt.toFixed(2)} €</b></p>` : ''; })()}
+      </div>`;
+
+    const letzte=p.kapitelIdx.slice(-4).reverse();
+    if(letzte.length){ h+='<h3>Zuletzt geschrieben</h3>';
+      letzte.forEach(k=>{ h+=`<div class="item"><div class="split"><div><div class="kap">${k.n===0?'Prolog':'Kapitel '+k.n}</div><div class="t">${esc(k.titel)}</div></div>
+        <span class="tag ${k.status==='fertig'?'ok':'bad'}">${k.status==='fertig'?'sauber':'prüfen'}</span></div>
+        <div class="sub" style="margin-top:4px">${nf(k.woerter)} Wörter</div></div>`; });
+    }
+    return h;
+  },
+
+  t_buch(p){
+    const k=p.konzept;
+    let h='';
+    if(p.verkaufssatz) h+=`<div class="card" style="border-color:var(--deep-d)"><div class="sub">Verkaufssatz</div><p style="margin:6px 0 0;font-family:var(--serif);font-size:17px;color:var(--head)">${esc(p.verkaufssatz)}</p></div>`;
+    h+=`<div class="card"><h2>Grunddaten</h2>
+      ${k.genre?`<p class="sub" style="margin:-4px 0 10px">Genre: ${esc(k.genre)}</p>`:''}
+      <label>Titel</label><input value="${att(k.titel)}" onchange="App.setK('titel',this.value)">
+      <label style="margin-top:10px">Untertitel</label><input value="${att(k.untertitel)}" onchange="App.setK('untertitel',this.value)">
+      <label style="margin-top:10px">Prämisse in einem Satz</label><textarea onchange="App.setK('praemisse',this.value)">${esc(k.praemisse)}</textarea>
+      <label style="margin-top:10px">Schauplatz</label><textarea onchange="App.setK('schauplatz',this.value)">${esc(k.schauplatz)}</textarea>
+      <div class="row" style="margin-top:10px">
+        <div><label>Zielwörter gesamt</label><input type="number" value="${p.zielWoerter}" onchange="App.setP('zielWoerter',+this.value)"></div>
+        <div><label>Wörter pro Kapitel</label><input type="number" value="${p.kapitelZiel}" onchange="App.setP('kapitelZiel',+this.value)"></div>
+      </div>
+      <p class="sub" style="margin-top:8px">Das Token-Budget für Entwurf/Korrektur/Politur skaliert automatisch mit diesem Wert. Bei deutlich höheren Zielen (4000–5000+ Wörter) dauert ein Kapitel entsprechend länger und kostet mehr — bei kimi-k3 zusätzlich, weil das interne Nachdenken des Modells als Ausgabe mitzählt. Für lange Kapitel ist kimi-k2.6 oft die günstigere Wahl bei kaum schlechterer Qualität.</p>
+      </div>`;
+
+    h+=`<div class="card"><h2>${esc(k.regelLabel||'Regeln des Spuks')}</h2><p class="sub">Eine Regel pro Zeile. Der Auditor prüft jedes Kapitel dagegen.</p>
+      <label style="margin-top:4px">Überschrift dieses Regelblocks (taucht so in jedem Prompt auf)</label>
+      <input value="${att(k.regelLabel||'REGELWERK DES SPUKS')}" onchange="App.setK('regelLabel',this.value)">
+      <textarea style="min-height:170px;margin-top:8px" onchange="App.setListe('regeln',this.value)">${esc(k.regeln.join('\n'))}</textarea></div>`;
+
+    h+=`<div class="card"><h2>Figuren</h2><p class="sub">Eine Figur pro Zeile: Name, Alter — Rolle, Fehler, Bogen.</p>
+      <textarea style="min-height:170px" onchange="App.setListe('figuren',this.value)">${esc(k.figuren.join('\n'))}</textarea></div>`;
+
+    h+=`<div class="card"><h2>Twists</h2><p class="sub">Eine Wendung pro Zeile. Wird nie vorweggenommen.</p>
+      <textarea style="min-height:110px" onchange="App.setListe('twists',this.value)">${esc(k.twists.join('\n'))}</textarea></div>`;
+
+    h+=`<details><summary>System-Prompt (gilt bei jedem Aufruf)</summary>
+      <textarea style="min-height:220px;margin-top:8px" onchange="App.setP('system',this.value)">${esc(p.system)}</textarea></details>`;
+    h+=`<details><summary>Blacklist</summary>
+      <textarea style="min-height:220px;margin-top:8px" onchange="App.setP('blacklist',this.value)">${esc(p.blacklist)}</textarea></details>`;
+    if(p.bibel) h+=`<details><summary>Erzeugte Bibel</summary><div class="mono" style="white-space:pre-wrap;margin-top:8px;max-height:300px;overflow:auto">${esc(JSON.stringify(p.bibel,null,1))}</div></details>`;
+
+    h+='<h3>Inhaltsverzeichnis</h3>';
+    let teil='';
+    p.toc.forEach(t=>{
+      if(t.teil!==teil){ teil=t.teil; h+=`<div class="sub" style="margin:14px 0 6px">Teil ${teil}</div>`; }
+      const da=p.kapitelIdx.find(k=>k.n===t.n);
+      const b=p.outline[t.n];
+      h+=`<div class="item"><div class="split">
+        <div style="min-width:0"><div class="kap">${t.n===0?'Prolog':t.n}</div>
+        <input value="${att(t.titel)}" onchange="App.setToc(${t.n},'titel',this.value)" style="border:none;background:none;padding:2px 0;font-weight:500;color:var(--head)"></div>
+        ${da?'<span class="tag ok">geschrieben</span>':b?'<span class="tag on">Beats</span>':'<span class="tag">offen</span>'}</div>
+        <textarea style="min-height:56px;margin-top:6px;font-size:13px" onchange="App.setToc(${t.n},'beat',this.value)">${esc(t.beat)}</textarea>`;
+      if(b && (b.spannungsquelle||b.sichtbar_fehlende_erinnerung)){
+        h+=`<div class="sub" style="margin-top:8px;border-left:2px solid var(--deep-d);padding-left:9px">
+          ${b.spannungsquelle?'<div><b>Anspannung:</b> '+esc(b.spannungsquelle)+'</div>':''}
+          ${b.sichtbar_fehlende_erinnerung?'<div style="margin-top:3px"><b>Fehlt sichtbar:</b> '+esc(b.sichtbar_fehlende_erinnerung)+'</div>':''}
+          ${b.schreckmoment?'<div style="margin-top:3px;color:var(--rost)">Schreckmoment</div>':''}
+        </div>`;
+      }
+      h+='</div>';
+    });
+    return h;
+  },
+
+  t_faeden(p){
+    const f=p.state.offene_faeden||[], jetzt=p.kapitelIdx.length;
+    const offen=f.filter(x=>x.status!=='geschlossen'), zu=f.filter(x=>x.status==='geschlossen');
+    let h=`<div class="card"><h2>Faden-Ampel</h2>
+      <p class="sub">${zu.length} von ${f.length} gelöst. Rot heißt: Deadline überschritten, der Auditor hat es durchgelassen.</p>
+      <div class="bar"><i style="width:${f.length?zu.length/f.length*100:0}%;background:${zu.length/(f.length||1)<.4?'var(--rost)':'var(--moos)'}"></i></div></div>`;
+    if(!f.length) h+='<div class="empty">Noch keine Fäden. Sie entstehen beim Schreiben und werden vom Auditor gepflegt.</div>';
+    offen.sort((a,b)=>a.spaetestens_kapitel-b.spaetestens_kapitel).forEach(x=>{
+      const rest=x.spaetestens_kapitel-jetzt;
+      const cls = rest<0?'bad':rest<=3?'on':'';
+      h+=`<div class="item"><div class="split"><span class="mono">${esc(x.id)}</span>
+        <span class="tag ${cls}">${rest<0?'überfällig':'noch '+rest+' Kap.'}</span></div>
+        <div style="margin-top:6px">${esc(x.versprechen)}</div>
+        <div class="sub" style="margin-top:4px">geöffnet in K${x.eroeffnet_in} · spätestens K${x.spaetestens_kapitel}</div>
+        <div class="row" style="margin-top:8px">
+          <button class="small ghost" onclick="App.fadenDeadline('${esc(x.id)}')">Deadline ändern</button>
+          <button class="small ghost" onclick="App.fadenZu('${esc(x.id)}')">Als gelöst markieren</button>
+        </div></div>`;
+    });
+    if(zu.length){ h+='<h3>Gelöst</h3>'; zu.forEach(x=>{
+      h+=`<div class="item" style="opacity:.6"><div class="split"><span class="mono">${esc(x.id)}</span><span class="tag ok">K${x.aufgeloest_in}</span></div>
+      <div style="margin-top:6px">${esc(x.versprechen)}</div></div>`; }); }
+
+    if((p.state.figuren||[]).length){
+      h+='<h3>Was die Figuren wissen</h3>';
+      p.state.figuren.forEach(f2=>{
+        h+=`<details><summary>${esc(f2.name)} <span class="sub">· ${f2.erinnerungen_geloescht||0} Erinnerungen weg</span></summary>
+        <div class="sub" style="margin-top:8px"><b>weiß:</b> ${esc((f2.weiss||[]).join(', ')||'—')}<br>
+        <b>weiß nicht:</b> ${esc((f2.weiss_nicht||[]).join(', ')||'—')}<br>
+        <b>Ort:</b> ${esc(f2.aufenthaltsort||'—')}<br>
+        <b>Zustand:</b> ${esc(f2.koerperlicher_zustand||'—')}</div></details>`;
+      });
+    }
+    return h;
+  },
+
+  t_lesen(p){
+    if(this.leseN!==null){
+      const ch=Store.kapitel(p.id,this.leseN);
+      if(!ch){ this.leseN=null; return this.t_lesen(p); }
+      if(this.edit){
+        return `<div class="card"><label>Titel</label><input id="ed-t" value="${att(ch.titel)}">
+          <label style="margin-top:10px">Text</label><textarea id="ed-b" style="min-height:60vh;font-size:15px">${esc(ch.body)}</textarea>
+          <div class="row" style="margin-top:12px"><button class="primary" onclick="App.speichereKapitel()">Speichern</button>
+          <button class="ghost" onclick="App.edit=false;App.render()">Abbrechen</button></div></div>`;
+      }
+      const paras=ch.body.split(/\n{2,}|\n/).map(s=>s.trim()).filter(Boolean);
+      let h=`<div class="split" style="margin:14px 0"><button class="small ghost" onclick="App.leseN=null;App.render()">Zurück</button>
+        <span class="sub">${nf(ch.woerter)} Wörter · ${ch.status==='fertig'?'sauber':'prüfen'}</span></div>`;
+      if(ch.audit && (ch.audit.verstoesse||[]).length){
+        h+=`<details><summary>${ch.audit.verstoesse.length} Anmerkungen des Auditors</summary><div class="sub" style="margin-top:8px">`;
+        ch.audit.verstoesse.forEach(v=>h+=`<div style="margin-bottom:8px"><span class="tag ${v.schwere==='hoch'?'bad':''}">${esc(v.typ)} · ${esc(v.schwere)}</span> ${esc(v.korrekturhinweis)}</div>`);
+        h+='</div></details>';
+      }
+      h+=`<div class="reader"><div class="kap">${ch.n===0?'Prolog':'Kapitel '+ch.n}</div>
+        <h2 style="font-size:22px;margin:2px 0 18px">${esc(ch.titel)}</h2>`;
+      paras.forEach(t=>{ h += (t==='*'||t==='***') ? '<div class="sep">* * *</div>' : `<p>${esc(t)}</p>`; });
+      h+=`</div><div class="row" style="margin:20px 0">
+        <button class="ghost small" onclick="App.edit=true;App.render()">Bearbeiten</button>
+        <button class="ghost small" onclick="App.wuerfeln(${ch.n})">Neu würfeln</button>
+        <button class="ghost small danger" onclick="App.loescheKapitel(${ch.n})">Löschen</button></div>`;
+      return h;
+    }
+    if(!p.kapitelIdx.length) return '<div class="empty">Noch nichts geschrieben. Auf „Werk" das erste Kapitel starten.</div>';
+    let h='';
+    if(p.leseStand && p.leseStand.anteil>0.02){
+      const k = p.kapitelIdx.find(x=>x.n===p.leseStand.n);
+      if(k) h+=`<div class="item" style="border-color:var(--deep-d)" onclick="App.leseN=${k.n};App.render()">
+        <div class="split"><div><div class="kap">Weiterlesen</div><div class="t">${k.n===0?'Prolog':'Kapitel '+k.n} — ${esc(k.titel)}</div>
+        <div class="sub">bei ${Math.round(p.leseStand.anteil*100)} %</div></div></div></div>`;
+    }
+    p.kapitelIdx.forEach(k=>{
+      h+=`<div class="item" onclick="App.leseN=${k.n};App.render()">
+        <div class="split"><div><div class="kap">${k.n===0?'Prolog':'Kapitel '+k.n}</div><div class="t">${esc(k.titel)}</div>
+        <div class="sub">${nf(k.woerter)} Wörter · ca. ${Math.max(1,Math.round(k.woerter/220))} Min.</div></div>
+        <span class="tag ${k.status==='fertig'?'ok':'bad'}">${k.status==='fertig'?'sauber':'prüfen'}</span></div></div>`;
+    });
+    return h;
+  },
+
+  t_setup(p){
+    const c=Store.cfg(), liste=Store.list();
+    const kk = p.state.kosten || {tokenEin:0, tokenAus:0, aufrufe:0};
+    const kostenSchaetzung = (kk.tokenEin/1e6*(c.preisEinProMio||0)) + (kk.tokenAus/1e6*(c.preisAusProMio||0));
+    const anbieter = ANBIETER[c.anbieter] || ANBIETER.kimi;
+    let h=`<div class="card"><h2>KI-Zugang</h2>
+      <label>Anbieter</label>
+      <select onchange="App.setAnbieter(this.value)">
+        ${Object.keys(ANBIETER).map(k=>`<option value="${k}" ${c.anbieter===k?'selected':''}>${ANBIETER[k].label}</option>`).join('')}
+      </select>
+      <p class="sub" style="margin:6px 0 12px">Hole dir deinen Key auf <a href="${anbieter.konsole}" target="_blank">${anbieter.konsole.replace('https://','')}</a>.</p>
+      <label>API-Key (bleibt nur auf diesem Gerät)</label>
+      <input type="password" value="${att(c.key)}" placeholder="sk-…" onchange="App.setCfg('key',this.value.trim())">
+      <label style="margin-top:10px">Modell</label>
+      <select onchange="App.setCfg('model',this.value)">
+        ${anbieter.modelle.map(m=>`<option value="${m.id}" ${c.model===m.id?'selected':''}>${m.id}</option>`).join('')}
+      </select>
+      <p class="sub" style="margin:6px 0 0">${anbieter.modelle.map(m=>m.label).join(' · ')}</p>
+      <label style="margin-top:10px">Korrekturrunden pro Kapitel (allgemeine Verstöße)</label>
+      <input type="number" min="0" max="5" value="${c.maxRetry}" onchange="App.setCfg('maxRetry',+this.value)">
+      <p class="sub" style="margin:6px 0 0">Fällige Fäden bekommen automatisch bis zu 4 eigene Korrekturversuche, unabhängig davon — das lässt sich objektiv prüfen (Zitat muss im Text stehen), deshalb braucht es hier keine niedrige Hürde.</p>
+      <label class="row" style="margin-top:12px;align-items:center;gap:8px">
+        <input type="checkbox" ${c.reflexion!==false?'checked':''} onchange="App.setCfg('reflexion',this.checked)" style="width:auto">
+        <span>Autoren-Reflexion vor jedem Kapitel</span>
+      </label>
+      <p class="sub" style="margin:4px 0 0">Das Modell denkt kurz durch, was die Figur wirklich will und wie die zu einfache Lösung aussähe, bevor es schreibt — ein zusätzlicher, aber günstiger Aufruf pro Kapitel.</p>
+      <label class="row" style="margin-top:12px;align-items:center;gap:8px">
+        <input type="checkbox" ${c.thinkingOff!==false?'checked':''} onchange="App.setCfg('thinkingOff',this.checked)" style="width:auto">
+        <span>Thinking aus (empfohlen bei kimi-k2.6)</span>
+      </label>
+      <p class="sub" style="margin:4px 0 0">Schaltet bei kimi-k2.6 das interne Nachdenken ab. Verhindert leere Antworten und spart Tokens. Bei kimi-k3 nicht möglich (denkt immer).</p>
+      </div>`;
+
+    h+=`<div class="card"><h2>Kosten</h2>
+      <p class="sub" style="margin-bottom:10px">Die App kennt aktuelle Preise nicht automatisch — Stand auf ${anbieter.preisSeite} prüfen und hier eintragen, dann rechnet sie live mit.</p>
+      <div class="row">
+        <div><label>€ je 1 Mio. Input-Token</label><input type="number" step="0.01" min="0" value="${c.preisEinProMio||0}" onchange="App.setCfg('preisEinProMio',+this.value)"></div>
+        <div><label>€ je 1 Mio. Output-Token</label><input type="number" step="0.01" min="0" value="${c.preisAusProMio||0}" onchange="App.setCfg('preisAusProMio',+this.value)"></div>
+      </div>
+      <p class="sub" style="margin-top:10px">Dieses Buch bisher: ${nf(kk.aufrufe)} Aufrufe · ${nf(kk.tokenEin)} Token rein, ${nf(kk.tokenAus)} raus${(c.preisEinProMio||c.preisAusProMio)?` · geschätzt <b style="color:var(--head)">${kostenSchaetzung.toFixed(2)} €</b>`:' · Preise eintragen für eine Schätzung'}</p>
+      </div>`;
+
+    h+=`<div class="card"><h2>Proxy (Cloudflare Worker)</h2>
+      <p class="sub" style="margin-bottom:12px">Die meisten Anbieter blocken Aufrufe direkt aus dem Browser (CORS). Diese App braucht deshalb deinen eigenen kleinen Cloudflare-Worker als Vermittler — er bekommt bei jedem Aufruf mitgeteilt, an welche Adresse er weiterleiten soll (Header „x-sw-target"), muss also beim Anbieterwechsel meist nicht neu deployed werden. Trag hier die Adresse ein, die dir Cloudflare nach dem Deployen zeigt.</p>
+      <label>Worker-URL</label>
+      <input value="${att(c.proxyUrl)}" placeholder="https://deepseek-proxy-cj6.pages.dev" onchange="App.setCfg('proxyUrl',this.value.trim())">
+      <label style="margin-top:10px">Zugangswort (muss zum Worker-Secret SW_PASS passen)</label>
+      <input type="password" value="${att(c.pass)}" onchange="App.setCfg('pass',this.value)">
+      <label style="margin-top:14px">Hintergrund-Worker (buch-engine, optional)</label>
+      <input value="${att(c.engineUrl||'')}" placeholder="https://buch-engine.DEIN-ACCOUNT.workers.dev" onchange="App.setCfg('engineUrl',this.value.trim())">
+      <p class="sub" style="margin:6px 0 0">Damit Kapitel weitergeschrieben werden, wenn das Handy aus ist. Gleicher Pass wie oben.</p>
+      <button class="ghost small full" style="margin-top:10px" onclick="App.testKey()">Verbindung testen</button>
+      </div>`;
+
+    h+=`<div class="card"><h2>Projekte</h2>`;
+    liste.forEach(x=>{ h+=`<div class="item" style="cursor:pointer" onclick="App.wechsle('${x.id}')"><div class="split"><div class="t">${esc(x.name)}${x.id===p.id?' <span class="tag on">aktiv</span>':''}</div>
+      <div class="row pack" style="flex:0 0 auto" onclick="event.stopPropagation()">
+      ${x.id===p.id?'':'<button class="small ghost" onclick="App.wechsle(\''+x.id+'\')">Öffnen</button>'}
+      <button class="small ghost danger" onclick="event.stopPropagation();App.loescheProjekt('${x.id}')">Löschen</button></div></div>
+      <p class="sub" style="margin:6px 0 0">${x.id===p.id?'Aktuell geöffnet — Titel unter Buch ändern':'Tippen, um dieses Buch zu öffnen'}</p></div>`; });
+    h+=`<button class="primary full" style="margin-top:10px" onclick="App.neuStarten()">Neues Buch entwerfen</button>
+      <div class="grid2">
+      ${Object.keys(VORLAGEN).map(k=>{
+        const v=VORLAGEN[k];
+        const hint=(v.genre||'').split(',')[0];
+        return '<button class="tile" onclick="App.neuesProjekt(\''+k+'\')">'+esc(v.name)+'<small>'+esc(hint)+'</small></button>';
+      }).join('')}
+      <button class="tile accent" onclick="App.neuesProjekt(true)">Leeres Buch<small>ohne Vorlage starten</small></button>
+      </div>
+      <button class="ghost full" style="margin-top:8px" onclick="App.vorlageAktualisieren()">Dieses Projekt auf die aktuelle Vorlage setzen</button>
+      <hr><h3 style="margin-top:14px">Gesamte Bibliothek</h3>
+      <p class="sub" style="margin-bottom:8px">Sichert oder lädt ALLE Projekte auf einmal — anders als das Manuskript-Backup unten, das nur das aktuell offene Buch betrifft.</p>
+      <button class="ghost full" onclick="App.exportBibliothek()">Alle Projekte sichern</button>
+      <label style="margin-top:10px">Bibliotheks-Backup einspielen (fügt Projekte hinzu, ersetzt nichts)</label>
+      <input type="file" accept=".json" onchange="App.importBibliothek(event)"></div>`;
+
+    h+=`<div class="card"><h2>Manuskript</h2><p class="sub">${p.kapitelIdx.length} Kapitel · ${nf(p.state.woerter_gesamt||0)} Wörter</p>
+      <div class="row"><button onclick="App.exportEPUB()">EPUB 3</button><button onclick="App.exportDOCX()">Word (.docx)</button></div>
+      <div class="row" style="margin-top:8px"><button class="ghost" onclick="App.exportTXT()">Text</button>
+      <button class="ghost" onclick="App.exportJSON()">Backup</button></div>
+      <hr><label>Cover</label>
+      ${p.cover?`<img src="${p.cover}" alt="Cover" style="display:block;width:150px;border-radius:6px;border:1px solid var(--line);margin:8px auto">
+        <button class="ghost small full" onclick="App.coverWeg()">Cover entfernen</button>`
+        :'<p class="sub" style="margin:4px 0 8px">Kein Cover. Wird ins EPUB eingebettet und als erste Seite angezeigt. KDP will 1600×2560 px.</p>'}
+      <input type="file" accept="image/*" onchange="App.coverWaehlen(event)">
+      <label style="margin-top:14px">Autor (für Export)</label><input value="${att(p.autor)}" onchange="App.setP('autor',this.value)">
+      <label style="margin-top:10px">ISBN (optional)</label><input value="${att(p.isbn)}" onchange="App.setP('isbn',this.value)">
+      <hr><label>Backup einspielen</label><input type="file" accept=".json" onchange="App.importJSON(event)"></div>`;
+
+    if(p.kdp) h+=`<div class="card"><h2>KDP-Paket</h2><div style="white-space:pre-wrap;font-size:14px">${esc(p.kdp)}</div>
+      <button class="ghost full" style="margin-top:10px" onclick="App.kdp()">Neu erzeugen</button></div>`;
+    else h+=`<div class="card"><h2>KDP-Paket</h2><p class="sub">Klappentext, Keywords, Kategorien, Coverbriefing — sinnvoll, wenn das Manuskript steht.</p>
+      <button class="ghost full" onclick="App.kdp()">Jetzt erzeugen</button></div>`;
+
+    let belegt=0; try{ for(const k in MEM) if(k.startsWith('sw:')) belegt += JSON.stringify(MEM[k]||'').length; }catch(e){}
+    h+=`<p class="sub" style="margin:20px 0 0">Speicher: ${Math.round(belegt/1024)} KB (liegt in IndexedDB, deutlich mehr Platz als der frühere 5-MB-Deckel von localStorage — aber auch das ist nicht unbegrenzt).${belegt>50_000_000?' <b style="color:var(--rost)">Wird groß — Backup ziehen und alte Projekte löschen.</b>':''}</p>`;
+    h+=`<p class="sub" style="margin:6px 0 30px">Alles liegt in diesem Browser. Backup regelmäßig exportieren — ein geleerter Browserspeicher nimmt das Buch mit.</p>`;
+    return h;
+  }
+};
+
+/* ============ AKTIONEN ============ */
+Object.assign(App, {
+  setK(k,v){ this.p.konzept[k]=v; if(k==='titel') this.p.name=v; this.save(); this.render(); },
+  setP(k,v){ this.p[k]=v; this.save(); if(k==='autor'||k==='isbn'||k==='system'||k==='blacklist') return; this.render(); },
+  setListe(k,v){ this.p.konzept[k]=v.split('\n').map(s=>s.trim()).filter(Boolean); this.save(); },
+  setToc(n,k,v){ const t=this.p.toc.find(x=>x.n===n); if(t){t[k]=v; this.save();} },
+  setCfg(k,v){
+    const c=Store.cfg();
+    if(k==='key'){
+      const roh=String(v);
+      v = roh.replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g,'');
+      if(v && !/^[\x21-\x7E]+$/.test(v)) return this.toast('Der Key enthält ungültige Zeichen.',1);
+      if(v && !/^(sk-|xai-)/.test(v)) this.toast('Ungewöhnlicher Key — Kimi/DeepSeek: sk-…, Grok: xai-…',1);
+      else if(v!==roh) this.toast('Key gespeichert (Leerzeichen entfernt).');
+    }
+    c[k]=v; Store.saveCfg(c); if(k==='key'||k==='model'||k==='proxyUrl'||k==='pass'||k==='preisEinProMio'||k==='preisAusProMio'||k==='thinkingOff'||k==='reflexion') this.render();
+  },
+  setAnbieter(a){
+    const c=Store.cfg();
+    const anbieter = ANBIETER[a]; if(!anbieter) return;
+    c.anbieter = a;
+    c.model = anbieter.modelle[0].id;
+    Store.saveCfg(c);
+    this.toast('Anbieter gewechselt zu '+anbieter.label+' — Modell auf '+c.model+' gesetzt.');
+    this.render();
+  },
+
+  async testKey(){
+    try{ this.toast('Teste …');
+      const r = await API.call({user:'Antworte mit dem Wort: bereit', temp:0, maxTokens:200});
+      this.toast('Verbindung steht: '+r.slice(0,30));
+    }catch(e){ this.toast(e.message,1); }
+  },
+
+  async selbsttest(){
+    this.tab='werk'; this.render();
+    Pipe.logs.length=0;
+    const c = Store.cfg();
+    Pipe.log('Selbsttest — Modell '+c.model);
+    if(!c.key){ Pipe.log('Kein API-Key hinterlegt.','e'); return this.toast('Kein Key im Setup.',1); }
+    if(!c.proxyUrl){ Pipe.log('Keine Proxy-Adresse hinterlegt.','e'); return this.toast('Keine Worker-URL im Setup.',1); }
+    Pipe.log(/^sk-[\x21-\x7E]+$/.test(c.key) ? 'Key sieht sauber aus.' : 'Key hat ein ungewöhnliches Format.','k');
+    try{
+      Pipe.log('1/2 — einfache Antwort …');
+      const a = await API.call({user:'Antworte mit genau einem Wort: bereit', temp:0, maxTokens:200});
+      Pipe.log('   Antwort: '+a.slice(0,40),'k');
+      Pipe.log('2/2 — JSON-Fähigkeit …');
+      const j = await API.call({user:'Gib ein JSON-Objekt mit dem Feld "ok" und dem Wert true aus.', temp:0, maxTokens:64, prefill:'{'});
+      const o = parseJSONflex(j, '{');
+      Pipe.log('   JSON gelesen: '+JSON.stringify(o),'k');
+      Pipe.log('Selbsttest bestanden. '+Pipe.aufrufe+' Aufrufe, '+nf(Pipe.tokenEin+Pipe.tokenAus)+' Token.','k');
+      this.toast('Alles in Ordnung.');
+    }catch(e){
+      Pipe.log('Selbsttest gescheitert: '+e.message,'e');
+      this.toast(e.message,1);
+    }
+    this.render();
+  },
+
+  vorlageAktualisieren(){
+    const p=this.p;
+    const v = VORLAGEN[p.konzept.vorlageSchluessel] || NACHBILD;
+    if(p.kapitelIdx.length && !confirm('Konzept und Inhaltsverzeichnis auf die aktuelle Vorlage ("'+v.name+'") setzen? Geschriebene Kapitel bleiben, passen aber womöglich nicht mehr.')) return;
+    p.konzept = { titel:v.titel, untertitel:v.untertitel, genre:v.genre,
+      praemisse:v.praemisse, kern:v.kern, regeln:v.regeln.slice(),
+      figuren:v.figuren.slice(), schauplatz:v.schauplatz, twists:v.twists.slice(),
+      regelLabel: v.regelLabel || 'REGELWERK DES SPUKS', vorlageSchluessel: v.schluessel || p.konzept.vorlageSchluessel };
+    p.toc = v.toc.map(t=>({...t}));
+    p.kapitelZiel = v.kapitelZiel;
+    p.system = systemPrompt(v);
+    p.blacklist = BLACKLIST_DEFAULT + (v.blacklistZusatz ? ('\n\n'+v.blacklistZusatz) : '');
+    p.state.loeschuhr = v.uhr ? { startjahr:v.uhr.start, endjahr:v.uhr.ende, aktuell_geloescht_bis_jahr:v.uhr.start } : null;
+    p.state.sonderzustand = v.sonderzustand ? { label:v.sonderzustand.label, ...JSON.parse(JSON.stringify(v.sonderzustand.start||{})) } : null;
+    p.outline = {}; p.bibel = null;
+    this.save(); this.tab='buch'; this.render();
+    this.toast('Vorlage übernommen — Bibel und Beats werden neu erzeugt.');
+  },
+
+  async lauf(n){ await Pipe.lauf(this.p, n); },
+  async nurBibel(){ try{ Pipe.laeuft=true;this.render(); await Pipe.bibel(this.p);}catch(e){Pipe.log('Fehler: '+e.message,'e');this.toast(e.message,1)} Pipe.laeuft=false; this.render(); },
+  async nurBeats(n){ try{ Pipe.laeuft=true;this.render(); await Pipe.beatsFuer(this.p,n);}catch(e){Pipe.log('Fehler: '+e.message,'e');this.toast(e.message,1)} Pipe.laeuft=false; this.render(); },
+
+  async wuerfeln(n){
+    if(!confirm('Kapitel '+n+' verwerfen und mit denselben Beats neu schreiben?')) return;
+    this.leseN=null; this.tab='werk'; this.render();
+    try{ Pipe.laeuft=true; this.render();
+      this.p.kapitelIdx=this.p.kapitelIdx.filter(k=>k.n!==n);
+      this.p.state.kapitel_summaries=(this.p.state.kapitel_summaries||[]).filter(s=>s.n!==n);
+      await Pipe.kapitel(this.p,n);
+    }catch(e){ Pipe.log('Fehler: '+e.message,'e'); this.toast(e.message,1); }
+    Pipe.laeuft=false; this.render();
+  },
+
+  speichereKapitel(){
+    const n=this.leseN, ch=Store.kapitel(this.p.id,n);
+    ch.titel=document.getElementById('ed-t').value;
+    ch.body=document.getElementById('ed-b').value;
+    ch.woerter=words(ch.body);
+    Store.saveKapitel(this.p.id,n,ch);
+    const k=this.p.kapitelIdx.find(x=>x.n===n); if(k){k.titel=ch.titel;k.woerter=ch.woerter}
+    this.p.state.woerter_gesamt=this.p.kapitelIdx.reduce((a,x)=>a+(x.woerter||0),0);
+    this.save(); this.edit=false; this.render(); this.toast('Gespeichert');
+  },
+
+  loescheKapitel(n){
+    if(!confirm('Kapitel '+n+' endgültig löschen?')) return;
+    S.del(S.ck(this.p.id,n));
+    this.p.kapitelIdx=this.p.kapitelIdx.filter(k=>k.n!==n);
+    this.p.state.kapitel_summaries=(this.p.state.kapitel_summaries||[]).filter(s=>s.n!==n);
+    this.p.state.woerter_gesamt=this.p.kapitelIdx.reduce((a,x)=>a+(x.woerter||0),0);
+    this.save(); this.leseN=null; this.render();
+  },
+
+  // Manuelles Override: der Nutzer hat ein "prüfen"-Kapitel selbst gelesen/korrigiert
+  // und will, dass der automatische Lauf daran vorbei weiterschreibt.
+  alsFertigAkzeptieren(n){
+    const ch = Store.kapitel(this.p.id, n); if(!ch) return;
+    ch.status = 'fertig'; Store.saveKapitel(this.p.id, n, ch);
+    const k = this.p.kapitelIdx.find(x=>x.n===n); if(k) k.status='fertig';
+    this.save(); this.render();
+    this.toast('Kapitel '+n+' als fertig akzeptiert.');
+  },
+
+  fadenZu(id){ const f=this.p.state.offene_faeden.find(x=>x.id===id);
+    if(f){f.status='geschlossen';f.aufgeloest_in=this.p.kapitelIdx.length;this.save();this.render()} },
+  fadenDeadline(id){ const f=this.p.state.offene_faeden.find(x=>x.id===id); if(!f) return;
+    const v=prompt('Spätestens in Kapitel:', f.spaetestens_kapitel);
+    if(v){ f.spaetestens_kapitel=parseInt(v,10)||f.spaetestens_kapitel; this.save(); this.render(); } },
+
+  wechsle(id){ this.p=Store.load(id); const m=Store.meta(); m.aktiv=id; Store.saveMeta(m); this.leseN=null; this.render(); },
+  neuStarten(){
+    this.entwurfModus = true; this.entwurfGenre=''; this.entwurfIdee=''; this.entwurfLaeuft=false;
+    this.tab='werk';
+    this.render();
+  },
+  async entwurfGenerieren(){
+    const genre = (this.entwurfGenre||'').trim();
+    const idee = (this.entwurfIdee||'').trim();
+    if(!genre) return this.toast('Bitte ein Genre/Ton eintragen.',1);
+    if(idee.length<20) return this.toast('Bitte die Idee etwas ausführlicher beschreiben (ein paar Sätze).',1);
+    const cfg = Store.cfg();
+    if(!cfg.key || !cfg.proxyUrl) return this.toast('Erst Setup ausfüllen (API-Key + Proxy-Adresse).',1);
+    this.entwurfLaeuft = true; this.render();
+    try{
+      Pipe.log('Buchkonzept wird entworfen …');
+      const konzept = parseJSONflex(await API.call({system:'Du entwickelst Buchkonzepte für Romane. Du antwortest ausschließlich mit JSON.',
+        user:P.konzeptEntwurf(genre, idee), temp:0.95, maxTokens:3000, prefill:'{', onRetry:m=>Pipe.log(m,'e')}), '{');
+      if(!konzept || !konzept.titel) throw new Error('Konzept war unvollständig.');
+      Pipe.log('Inhaltsverzeichnis wird entworfen …');
+      const toc = parseJSONflex(await API.call({system:'Du planst Kapitelstrukturen für Romane. Du antwortest ausschließlich mit JSON.',
+        user:P.tocEntwurf(konzept), temp:0.9, maxTokens:8000, prefill:'[', onRetry:m=>Pipe.log(m,'e')}), '[');
+      if(!Array.isArray(toc) || toc.length<8) throw new Error('Das erzeugte Inhaltsverzeichnis war zu kurz oder ungültig — bitte nochmal versuchen.');
+
+      const v = {
+        schluessel: '', name: konzept.titel, titel: konzept.titel, untertitel: konzept.untertitel||'',
+        genre: genre, regelLabel: konzept.regelLabel || 'WELTREGELN',
+        zielWoerter: konzept.zielWoerter||90000, kapitelZiel: konzept.kapitelZiel||2300,
+        praemisse: konzept.praemisse||'', kern: konzept.kern||'',
+        regeln: Array.isArray(konzept.regeln)?konzept.regeln:[],
+        figuren: Array.isArray(konzept.figuren)?konzept.figuren:[],
+        schauplatz: konzept.schauplatz||'',
+        twists: Array.isArray(konzept.twists)?konzept.twists:[],
+        uhr: null, sonderzustand: null,
+        systemZusatz: konzept.systemZusatz||'', blacklistZusatz: konzept.blacklistZusatz||'',
+        toc: toc.map((t,i)=>({n: typeof t.n==='number'?t.n:i+1, teil:t.teil||'I', titel:t.titel||('Kapitel '+(i+1)), beat:t.beat||''}))
+      };
+      const p = Store.create(v);
+      p.name = v.titel; p.konzept.titel = v.titel;
+      Store.save(p);
+      this.p = p; this.entwurfModus=false; this.entwurfLaeuft=false;
+      this.tab='buch'; this.leseN=null; this.render();
+      this.toast('Konzept erstellt — kurz prüfen, dann kann geschrieben werden.');
+    }catch(e){
+      this.entwurfLaeuft = false;
+      this.toast('Entwurf fehlgeschlagen: '+e.message, 1);
+      Pipe.log('Buch-Entwurf fehlgeschlagen: '+e.message, 'e');
+      this.render();
+    }
+  },
+  neuesProjekt(schluessel){
+    let v, name;
+    if(schluessel===true){
+      name='Neues Buch';
+      v={...NACHBILD, schluessel:'', name, titel:name, untertitel:'', praemisse:'', kern:'', regeln:[], figuren:[], twists:[], schauplatz:'',
+        regelLabel:'WELTREGELN', systemZusatz:'', blacklistZusatz:'', uhr:null, sonderzustand:null,
+        toc:[{n:1,teil:'I',titel:'Kapitel 1',beat:''}]};
+    } else {
+      v = VORLAGEN[schluessel];
+      if(!v) return this.toast('Unbekannte Vorlage.',1);
+      name = v.titel || v.name;
+    }
+    const p=Store.create(v);
+    p.name=name; p.konzept.titel=name; Store.save(p);
+    this.p=p; this.tab='buch'; this.leseN=null; this.edit=false;
+    this.toast('Buch geöffnet: '+name);
+    this.render();
+    window.scrollTo(0,0);
+  },
+  engineBasis(){
+    const c=Store.cfg();
+    return String(c.engineUrl||'').replace(/\/+$/,'');
+  },
+  async hintergrundStart(anzahl){
+    const c=Store.cfg();
+    const basis=this.engineBasis();
+    if(!basis) return this.toast('Im Setup die Hintergrund-Worker-URL eintragen.',1);
+    if(!c.pass) return this.toast('Zugangswort im Setup fehlt.',1);
+    const p=this.p;
+    const start=Pipe.naechstesN(p);
+    const plan=[];
+    for(let n=start;n<start+anzahl && n<=p.toc.length;n++){
+      const t=p.toc.find(x=>x.n===n)||{titel:'Kapitel '+n,beat:''};
+      plan.push({n,titel:t.titel,beat:t.beat||''});
+    }
+    if(!plan.length) return this.toast('Kein offenes Kapitel mehr.',1);
+    const ctx=Pipe.ctxFor(p,plan[0].n);
+    const jobId='p-'+p.id+'-'+Date.now().toString(36);
+    try{
+      this.toast('Hintergrundauftrag startet …');
+      const r=await fetch(basis+'/start',{method:'POST',headers:{'content-type':'application/json','x-sw-pass':c.pass},body:JSON.stringify({
+        jobId, typ:'lauf', model:c.model||'kimi-k2.6', apiKey:c.key, plan,
+        projekt:{
+          id:p.id, system:p.system, konzept:p.konzept, toc:p.toc, outline:p.outline||{},
+          state:p.state, bibel:p.bibel, kapitelZiel:p.kapitelZiel||2200, blacklist:p.blacklist
+        }
+      })});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.fehler||r.status);
+      p.state.hintergrundJob=d.jobId||jobId;
+      this.save();
+      this.toast('Läuft auf dem Server. Handy darf aus.');
+      this.render();
+    }catch(e){ this.toast('Hintergrund: '+e.message,1); }
+  },
+  async hintergrundSync(){
+    const c=Store.cfg(); const basis=this.engineBasis(); const p=this.p;
+    if(!basis || !p || !p.state.hintergrundJob) return;
+    try{
+      const r=await fetch(basis+'/status?jobId='+encodeURIComponent(p.state.hintergrundJob),{headers:{'x-sw-pass':c.pass||''}});
+      const d=await r.json();
+      if(!r.ok) return;
+      let neu=0;
+      (d.kapitel||[]).forEach(k=>{
+        if(k.text && !Store.kapitel(p.id,k.n)){
+          Store.saveKapitel(p.id,k.n,{n:k.n,titel:k.titel,body:k.text,woerter:k.woerter||words(k.text),stand:k.stand||'ok'});
+          if(!p.kapitelIdx.find(x=>x.n===k.n)) p.kapitelIdx.push({n:k.n,titel:k.titel,woerter:k.woerter||words(k.text)});
+          neu++;
+        }
+      });
+      if(d.state){
+        p.state = d.state;
+        p.state.woerter_gesamt = p.kapitelIdx.reduce((a,x)=>a+(x.woerter||0),0);
+      }
+      if(neu){ p.kapitelIdx.sort((a,b)=>a.n-b.n); this.save(); }
+      if(d.status==='fertig'||d.status==='fehler'||d.status==='stopp'){
+        this.toast(neu? (neu+' Kapitel vom Server geholt') : ('Hintergrund: '+d.status));
+        if(d.status!=='laeuft' && d.status!=='wartet') p.state.hintergrundJob=null;
+        this.save();
+      } else if(neu) this.toast(neu+' Kapitel nachgeladen');
+      this.render();
+    }catch(e){}
+  },
+  exportBibliothek(){
+    const liste = Store.list();
+    if(!liste.length) return this.toast('Keine Projekte vorhanden.',1);
+    const projekte = liste.map(x=>{
+      const proj = Store.load(x.id);
+      const kapitel = (proj.kapitelIdx||[]).map(k=>Store.kapitel(proj.id,k.n)).filter(Boolean);
+      return {projekt:proj, kapitel};
+    });
+    const d = {bibliothek:projekte, version:1, exportiert:new Date().toISOString()};
+    this.dl(new Blob([JSON.stringify(d)],{type:'application/json'}), 'bibliothek-'+new Date().toISOString().slice(0,10)+'.json');
+    this.toast('Gesamte Bibliothek exportiert ('+projekte.length+' Projekt(e))');
+  },
+  importBibliothek(ev){
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+      const d=JSON.parse(r.result);
+      const liste = d.bibliothek;
+      if(!Array.isArray(liste) || !liste.length) throw new Error('Keine Projekte in dieser Datei gefunden.');
+      let n=0;
+      liste.forEach(eintrag=>{
+        const proj = eintrag && eintrag.projekt; if(!proj) return;
+        proj.id = uid();
+        (eintrag.kapitel||[]).forEach(c=>Store.saveKapitel(proj.id, c.n, c));
+        Store.save(proj); n++;
+      });
+      const m=Store.meta(); this.p=Store.load(m.aktiv); this.leseN=null; this.render();
+      this.toast(n+' Projekt(e) aus Bibliotheks-Backup eingespielt');
+    }catch(e){ this.toast('Bibliotheks-Backup unlesbar: '+e.message,1) } };
+    r.readAsText(f);
+    ev.target.value = '';
+  },
+  loescheProjekt(id){
+    if(Store.list().length<2) return this.toast('Das letzte Projekt bleibt.',1);
+    if(!confirm('Projekt mit allen Kapiteln löschen? Das ist endgültig.')) return;
+    Store.remove(id); this.p=Store.load(Store.aktivId()); this.render();
+  },
+
+  async kdp(){
+    const p=this.p;
+    const sum=(p.state.kapitel_summaries||[]).map(s=>`K${s.n}: ${s.summary}`).join('\n')||p.toc.map(t=>`${t.n}: ${t.beat}`).join('\n');
+    try{ this.toast('KDP-Paket wird erzeugt …');
+      p.kdp = await API.call({system:p.system, user:P.kdp(p,sum), temp:0.9, maxTokens:4000});
+      this.save(); this.tab='setup'; this.render();
+    }catch(e){ this.toast(e.message,1); }
+  },
+
+  alleKapitel(){ return this.p.kapitelIdx.map(k=>Store.kapitel(this.p.id,k.n)).filter(Boolean); },
+  dl(blob,name){ const u=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); },
+  datei(ext){ return (this.p.konzept.titel||'buch').replace(/[^\wäöüÄÖÜß -]/g,'').trim().replace(/\s+/g,'_')+'.'+ext; },
+
+  exportTXT(){
+    const chs=this.alleKapitel(); if(!chs.length) return this.toast('Noch keine Kapitel.',1);
+    let t=this.p.konzept.titel+'\n'+this.p.konzept.untertitel+'\n'+(this.p.autor||'')+'\n\n';
+    chs.forEach(c=>{ t+='\n\n'+(c.n===0?'PROLOG':'KAPITEL '+c.n)+'\n'+c.titel+'\n\n'+c.body+'\n'; });
+    this.dl(new Blob([t],{type:'text/plain;charset=utf-8'}), this.datei('txt'));
+  },
+  exportJSON(){
+    const d={projekt:this.p, kapitel:this.alleKapitel(), version:1};
+    this.dl(new Blob([JSON.stringify(d)],{type:'application/json'}), this.datei('json'));
+  },
+  importJSON(ev){
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+      const d=JSON.parse(r.result);
+      const p=d.projekt; p.id=uid();
+      (d.kapitel||[]).forEach(c=>Store.saveKapitel(p.id,c.n,c));
+      Store.save(p); this.p=p; this.leseN=null; this.render(); this.toast('Backup eingespielt');
+    }catch(e){ this.toast('Backup unlesbar: '+e.message,1) } };
+    r.readAsText(f);
+  },
+
+  async exportEPUB(){
+    const chs=this.alleKapitel(); if(!chs.length) return this.toast('Noch keine Kapitel.',1);
+    const p=this.p, zip=new JSZip();
+    zip.file('mimetype','application/epub+zip',{compression:'STORE'});
+    zip.folder('META-INF').file('container.xml','<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+    const o=zip.folder('OEBPS');
+    o.file('style.css','body{font-family:Georgia,serif;line-height:1.65;margin:0;padding:1.4em;color:#1a1a1a}h1{font-size:1.5em;margin:.2em 0 1.4em;font-weight:600}p{margin:0 0 .9em;text-indent:0}.kap{color:#777;font-size:.9em;margin-bottom:.3em}.sep{text-align:center;margin:1.6em 0;letter-spacing:.4em}');
+    let man='<item id="css" href="style.css" media-type="text/css"/><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>';
+    let spine='', toc='', ncx='', po=1, coverMeta='';
+    if(p.cover){
+      const teile = p.cover.split(',');
+      const png = /image\/png/.test(teile[0]);
+      const datei = png ? 'cover.png' : 'cover.jpg';
+      o.file(datei, teile[1], {base64:true});
+      man += `<item id="cover-image" href="${datei}" media-type="${png?'image/png':'image/jpeg'}" properties="cover-image"/>`;
+      man += '<item id="coverpage" href="cover.xhtml" media-type="application/xhtml+xml"/>';
+      o.file('cover.xhtml',`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Cover</title><style>body{margin:0;padding:0}img{display:block;width:100%;height:auto}</style></head><body><section epub:type="cover"><img src="${datei}" alt="Cover"/></section></body></html>`);
+      spine += '<itemref idref="coverpage" linear="yes"/>';
+      coverMeta = '<meta name="cover" content="cover-image"/>';
+    }
+    chs.forEach(c=>{
+      const id='ch'+String(c.n).padStart(3,'0');
+      const body=c.body.split(/\n{2,}|\n/).map(s=>s.trim()).filter(Boolean)
+        .map(s=> (s==='*'||s==='***') ? '<p class="sep">* * *</p>' : '<p>'+esc(s)+'</p>').join('');
+      o.file(id+'.xhtml',`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>${esc(c.titel)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body><section epub:type="chapter"><div class="kap">${c.n===0?'Prolog':'Kapitel '+c.n}</div><h1>${esc(c.titel)}</h1>${body}</section></body></html>`);
+      man+=`<item id="${id}" href="${id}.xhtml" media-type="application/xhtml+xml"/>`;
+      spine+=`<itemref idref="${id}"/>`;
+      toc+=`<li><a href="${id}.xhtml">${esc(c.titel)}</a></li>`;
+      ncx+=`<navPoint id="${id}" playOrder="${po++}"><navLabel><text>${esc(c.titel)}</text></navLabel><content src="${id}.xhtml"/></navPoint>`;
+    });
+    const bid='urn:uuid:sw-'+p.id+'-'+Date.now();
+    o.file('content.opf',`<?xml version="1.0" encoding="UTF-8"?><package version="3.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${esc(p.konzept.titel)}</dc:title><dc:creator>${esc(p.autor||'Unbekannt')}</dc:creator><dc:language>de</dc:language><dc:identifier id="BookId">${bid}</dc:identifier>${p.isbn?'<dc:identifier>'+esc(p.isbn)+'</dc:identifier>':''}<dc:date>${new Date().toISOString().slice(0,10)}</dc:date><meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+/,'')}</meta>${coverMeta}</metadata><manifest>${man}<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/></manifest><spine toc="ncx"><itemref idref="nav" linear="no"/>${spine}</spine></package>`);
+    o.file('nav.xhtml',`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Inhalt</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body><nav epub:type="toc" id="toc"><h1>Inhalt</h1><ol>${toc}</ol></nav></body></html>`);
+    o.file('toc.ncx',`<?xml version="1.0" encoding="UTF-8"?><ncx version="2005-1" xmlns="http://www.daisy.org/z3986/2005/ncx/"><head><meta name="dtb:uid" content="${bid}"/><meta name="dtb:depth" content="1"/><meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head><docTitle><text>${esc(p.konzept.titel)}</text></docTitle><navMap>${ncx}</navMap></ncx>`);
+    this.dl(await zip.generateAsync({type:'blob',mimeType:'application/epub+zip'}), this.datei('epub'));
+    this.toast('EPUB 3 exportiert');
+  },
+
+  async exportDOCX(){
+    const chs=this.alleKapitel(); if(!chs.length) return this.toast('Noch keine Kapitel.',1);
+    const p=this.p, zip=new JSZip();
+    const t=s=>esc(s).replace(/\t/g,' ');
+    let body='';
+    chs.forEach((c,i)=>{
+      if(i) body+='<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+      body+=`<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t xml:space="preserve">${c.n===0?'Prolog':'Kapitel '+c.n} — ${t(c.titel)}</w:t></w:r></w:p>`;
+      c.body.split(/\n{2,}|\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{
+        const mitte=(s==='*'||s==='***');
+        body+=`<w:p>${mitte?'<w:pPr><w:jc w:val="center"/></w:pPr>':''}<w:r><w:t xml:space="preserve">${mitte?'* * *':t(s)}</w:t></w:r></w:p>`;
+      });
+    });
+    zip.file('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>');
+    zip.folder('_rels').file('.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    const w=zip.folder('word');
+    w.folder('_rels').file('document.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
+    w.file('styles.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:sz w:val="24"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:pPr><w:outlineLvl w:val="0"/><w:spacing w:before="480" w:after="240"/></w:pPr><w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style></w:styles>');
+    w.file('document.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417"/></w:sectPr></w:body></w:document>`);
+    this.dl(await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}), this.datei('docx'));
+    this.toast('Word-Datei exportiert');
+  }
+});
+
+
+
+/* ============ HINTERGRUND: Wake-Lock, Auto-Resume, Benachrichtigung ============ */
+const Hintergrund = {
+  lock: null,
+  resumePending: false,
+  async wachhalten(){
+    try{
+      if(document.visibilityState!=='visible') return;
+      if(this.lock) return;
+      if(navigator.wakeLock && navigator.wakeLock.request){
+        this.lock = await navigator.wakeLock.request('screen');
+        this.lock.addEventListener('release', ()=>{ this.lock=null; });
+      }
+    }catch(e){ this.lock=null; }
+  },
+  loslassen(){
+    try{ this.lock && this.lock.release(); }catch(e){}
+    this.lock=null;
+  },
+  async benachrichtigen(titel, text){
+    try{
+      if(!('Notification' in window)) return;
+      if(Notification.permission==='default') await Notification.requestPermission();
+      if(Notification.permission==='granted'){
+        const n = new Notification(titel||'Roman-Werkstatt', {body:text||'', icon:'icon.svg', tag:'rw-kapitel'});
+        n.onclick = ()=>{ window.focus(); n.close(); };
+      }
+    }catch(e){}
+  }
+};
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible'){
+    if(typeof Pipe!=='undefined' && Pipe.laeuft) Hintergrund.wachhalten();
+    // Pipeline nach kurzem Wegschalten fortsetzen, wenn sie stehengeblieben ist
+    if(typeof App!=='undefined' && App.p && typeof Pipe!=='undefined' && !Pipe.laeuft){
+      try{
+        const id = App.p.id;
+        const offene = (App.p.kapitelIdx||[]).filter(k=>{
+          const z = Store.zwischenstand(id, k.n);
+          return z && !z.fertig;
+        });
+        if(offene.length && App._autoResume!==false){
+          const n = offene[0].n;
+          App.toast && App.toast('Hintergrund: Kapitel '+n+' wird fortgesetzt');
+          if(Pipe.kapitel) Pipe.kapitel(App.p, n).then(()=>{ Hintergrund.benachrichtigen('Kapitel fertig','Kapitel '+n+' ist geschrieben.'); App.render && App.render(); }).catch(e=>App.toast && App.toast(String(e.message||e),1));
+        }
+      }catch(e){}
+    }
+  }else{
+    // Zwischenstand sichern, bevor iOS die Seite einfriert
+    try{
+      if(typeof Pipe!=='undefined' && Pipe.laeuft && App && App.p && App._offenesKapitel){
+        const n = App._offenesKapitel;
+        const z = Store.zwischenstand(App.p.id, n) || {};
+        z.ts = Date.now(); z.paused=true;
+        Store.saveZwischenstand(App.p.id, n, z);
+      }
+    }catch(e){}
+  }
+});
+window.addEventListener('pagehide', ()=>{
+  try{
+    if(App && App.p) Store.save(App.p);
+  }catch(e){}
+});
+
+/* ============ PWA + COVER ============ */
+Object.assign(App, {
+  setupPWA(){
+    const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='30' fill='%230E1216'/%3E%3Crect x='52' y='34' width='88' height='124' rx='44' fill='none' stroke='%234A9EFF' stroke-width='5'/%3E%3Cpath d='M70 60 C70 128 96 150 96 150' stroke='%23C9D1D7' stroke-width='4' fill='none' opacity='.55'/%3E%3Ccircle cx='96' cy='96' r='7' fill='%234A9EFF'/%3E%3C/svg%3E";
+    const manifest = {
+      name:'Roman-Werkstatt', short_name:'Roman-Werkstatt', start_url:'.', display:'standalone',
+      orientation:'portrait', background_color:'#0E1216', theme_color:'#0E1216',
+      icons:[{src:icon, sizes:'192x192', type:'image/svg+xml'},{src:icon, sizes:'512x512', type:'image/svg+xml'}]
+    };
+    try{
+      const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
+      const m=document.getElementById('manifestLink'); if(m) m.href=url;
+      const a=document.getElementById('appleIcon'); if(a) a.href=icon;
+    }catch(e){}
+  },
+
+  coverWaehlen(ev){
+    const f=ev.target.files && ev.target.files[0]; if(!f) return;
+    if(!/^image\//.test(f.type)) return this.toast('Das ist kein Bild.',1);
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxH=1400, sk=Math.min(1, maxH/img.height);
+        const c=document.createElement('canvas');
+        c.width=Math.round(img.width*sk); c.height=Math.round(img.height*sk);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        const data=c.toDataURL('image/jpeg',0.82);
+        if(data.length > 1_200_000) return this.toast('Bild zu groß für den Speicher — kleiner exportieren.',1);
+        this.p.cover=data; this.save(); this.render();
+        const v=img.width/img.height;
+        if(Math.abs(v-0.625)>0.06) this.toast('Gespeichert. KDP mag 1600×2560 (Seitenverhältnis 1:1,6).');
+        else this.toast('Cover gespeichert');
+      };
+      img.onerror=()=>this.toast('Bild ließ sich nicht laden.',1);
+      img.src=r.result;
+    };
+    r.readAsDataURL(f);
+  },
+
+  coverWeg(){ if(!confirm('Cover entfernen?')) return; this.p.cover=null; this.save(); this.render(); }
+});
+
+App.setupPWA();
+App.init();
+
+</script>
+</body></html>
