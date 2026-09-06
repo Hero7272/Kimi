@@ -6,34 +6,185 @@
 <meta name="theme-color" content="#F5F5F7">
 <title>Roman-Werkstatt</title>
 <style>
-body{font-family:-apple-system,sans-serif;background:#F5F5F7;color:#1D1D1F;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-.box{text-align:center;padding:24px}
-.sp{width:28px;height:28px;border:3px solid #E5E5EA;border-top-color:#FF9500;border-radius:50%;animation:s .7s linear infinite;margin:0 auto 14px}
-@keyframes s{to{transform:rotate(360deg)}}
+:root{
+  --bg:#F5F5F7; --panel:#FFFFFF; --panel2:#F2F2F7; --line:#E5E5EA;
+  --text:#3A3A3C; --head:#1D1D1F; --muted:#8E8E93;
+  --deep:#FF9500; --deep-d:#E68600; --moos:#34C759; --rost:#FF3B30;
+  --r:14px; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  --serif:Georgia,"Iowan Old Style",serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.47;
+  padding:calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:24px;font-weight:700;color:var(--head);letter-spacing:-.03em;margin:0 0 4px}
+h1 span{color:var(--deep)}
+h2{font-size:18px;font-weight:700;color:var(--head);margin:0 0 10px}
+.sub{font-size:13px;color:var(--muted);margin:0 0 16px}
+.card{background:var(--panel);border-radius:var(--r);padding:18px 16px;margin:12px 0;box-shadow:var(--shadow)}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px;font-weight:500}
+input,select,textarea{width:100%;background:var(--panel2);border:1px solid transparent;color:var(--head);
+  border-radius:12px;padding:12px 14px;font-size:16px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--deep);background:#fff;box-shadow:0 0 0 3px rgba(255,149,0,.18)}
+button{font-family:inherit;font-size:16px;font-weight:600;border-radius:12px;padding:12px 16px;border:none;
+  background:var(--panel2);color:var(--head);cursor:pointer;min-height:48px;width:100%;margin-top:10px}
+button.primary{background:var(--deep);color:#fff}
+button:active{opacity:.85;transform:scale(.98)}
+button:disabled{opacity:.4}
+.log{background:#1C1C1E;border-radius:12px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+  color:#A1A1A6;max-height:220px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+.log .k{color:#30D158}.log .e{color:#FF6961}
+.reader{font-family:var(--serif);font-size:18px;line-height:1.7;color:var(--head);margin-top:12px}
 </style>
 </head>
 <body>
-<div class="box"><div class="sp"></div><div>Roman-Werkstatt lädt …</div></div>
+<div class="wrap">
+  <h1><span>Roman</span>-Werkstatt</h1>
+  <p class="sub">Kimi-Fix · Apple-Look · Kapitel-Test</p>
+
+  <div class="card">
+    <h2>Setup</h2>
+    <label>Proxy-URL</label>
+    <input id="proxy" value="https://deepseek-proxy-cj6.pages.dev" placeholder="https://….pages.dev">
+    <label>Zugangswort</label>
+    <input id="pass" type="password" value="1234">
+    <label>API-Key (Kimi)</label>
+    <input id="key" type="password" placeholder="sk-…">
+    <label>Modell</label>
+    <select id="model">
+      <option value="kimi-k2.6" selected>kimi-k2.6 (empfohlen)</option>
+      <option value="kimi-k3">kimi-k3 (denkt immer, teurer)</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px">
+      <input type="checkbox" id="thinkingOff" checked style="width:auto">
+      Thinking aus (bei k2.6)
+    </label>
+    <button class="primary" id="btnTest">Selbsttest</button>
+  </div>
+
+  <div class="card">
+    <h2>Kapitel schreiben</h2>
+    <p class="sub">Kurzer Test: Anfang von „Zwei Zeilen zu viel“ (~400 Wörter).</p>
+    <button class="primary" id="btnKap" disabled>Kapitel generieren</button>
+    <div class="log" id="log"></div>
+    <div class="reader" id="out"></div>
+  </div>
+</div>
 <script>
-(async function(){
-  try {
-    const parts = [];
-    for (let i = 0; i < 11; i++) {
-      const r = await fetch('h.' + i + '.txt');
-      if (!r.ok) throw new Error('Teil ' + i + ' fehlt (' + r.status + ')');
-      parts.push(await r.text());
-    }
-    const b64 = parts.join('');
-    const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    const ds = new DecompressionStream('gzip');
-    const stream = new Blob([bin]).stream().pipeThrough(ds);
-    const html = await new Response(stream).text();
-    document.open(); document.write(html); document.close();
-  } catch (e) {
-    document.body.innerHTML = '<div class="box"><h2>Ladefehler</h2><p>' + e.message + '</p><p style="color:#8E8E93;font-size:14px">Hard-Refresh (Ctrl+Shift+R).</p></div>';
-    console.error(e);
+const logEl = document.getElementById('log');
+const outEl = document.getElementById('out');
+function log(t, cls){
+  const s = document.createElement('div');
+  if(cls) s.className = cls;
+  s.textContent = new Date().toLocaleTimeString('de-DE') + '  ' + t;
+  logEl.appendChild(s); logEl.scrollTop = logEl.scrollHeight;
+}
+function cfg(){
+  return {
+    proxy: document.getElementById('proxy').value.trim().replace(/\/+$/,''),
+    pass: document.getElementById('pass').value.trim(),
+    key: document.getElementById('key').value.trim().replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g,''),
+    model: document.getElementById('model').value,
+    thinkingOff: document.getElementById('thinkingOff').checked
+  };
+}
+async function kimiCall({system, user, maxTokens=4000}){
+  const c = cfg();
+  if(!c.key) throw new Error('API-Key fehlt');
+  if(!c.proxy) throw new Error('Proxy-URL fehlt');
+  const isK3 = c.model.includes('kimi-k3');
+  const isK26 = c.model.includes('kimi-k2.6');
+  const thinkingAus = isK26 && c.thinkingOff && !isK3;
+  let budget = maxTokens;
+  if(isK3) budget = Math.max(maxTokens, 48000);
+  else if(isK26 && !thinkingAus) budget = Math.max(maxTokens, 24000);
+  const body = {
+    model: c.model,
+    max_completion_tokens: budget,
+    stream: false,
+    messages: []
+  };
+  if(system) body.messages.push({role:'system', content:system});
+  body.messages.push({role:'user', content:user});
+  if(thinkingAus) body.thinking = {type:'disabled'};
+  if(isK3) body.temperature = 1;
+  else if(thinkingAus) body.temperature = 0.6;
+  else body.temperature = 1;
+
+  const headers = {
+    'content-type':'application/json',
+    'x-api-key': c.key,
+    'x-sw-target': 'https://api.moonshot.ai/v1/chat/completions'
+  };
+  if(c.pass) headers['x-sw-pass'] = c.pass;
+
+  const r = await fetch(c.proxy, {method:'POST', headers, body: JSON.stringify(body)});
+  const txt = await r.text();
+  if(!r.ok){
+    let msg = txt;
+    try{ msg = JSON.parse(txt).error.message }catch(e){}
+    if(r.status===403) throw new Error('Zugangswort falsch');
+    if(r.status===401) throw new Error('API-Key ungültig');
+    throw new Error('API '+r.status+': '+msg);
   }
-})();
+  const d = JSON.parse(txt);
+  const msg = d.choices && d.choices[0] && d.choices[0].message;
+  const content = (msg && msg.content) || '';
+  const finish = d.choices && d.choices[0] && d.choices[0].finish_reason;
+  if(!content){
+    throw new Error('Leere Antwort (finish='+finish+'). Bei k2.6: Thinking aus aktivieren. Bei k3: höheres Budget nötig.');
+  }
+  return content.trim();
+}
+
+document.getElementById('btnTest').onclick = async () => {
+  logEl.innerHTML = '';
+  try{
+    log('Selbsttest …');
+    const a = await kimiCall({user:'Antworte mit genau einem Wort: bereit', maxTokens:300});
+    log('Antwort: '+a, 'k');
+    log('Selbsttest bestanden.', 'k');
+    document.getElementById('btnKap').disabled = false;
+  }catch(e){
+    log(e.message, 'e');
+  }
+};
+
+document.getElementById('btnKap').onclick = async () => {
+  const btn = document.getElementById('btnKap');
+  btn.disabled = true; outEl.innerHTML = '';
+  try{
+    log('Kapitel wird geschrieben …');
+    const text = await kimiCall({
+      system: 'Du bist ein deutscher Autor. Schreibe literarische Prosa ohne Meta-Kommentare und ohne Überschrift.',
+      user: 'Schreibe den Anfang von Kapitel 1 eines Horror-Thrillers. Titel: Zwei Zeilen zu viel. Setting: Büro einer Programmiererin/KI-Trainerin in einer deutschen Universitätsstadt im November. Sie trainiert ein Modell, ihr 7-jähriger Sohn Emil macht nebenbei Hausaufgaben. Alltag, Wärme, leichte Geldsorgen. Ca. 400–500 Wörter. Direkt in die Szene.',
+      maxTokens: 2500
+    });
+    log('Fertig · '+text.split(/\s+/).length+' Wörter', 'k');
+    outEl.innerHTML = text.split(/\n\n+/).map(p=>'<p>'+p.replace(/</g,'<')+'</p>').join('');
+  }catch(e){
+    log(e.message, 'e');
+  }
+  btn.disabled = false;
+};
+
+try{
+  const s = JSON.parse(localStorage.getItem('rw-cfg')||'{}');
+  if(s.key) document.getElementById('key').value = s.key;
+  if(s.proxy) document.getElementById('proxy').value = s.proxy;
+  if(s.pass!=null) document.getElementById('pass').value = s.pass;
+}catch(e){}
+['key','proxy','pass','model'].forEach(id=>{
+  document.getElementById(id).onchange = ()=>{
+    localStorage.setItem('rw-cfg', JSON.stringify({
+      key: document.getElementById('key').value,
+      proxy: document.getElementById('proxy').value,
+      pass: document.getElementById('pass').value,
+      model: document.getElementById('model').value
+    }));
+  };
+});
 </script>
 </body>
 </html>
