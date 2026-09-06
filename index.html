@@ -147,6 +147,33 @@ hr{border:none;border-top:1px solid var(--line);margin:18px 0}
 .tile.accent{background:rgba(255,149,0,.14);color:var(--deep)}
 .row.pack>*{flex:0 1 auto;min-width:auto}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Apple-Books-like page flip */
+.flip-chrome{display:flex;align-items:center;gap:10px;margin:10px 0 8px}
+.flip-chrome .flip-meta{flex:1;min-width:0}
+.flip-chrome .flip-title{font-weight:700;color:var(--head);font-size:15px;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flip-pageind{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--deep);background:rgba(255,149,0,.12);padding:6px 10px;border-radius:999px}
+.flip-stage{position:relative;margin:8px 0 0;border-radius:16px;perspective:1800px;-webkit-perspective:1800px;touch-action:pan-y}
+.flip-book{position:relative;width:100%;height:100%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+.flip-page{position:absolute;inset:0;border-radius:16px;background:linear-gradient(180deg,#FFFDF8 0%,#FFF9F0 100%);box-shadow:var(--shadow), inset 0 0 0 1px rgba(0,0,0,.04);overflow:hidden;transform-origin:left center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-page.show,.flip-page.base{position:absolute}
+.flip-page-inner{height:100%;overflow:hidden;padding:22px 20px 18px;box-sizing:border-box}
+.flip-page-inner.reader{font-size:18px;line-height:1.65;color:#1D1D1F}
+.flip-page-inner.reader p{margin:0 0 0.95em}
+.flip-page-inner.reader p:last-child{margin-bottom:0}
+.flip-page-back{position:absolute;inset:0;border-radius:16px;background:linear-gradient(180deg,#F7F1E6 0%,#F3EADB 100%);transform:rotateY(180deg);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+.flip-page.flipping{z-index:3;transition:transform .5s cubic-bezier(.22,.61,.36,1);box-shadow:-8px 0 24px rgba(0,0,0,.12)}
+.flip-page.flipping.turn-forward{transform:rotateY(0deg)}
+.flip-page.flipping.turn-forward.go{transform:rotateY(-180deg)}
+.flip-page.flipping.turn-back{transform:rotateY(-180deg)}
+.flip-page.flipping.turn-back.go{transform:rotateY(0deg)}
+.flip-hit{position:absolute;top:0;bottom:0;width:28%;border:none;background:transparent;padding:0;min-height:0;z-index:5;cursor:pointer;border-radius:0}
+.flip-hit.left{left:0}
+.flip-hit.right{right:0}
+.flip-hit:active{background:rgba(255,149,0,.04)}
+.flip-end{gap:10px}
+@media(min-width:700px){.flip-page-inner.reader{font-size:19px;padding:26px 28px}}
+
 </style>
 </head>
 <body>
@@ -804,39 +831,101 @@ const CloudSync = {
       }
     }
   },
+  normalizeKapitel(raw){
+    if(!raw || typeof raw!=='object') return null;
+    const text = String(raw.body || raw.text || '');
+    const stand = raw.stand || (raw.status==='fertig' ? 'ok' : (raw.status || 'ok'));
+    const status = raw.status || (stand==='ok' ? 'fertig' : 'pruefen');
+    const out = Object.assign({}, raw, {
+      body: text,
+      text: text,
+      woerter: raw.woerter || (text ? text.trim().split(/\s+/).filter(Boolean).length : 0),
+      stand, status
+    });
+    return out;
+  },
   async pullProjekt(id){
     const data = await this.req('GET', '/projekt?id='+encodeURIComponent(id));
     const projekt = data.projekt || data;
     if(!projekt || !projekt.id) throw new Error('Projekt leer');
-    // Kapitel nachziehen
+    let neuKapitel = 0;
+    const idx = [];
     for(const k of (projekt.kapitelIdx||[])){
       try{
         const ch = await this.req('GET', '/kapitel?id='+encodeURIComponent(id)+'&n='+k.n);
-        const kapitel = ch.kapitel || ch;
-        if(kapitel && (kapitel.text || kapitel.titel)) Store.saveKapitel(id, k.n, kapitel);
-      }catch(e){ /* kapitel optional */ }
+        const kapitel = this.normalizeKapitel(ch.kapitel || ch);
+        if(kapitel && (kapitel.body || kapitel.titel)){
+          const vorher = Store.kapitel(id, k.n);
+          const vorherText = vorher ? String(vorher.body||vorher.text||'').trim() : '';
+          const neuText = String(kapitel.body||'').trim();
+          if(!vorher || vorherText!==neuText){
+            if(neuText && !vorherText) neuKapitel++;
+            Store.saveKapitel(id, k.n, kapitel);
+          }
+          idx.push({
+            n: kapitel.n!=null?kapitel.n:k.n,
+            titel: kapitel.titel || k.titel || ('Kapitel '+(k.n)),
+            woerter: kapitel.woerter || k.woerter || 0,
+            stand: kapitel.stand || k.stand || 'ok',
+            status: kapitel.status || k.status || 'fertig'
+          });
+        } else {
+          idx.push(Object.assign({}, k, {
+            status: k.status || (k.stand==='ok'?'fertig':'pruefen')
+          }));
+        }
+      }catch(e){
+        idx.push(Object.assign({}, k, {
+          status: k.status || (k.stand==='ok'?'fertig':'pruefen')
+        }));
+      }
     }
-    Store.save(projekt);
-    return projekt;
+    if(idx.length) projekt.kapitelIdx = idx.sort((a,b)=>a.n-b.n);
+    if(projekt.state && typeof projekt.state==='object'){
+      projekt.state.woerter_gesamt = (projekt.kapitelIdx||[]).reduce((a,x)=>a+(x.woerter||0),0);
+    }
+    // Während Pull nicht zurück in die Cloud pushen
+    const wasPulling = this.pulling;
+    this.pulling = true;
+    try{ Store.save(projekt); }
+    finally{ this.pulling = wasPulling; }
+    return { projekt, neuKapitel };
   },
-  async pullAll(){
-    if(!this.enabled()) return { ok:false, grund:'aus' };
+  async pullAll(opts){
+    if(!this.enabled()) return { ok:false, grund:'aus', neuKapitel:0 };
+    opts = opts || {};
     this.pulling = true;
     try{
       const data = await this.req('GET', '/projekte');
       const liste = data.projekte || [];
       let gezogen = 0;
+      let neuKapitel = 0;
+      const wantId = opts.forceId || 'isekai-6a9dc73e';
+      const seen = {};
       for(const meta of liste){
+        seen[meta.id] = true;
         const lokal = Store.load(meta.id);
         const lokalTs = lokal && lokal.aktualisiert ? Date.parse(lokal.aktualisiert) : 0;
         const cloudTs = meta.aktualisiert ? Date.parse(meta.aktualisiert) : 0;
-        if(!lokal || (cloudTs && cloudTs > lokalTs)){
-          await this.pullProjekt(meta.id);
-          gezogen++;
+        const force = opts.force || meta.id===wantId;
+        if(force || !lokal || (cloudTs && cloudTs > lokalTs)){
+          try{
+            const r = await this.pullProjekt(meta.id);
+            gezogen++;
+            neuKapitel += (r && r.neuKapitel) || 0;
+          }catch(e){ console.warn('pull', meta.id, e); }
         }
       }
+      // Falls Fleisch & Thron nicht in /projekte-Liste, trotzdem gezielt ziehen
+      if(wantId && !seen[wantId]){
+        try{
+          const r = await this.pullProjekt(wantId);
+          gezogen++;
+          neuKapitel += (r && r.neuKapitel) || 0;
+        }catch(e){ /* optional */ }
+      }
       this.lastMsg = gezogen ? (gezogen+' Projekt(e) aus der Cloud geladen') : 'Cloud aktuell';
-      return { ok:true, gezogen, liste };
+      return { ok:true, gezogen, liste, neuKapitel };
     } finally { this.pulling = false; }
   },
   async liste(){
@@ -1937,7 +2026,7 @@ const Pipe = {
 
 /* ============ UI ============ */
 const App = {
-  tab:'werk', p:null, leseN:null, edit:false, entwurfModus:false, entwurfGenre:'', entwurfIdee:'', entwurfLaeuft:false,
+  tab:'werk', p:null, leseN:null, flipPage:0, flipResume:false, edit:false, entwurfModus:false, entwurfGenre:'', entwurfIdee:'', entwurfLaeuft:false,
 
   async init(){
     const v = document.getElementById('view');
@@ -1949,41 +2038,166 @@ const App = {
       const d = {anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
       const c = Store.cfg();
       let ch = false;
-      // proxyUrl/pass/engineUrl/anbieter/model immer auf bekannte gute Werte setzen
       ['proxyUrl','pass','engineUrl','anbieter','model'].forEach(k=>{ if(c[k] !== d[k]){ c[k]=d[k]; ch=true; } });
       if(ch) Store.saveCfg(c);
     })();
+    const WANT = 'isekai-6a9dc73e';
+    let cloudNeu = 0;
     if(CloudSync.enabled()){
-      try{ await CloudSync.pullAll(); }catch(e){ console.warn('Cloud pull', e); if(typeof App!=='undefined' && App.toast) setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500); }
+      try{
+        const r = await CloudSync.pullAll({ force:true, forceId:WANT });
+        cloudNeu = (r && r.neuKapitel) || 0;
+        // Explizit Fleisch & Thron inkl. aller Kapitel nachziehen
+        try{
+          const r2 = await CloudSync.pullProjekt(WANT);
+          cloudNeu += (r2 && r2.neuKapitel) || 0;
+        }catch(e2){ console.warn('pullProjekt Fleisch', e2); }
+      }catch(e){
+        console.warn('Cloud pull', e);
+        setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500);
+      }
     }
-    // Nach Cloud-Pull immer Fleisch & Thron aktivieren, falls vorhanden
+    // Bootstrap aus eingebettetem JSON, falls Projekt lokal fehlt oder ohne Kapiteltexte
+    let bootImport = false;
     try{
-      const wantId = 'isekai-6a9dc73e';
-      const hit = (Store.list() || []).find(x => x && x.id === wantId);
+      bootImport = await this.ensureFleischBootstrap(WANT);
+    }catch(e){ console.warn('Bootstrap', e); }
+    try{
+      const hit = Store.load(WANT);
       if(hit){
         const m = Store.meta();
-        m.aktiv = wantId;
+        m.aktiv = WANT;
         Store.saveMeta(m);
-        this.p = Store.load(wantId);
+        this.p = hit;
+        if(bootImport) setTimeout(()=>App.toast('Fleisch & Thron geladen'), 400);
+        else if(cloudNeu>0) setTimeout(()=>App.toast(cloudNeu===1?'Neues Kapitel aus der Cloud':(cloudNeu+' neue Kapitel aus der Cloud')), 400);
       }
     }catch(e){ console.warn('Aktiv-Projekt setzen', e); }
     let id = Store.aktivId();
     if(!this.p) this.p = id ? Store.load(id) : null;
     if(!this.p) this.p = Store.create(NACHBILD);
-    // Wo war ich zuletzt? Tab und ggf. offenes Kapitel wiederherstellen, statt
-    // nach jedem Neuladen wieder bei "Werk" und der Kapitelliste zu landen.
     this.tab = this.p.letzterTab || 'werk';
     this.leseN = (this.tab==='lesen' && this.p.leseStand) ? this.p.leseStand.n : null;
-    document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{this.tab=b.dataset.tab;this.edit=false;this.render();window.scrollTo(0,0)});
+    document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+      const tab=b.dataset.tab;
+      this.tab=tab; this.edit=false;
+      if(tab==='lesen'||tab==='buch') this.cloudRefreshDebounced();
+      this.render(); window.scrollTo(0,0);
+    });
+    this.bindCloudFocusSync();
     this.render();
     this.hintergrundSync();
     setInterval(()=>this.hintergrundSync(), 20000);
+    setInterval(()=>this.cloudRefreshDebounced(true), 60000);
   },
 
   save(){ Store.save(this.p); },
   toast(msg, bad){
     const el=document.createElement('div'); el.className='toast'+(bad?' bad':''); el.textContent=msg;
     document.body.appendChild(el); setTimeout(()=>el.remove(), bad?4200:2200);
+  },
+
+  FLEISCH_ID: 'isekai-6a9dc73e',
+  _cloudRefreshAt: 0,
+  _cloudRefreshBusy: false,
+
+  kapitelText(ch){
+    if(!ch) return '';
+    return String(ch.body || ch.text || '');
+  },
+  kapitelStatusOk(k){
+    if(!k) return false;
+    return k.status==='fertig' || k.stand==='ok';
+  },
+  normalizeImportedKapitel(c){
+    const text = String((c && (c.body||c.text)) || '');
+    const stand = (c && c.stand) || ((c && c.status)==='fertig' ? 'ok' : 'ok');
+    const status = (c && c.status) || (stand==='ok' ? 'fertig' : 'pruefen');
+    return {
+      n: c.n, titel: c.titel || ('Kapitel '+c.n), body: text, text,
+      woerter: c.woerter || (text ? text.trim().split(/\s+/).filter(Boolean).length : 0),
+      stand, status, summary: c.summary || '', audit: c.audit || null
+    };
+  },
+  projectHasReadableChapters(id){
+    const p = Store.load(id);
+    if(!p || !(p.kapitelIdx||[]).length) return false;
+    return (p.kapitelIdx||[]).some(k=>{
+      const ch = Store.kapitel(id, k.n);
+      return !!(ch && this.kapitelText(ch).trim());
+    });
+  },
+  async ensureFleischBootstrap(wantId){
+    wantId = wantId || this.FLEISCH_ID;
+    if(this.projectHasReadableChapters(wantId)) return false;
+    const r = await fetch('./fleisch-thron.json', { cache:'no-store' });
+    if(!r.ok) throw new Error('Bootstrap HTTP '+r.status);
+    const d = await r.json();
+    const proj = d.projekt || d;
+    if(!proj || !proj.id) throw new Error('Bootstrap ohne Projekt');
+    proj.id = wantId;
+    const kapitel = d.kapitel || [];
+    const wasPulling = CloudSync.pulling;
+    CloudSync.pulling = true;
+    try{
+      (kapitel||[]).forEach(c=>{
+        const norm = this.normalizeImportedKapitel(c);
+        Store.saveKapitel(wantId, norm.n, norm);
+      });
+      proj.kapitelIdx = (kapitel.length ? kapitel : (proj.kapitelIdx||[])).map(c=>{
+        const norm = this.normalizeImportedKapitel(c);
+        return { n:norm.n, titel:norm.titel, woerter:norm.woerter, stand:norm.stand, status:norm.status };
+      }).sort((a,b)=>a.n-b.n);
+      if(proj.state && typeof proj.state==='object'){
+        proj.state.woerter_gesamt = proj.kapitelIdx.reduce((a,x)=>a+(x.woerter||0),0);
+      }
+      Store.save(proj);
+    } finally { CloudSync.pulling = wasPulling; }
+    return true;
+  },
+  async cloudRefreshDebounced(silentPoll){
+    if(!CloudSync.enabled()) return;
+    const now = Date.now();
+    if(this._cloudRefreshBusy) return;
+    if(!silentPoll && now - (this._cloudRefreshAt||0) < 30000) return;
+    if(silentPoll && now - (this._cloudRefreshAt||0) < 30000) return;
+    this._cloudRefreshBusy = true;
+    this._cloudRefreshAt = now;
+    try{
+      const want = this.FLEISCH_ID;
+      let neu = 0;
+      try{
+        const r = await CloudSync.pullProjekt(want);
+        neu += (r && r.neuKapitel) || 0;
+      }catch(e){
+        try{
+          const r2 = await CloudSync.pullAll({ forceId: want });
+          neu += (r2 && r2.neuKapitel) || 0;
+        }catch(e2){ console.warn('cloud refresh', e2); }
+      }
+      const aktiv = Store.load(want);
+      if(aktiv){
+        const m = Store.meta();
+        if(m.aktiv !== want){ m.aktiv = want; Store.saveMeta(m); }
+        // Aktives Projekt neu laden, Kapitel-Index aktualisieren
+        if(this.p && this.p.id === want){
+          this.p = Store.load(want);
+          if(neu>0){
+            this.toast(neu===1?'Neues Kapitel aus der Cloud':(neu+' neue Kapitel aus der Cloud'));
+            this.render();
+          }
+        } else if(neu>0){
+          this.toast(neu===1?'Neues Kapitel aus der Cloud':(neu+' neue Kapitel aus der Cloud'));
+        }
+      }
+    } finally { this._cloudRefreshBusy = false; }
+  },
+  bindCloudFocusSync(){
+    if(this._focusBound) return;
+    this._focusBound = true;
+    const go = ()=>{ if(document.visibilityState==='visible') this.cloudRefreshDebounced(); };
+    document.addEventListener('visibilitychange', go);
+    window.addEventListener('focus', ()=>this.cloudRefreshDebounced());
   },
   paintLog(){ const el=document.getElementById('log'); if(!el) return;
     el.innerHTML = Pipe.logs.map(l=>`<span class="${l.cls||''}">${esc(l.zeit)}  ${esc(l.t)}</span>`).join('\n');
@@ -2010,15 +2224,13 @@ const App = {
       || (p.leseStand && neuerStand && p.leseStand.n!==neuerStand.n);
     if(aendertSich){ p.letzterTab=this.tab; p.leseStand=neuerStand; Store.save(p); }
 
-    // Beim Öffnen eines Kapitels (oder Rückkehr dorthin) zur gemerkten Stelle scrollen.
-    if(this.tab==='lesen' && this.leseN!==null && !this.edit && p.leseStand && p.leseStand.n===this.leseN && p.leseStand.anteil>0){
-      const ziel = p.leseStand.anteil;
-      requestAnimationFrame(()=>{
-        const hoehe = document.body.scrollHeight - window.innerHeight;
-        if(hoehe>0) window.scrollTo(0, Math.round(ziel*hoehe));
-      });
+    // Page-Flip-Reader aufbauen (misst Seiten nach DOM-Insert)
+    if(this.tab==='lesen' && this.leseN!==null && !this.edit){
+      requestAnimationFrame(()=>this.setupFlipReader());
+    } else {
+      this.teardownFlipReader();
+      this.scrollVerfolgen();
     }
-    this.scrollVerfolgen();
   },
 
   // Verfolgt beim Lesen die Scrollposition (als Anteil der Seitenhöhe, robust
@@ -2038,6 +2250,186 @@ const App = {
       }, 600);
     };
     window.addEventListener('scroll', this._scrollHandler, {passive:true});
+  },
+
+  teardownFlipReader(){
+    if(this._flipResize){ window.removeEventListener('resize', this._flipResize); this._flipResize=null; }
+    if(this._flipKey){ window.removeEventListener('keydown', this._flipKey); this._flipKey=null; }
+    this._flipPages = null;
+  },
+  paginateChapter(text, pageEl){
+    const raw = String(text||'').replace(/\r\n/g,'\n').trim();
+    if(!raw) return ['<p></p>'];
+    const blocks = raw.split(/\n{2,}|\n/).map(s=>s.trim()).filter(Boolean).map(t=>{
+      if(t==='*'||t==='***') return {html:'<div class="sep">* * *</div>', plain:''};
+      return {html:'<p>'+esc(t)+'</p>', plain:t};
+    });
+    const maxH = pageEl.clientHeight;
+    if(maxH < 80) return [blocks.map(b=>b.html).join('')];
+    const pages = [];
+    let buf = '';
+    const fits = (html)=>{
+      pageEl.innerHTML = html;
+      return pageEl.scrollHeight <= maxH + 1;
+    };
+    const pushBuf = ()=>{
+      if(buf){ pages.push(buf); buf=''; }
+    };
+    for(const b of blocks){
+      const trial = buf + b.html;
+      if(fits(trial)){ buf = trial; continue; }
+      if(!buf){
+        // Block zu groß: nach Sätzen splitten
+        if(b.plain){
+          const sentences = b.plain.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [b.plain];
+          let para = '';
+          for(const s of sentences){
+            const piece = (para + s).trim();
+            const html = '<p>'+esc(piece)+'</p>';
+            if(fits(html)){ para = piece + ' '; continue; }
+            if(para){ pages.push('<p>'+esc(para.trim())+'</p>'); para = s + ' '; }
+            else {
+              // hart nach Wörtern
+              const words = s.split(/\s+/);
+              let line = '';
+              for(const w of words){
+                const t = (line+' '+w).trim();
+                const h = '<p>'+esc(t)+'</p>';
+                if(fits(h)) line = t;
+                else { if(line) pages.push('<p>'+esc(line)+'</p>'); line = w; }
+              }
+              if(line) para = line + ' ';
+            }
+          }
+          if(para.trim()) buf = '<p>'+esc(para.trim())+'</p>';
+        } else {
+          pages.push(b.html);
+        }
+        continue;
+      }
+      pushBuf();
+      if(fits(b.html)) buf = b.html;
+      else {
+        // nach Push immer noch zu groß
+        pageEl.innerHTML = b.html;
+        pages.push(b.html);
+        buf = '';
+      }
+    }
+    pushBuf();
+    pageEl.innerHTML = '';
+    return pages.length ? pages : ['<p></p>'];
+  },
+  setupFlipReader(){
+    const stage = document.getElementById('flipStage');
+    const book = document.getElementById('flipBook');
+    if(!stage || !book || !this.p || this.leseN===null) return;
+    this.teardownFlipReader();
+    const ch = Store.kapitel(this.p.id, this.leseN);
+    if(!ch) return;
+    const text = this.kapitelText(ch);
+
+    // Messfläche = sichtbare Buchseite
+    book.innerHTML = '<div class="flip-page"><div class="flip-page-inner reader" id="flipMeasure"></div></div>';
+    const measure = document.getElementById('flipMeasure');
+    // Höhe: Viewport minus Chrome/Nav
+    const chrome = document.querySelector('.flip-chrome');
+    const header = document.querySelector('header');
+    const nav = document.querySelector('nav');
+    const top = (header?header.getBoundingClientRect().bottom:0) + (chrome?chrome.getBoundingClientRect().height:0) + 12;
+    const bottom = (nav?nav.getBoundingClientRect().height:56) + 120;
+    const h = Math.max(280, window.innerHeight - top - bottom);
+    stage.style.height = h + 'px';
+    const pages = this.paginateChapter(text, measure);
+    this._flipPages = pages;
+
+    let page = Number(this.flipPage)||0;
+    if(this.flipResume && this.p.leseStand && this.p.leseStand.n===this.leseN){
+      page = Math.round((this.p.leseStand.anteil||0) * Math.max(0, pages.length-1));
+      this.flipResume = false;
+    }
+    page = Math.max(0, Math.min(pages.length-1, page));
+    this.flipPage = page;
+    this._flipAnimating = false;
+
+    const paint = (withAnim, dir)=>{
+      const ind = document.getElementById('flipPageInd');
+      if(ind) ind.textContent = (this.flipPage+1)+' / '+pages.length;
+      const end = document.getElementById('flipEndNav');
+      if(end) end.style.display = (this.flipPage >= pages.length-1) ? 'flex' : 'none';
+
+      const cur = pages[this.flipPage] || '';
+      if(!withAnim || pages.length<2){
+        book.innerHTML = '<div class="flip-page show"><div class="flip-page-inner reader">'+cur+'</div></div>';
+        return;
+      }
+      const prevHtml = pages[this.flipPage - (dir>0?1:-1)] || cur;
+      const front = dir>0 ? prevHtml : cur;
+      const back = dir>0 ? cur : prevHtml;
+      book.innerHTML =
+        '<div class="flip-page base"><div class="flip-page-inner reader">'+(dir>0?cur:prevHtml)+'</div></div>'+
+        '<div class="flip-page flipping '+(dir>0?'turn-forward':'turn-back')+'"><div class="flip-page-inner reader">'+front+'</div><div class="flip-page-back"><div class="flip-page-inner reader">'+back+'</div></div></div>';
+      const flipEl = book.querySelector('.flipping');
+      this._flipAnimating = true;
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          if(flipEl) flipEl.classList.add('go');
+        });
+      });
+      setTimeout(()=>{
+        book.innerHTML = '<div class="flip-page show"><div class="flip-page-inner reader">'+cur+'</div></div>';
+        this._flipAnimating = false;
+      }, 520);
+    };
+
+    const go = (delta)=>{
+      if(this._flipAnimating) return;
+      const next = this.flipPage + delta;
+      if(next < 0 || next >= pages.length) return;
+      this.flipPage = next;
+      const anteil = pages.length<=1 ? 0 : this.flipPage/Math.max(1,pages.length-1);
+      this.p.leseStand = {n:this.leseN, anteil};
+      Store.save(this.p);
+      paint(true, delta);
+    };
+
+    paint(false, 0);
+    const prevBtn = document.getElementById('flipPrev');
+    const nextBtn = document.getElementById('flipNext');
+    if(prevBtn) prevBtn.onclick = (e)=>{ e.preventDefault(); go(-1); };
+    if(nextBtn) nextBtn.onclick = (e)=>{ e.preventDefault(); go(1); };
+
+    // Touch swipe
+    let sx=0, sy=0, tracking=false;
+    stage.ontouchstart = (e)=>{
+      if(!e.touches||!e.touches[0]) return;
+      tracking=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY;
+    };
+    stage.ontouchmove = (e)=>{
+      if(!tracking) return;
+      const dx=e.touches[0].clientX-sx, dy=e.touches[0].clientY-sy;
+      if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>12) e.preventDefault();
+    };
+    stage.ontouchend = (e)=>{
+      if(!tracking) return; tracking=false;
+      const t=e.changedTouches&&e.changedTouches[0]; if(!t) return;
+      const dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)<40 || Math.abs(dx)<Math.abs(dy)) return;
+      if(dx<0) go(1); else go(-1);
+    };
+
+    this._flipKey = (e)=>{
+      if(this.tab!=='lesen' || this.edit) return;
+      if(e.key==='ArrowRight' || e.key==='PageDown') { e.preventDefault(); go(1); }
+      if(e.key==='ArrowLeft' || e.key==='PageUp') { e.preventDefault(); go(-1); }
+    };
+    window.addEventListener('keydown', this._flipKey);
+    let resizeTimer=null;
+    this._flipResize = ()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(()=>{ if(this.tab==='lesen' && this.leseN!==null && !this.edit) this.setupFlipReader(); }, 200);
+    };
+    window.addEventListener('resize', this._flipResize);
   },
 
   t_werk(p){
@@ -2275,41 +2667,58 @@ const App = {
       const ch=Store.kapitel(p.id,this.leseN);
       if(!ch){ this.leseN=null; return this.t_lesen(p); }
       if(this.edit){
+        const body = this.kapitelText(ch);
         return `<div class="card"><label>Titel</label><input id="ed-t" value="${att(ch.titel)}">
-          <label style="margin-top:10px">Text</label><textarea id="ed-b" style="min-height:60vh;font-size:15px">${esc(ch.body)}</textarea>
+          <label style="margin-top:10px">Text</label><textarea id="ed-b" style="min-height:60vh;font-size:15px">${esc(body)}</textarea>
           <div class="row" style="margin-top:12px"><button class="primary" onclick="App.speichereKapitel()">Speichern</button>
           <button class="ghost" onclick="App.edit=false;App.render()">Abbrechen</button></div></div>`;
       }
-      const paras=ch.body.split(/\n{2,}|\n/).map(s=>s.trim()).filter(Boolean);
-      let h=`<div class="split" style="margin:14px 0"><button class="small ghost" onclick="App.leseN=null;App.render()">Zurück</button>
-        <span class="sub">${nf(ch.woerter)} Wörter · ${ch.status==='fertig'?'sauber':'prüfen'}</span></div>`;
+      const ok = this.kapitelStatusOk(ch);
+      const next = (p.kapitelIdx||[]).find(x=>x.n>ch.n);
+      let h=`<div class="flip-chrome">
+        <button class="small ghost" type="button" onclick="App.leseN=null;App.render()">← Kapitel</button>
+        <div class="flip-meta">
+          <div class="kap">${ch.n===0?'Prolog':'Kapitel '+ch.n}</div>
+          <div class="flip-title">${esc(ch.titel)}</div>
+        </div>
+        <div class="flip-pageind" id="flipPageInd">—</div>
+      </div>`;
       if(ch.audit && (ch.audit.verstoesse||[]).length){
-        h+=`<details><summary>${ch.audit.verstoesse.length} Anmerkungen des Auditors</summary><div class="sub" style="margin-top:8px">`;
+        h+=`<details style="margin:8px 0"><summary>${ch.audit.verstoesse.length} Anmerkungen des Auditors</summary><div class="sub" style="margin-top:8px">`;
         ch.audit.verstoesse.forEach(v=>h+=`<div style="margin-bottom:8px"><span class="tag ${v.schwere==='hoch'?'bad':''}">${esc(v.typ)} · ${esc(v.schwere)}</span> ${esc(v.korrekturhinweis)}</div>`);
         h+='</div></details>';
       }
-      h+=`<div class="reader"><div class="kap">${ch.n===0?'Prolog':'Kapitel '+ch.n}</div>
-        <h2 style="font-size:22px;margin:2px 0 18px">${esc(ch.titel)}</h2>`;
-      paras.forEach(t=>{ h += (t==='*'||t==='***') ? '<div class="sep">* * *</div>' : `<p>${esc(t)}</p>`; });
-      h+=`</div><div class="row" style="margin:20px 0">
+      h+=`<div class="flip-stage" id="flipStage">
+        <div class="flip-book" id="flipBook" aria-live="polite"></div>
+        <button type="button" class="flip-hit left" id="flipPrev" aria-label="Vorherige Seite"></button>
+        <button type="button" class="flip-hit right" id="flipNext" aria-label="Nächste Seite"></button>
+      </div>
+      <div class="flip-actions row" style="margin:14px 0 8px">
         <button class="ghost small" onclick="App.edit=true;App.render()">Bearbeiten</button>
         <button class="ghost small" onclick="App.wuerfeln(${ch.n})">Neu würfeln</button>
-        <button class="ghost small danger" onclick="App.loescheKapitel(${ch.n})">Löschen</button></div>`;
+        <button class="ghost small danger" onclick="App.loescheKapitel(${ch.n})">Löschen</button>
+      </div>
+      <div class="flip-end row" id="flipEndNav" style="display:none;margin-bottom:20px">
+        ${next?`<button class="primary full" onclick="App.leseN=${next.n};App.flipPage=0;App.render()">Nächstes Kapitel →</button>`
+              :`<button class="ghost full" onclick="App.leseN=null;App.render()">Zur Kapitelliste</button>`}
+      </div>
+      <p class="sub" style="text-align:center;margin:0 0 24px">${nf(ch.woerter||0)} Wörter · ${ok?'sauber':'prüfen'} · Wischen oder tippen zum Umblättern</p>`;
       return h;
     }
     if(!p.kapitelIdx.length) return '<div class="empty">Noch nichts geschrieben. Auf „Werk" das erste Kapitel starten.</div>';
     let h='';
     if(p.leseStand && p.leseStand.anteil>0.02){
       const k = p.kapitelIdx.find(x=>x.n===p.leseStand.n);
-      if(k) h+=`<div class="item" style="border-color:var(--deep-d)" onclick="App.leseN=${k.n};App.render()">
+      if(k) h+=`<div class="item" style="border-color:var(--deep-d)" onclick="App.leseN=${k.n};App.flipResume=true;App.render()">
         <div class="split"><div><div class="kap">Weiterlesen</div><div class="t">${k.n===0?'Prolog':'Kapitel '+k.n} — ${esc(k.titel)}</div>
         <div class="sub">bei ${Math.round(p.leseStand.anteil*100)} %</div></div></div></div>`;
     }
     p.kapitelIdx.forEach(k=>{
-      h+=`<div class="item" onclick="App.leseN=${k.n};App.render()">
+      const ok = this.kapitelStatusOk(k);
+      h+=`<div class="item" onclick="App.leseN=${k.n};App.flipPage=0;App.render()">
         <div class="split"><div><div class="kap">${k.n===0?'Prolog':'Kapitel '+k.n}</div><div class="t">${esc(k.titel)}</div>
         <div class="sub">${nf(k.woerter)} Wörter · ca. ${Math.max(1,Math.round(k.woerter/220))} Min.</div></div>
-        <span class="tag ${k.status==='fertig'?'ok':'bad'}">${k.status==='fertig'?'sauber':'prüfen'}</span></div></div>`;
+        <span class="tag ${ok?'ok':'bad'}">${ok?'sauber':'prüfen'}</span></div></div>`;
     });
     return h;
   },
@@ -2417,7 +2826,8 @@ const App = {
 
     let belegt=0; try{ for(const k in MEM) if(k.startsWith('sw:')) belegt += JSON.stringify(MEM[k]||'').length; }catch(e){}
     h+=`<p class="sub" style="margin:20px 0 0">Speicher: ${Math.round(belegt/1024)} KB (liegt in IndexedDB, deutlich mehr Platz als der frühere 5-MB-Deckel von localStorage — aber auch das ist nicht unbegrenzt).${belegt>50_000_000?' <b style="color:var(--rost)">Wird groß — Backup ziehen und alte Projekte löschen.</b>':''}</p>`;
-    h+=`<p class="sub" style="margin:6px 0 30px">Alles liegt in diesem Browser. Backup regelmäßig exportieren — ein geleerter Browserspeicher nimmt das Buch mit.</p>`;
+    h+=`<p class="sub" style="margin:6px 0 8px">Alles liegt in diesem Browser. Backup regelmäßig exportieren — ein geleerter Browserspeicher nimmt das Buch mit.</p>`;
+    h+=`<p class="sub" style="margin:0 0 30px">Optional: <a href="./fleisch-thron.html" target="_blank" rel="noopener">Fleisch &amp; Thron als separate HTML-Seite</a> (Backup-Ansicht — primär im Lesen-Tab).</p>`;
     return h;
   }
 };
@@ -2519,6 +2929,7 @@ Object.assign(App, {
     const n=this.leseN, ch=Store.kapitel(this.p.id,n);
     ch.titel=document.getElementById('ed-t').value;
     ch.body=document.getElementById('ed-b').value;
+    ch.text=ch.body;
     ch.woerter=words(ch.body);
     Store.saveKapitel(this.p.id,n,ch);
     const k=this.p.kapitelIdx.find(x=>x.n===n); if(k){k.titel=ch.titel;k.woerter=ch.woerter}
@@ -2739,7 +3150,7 @@ Object.assign(App, {
   exportTXT(){
     const chs=this.alleKapitel(); if(!chs.length) return this.toast('Noch keine Kapitel.',1);
     let t=this.p.konzept.titel+'\n'+this.p.konzept.untertitel+'\n'+(this.p.autor||'')+'\n\n';
-    chs.forEach(c=>{ t+='\n\n'+(c.n===0?'PROLOG':'KAPITEL '+c.n)+'\n'+c.titel+'\n\n'+c.body+'\n'; });
+    chs.forEach(c=>{ const body=c.body||c.text||''; t+='\n\n'+(c.n===0?'PROLOG':'KAPITEL '+c.n)+'\n'+c.titel+'\n\n'+body+'\n'; });
     this.dl(new Blob([t],{type:'text/plain;charset=utf-8'}), this.datei('txt'));
   },
   exportJSON(){
@@ -2939,10 +3350,18 @@ Object.assign(App, {
 
 App.cloudLaden = async function(){
   try{
-    const r = await CloudSync.pullAll();
-    const id = Store.aktivId();
-    this.p = id ? Store.load(id) : this.p;
-    this.toast(CloudSync.lastMsg || 'Cloud geladen');
+    const r = await CloudSync.pullAll({ force:true, forceId:this.FLEISCH_ID });
+    try{ await CloudSync.pullProjekt(this.FLEISCH_ID); }catch(e){}
+    const want = Store.load(this.FLEISCH_ID);
+    if(want){
+      const meta = Store.meta(); meta.aktiv=this.FLEISCH_ID; Store.saveMeta(meta);
+      this.p = want;
+    } else {
+      const id = Store.aktivId();
+      this.p = id ? Store.load(id) : this.p;
+    }
+    const neu = (r && r.neuKapitel) || 0;
+    this.toast(neu>0 ? (neu===1?'Neues Kapitel aus der Cloud':(neu+' neue Kapitel aus der Cloud')) : (CloudSync.lastMsg || 'Cloud geladen'));
     this.render();
   }catch(e){ this.toast('Cloud laden: '+(e.message||e), 1); }
 };

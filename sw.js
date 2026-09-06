@@ -1,6 +1,6 @@
-const CACHE = 'rw-v6';
+const CACHE = 'rw-v7';
 const ASSETS = [
-  './','./index.html','./styles.css','./manifest.json','./icon.svg'
+  './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json'
 ];
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
@@ -11,9 +11,10 @@ self.addEventListener('activate', e=>{
 self.addEventListener('fetch', e=>{
   const url = new URL(e.request.url);
   if(e.request.method!=='GET') return;
-  // index.html / navigation: always try network first so fixes go live
+  // index.html / navigation / bootstrap book: network first
   const isDoc = e.request.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/Kimi/') || url.pathname.endsWith('/Kimi');
-  if(isDoc){
+  const isBoot = url.pathname.endsWith('/fleisch-thron.json');
+  if(isDoc || isBoot){
     e.respondWith(
       fetch(e.request).then(r=>{
         if(r.ok){ const copy=r.clone(); caches.open(CACHE).then(c=>c.put(e.request, copy)); }
