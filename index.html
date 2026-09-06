@@ -761,7 +761,7 @@ const Store = {
   loescheZwischenstand(id,n){ S.del(this.zwK(id,n)); },
   // proxyUrl: absolute URL deines Cloudflare Workers, z.B. https://silberwerk-proxy.DEINNAME.workers.dev
   // pass: Zugangswort, muss mit dem Secret SW_PASS im Worker übereinstimmen
-  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
+  cfg(){ return S.get('sw:cfg', {key:'sk-vHs1DVftccQOJLgWjZnCnC7oR90t8DqEFA65rzFcAlNyEVMO', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
   saveCfg(c){ S.put('sw:cfg', c); }
 };
 
@@ -2033,6 +2033,15 @@ const App = {
     if(v) v.innerHTML = '<div class="card">Bibliothek wird geladen …</div>';
     await S.initialisieren();
     if(!S.ok()){ document.getElementById('view').innerHTML='<div class="card">Der Browser erlaubt keinen dauerhaften Speicher (privates Fenster?). Die App braucht IndexedDB oder localStorage.</div>'; return; }
+    // Zugangsdaten fest setzen (Key, Proxy, Pass, Worker)
+    (function(){
+      const d = {key:'sk-vHs1DVftccQOJLgWjZnCnC7oR90t8DqEFA65rzFcAlNyEVMO', anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
+      const c = Store.cfg();
+      let ch = false;
+      Object.keys(d).forEach(k=>{ if(c[k] !== d[k]){ c[k]=d[k]; ch=true; } });
+      if(ch) Store.saveCfg(c);
+    })();
+
     // Fest hinterlegte Werkstatt-Defaults (Proxy/Pass/Engine) — Key bleibt server-seitig am Proxy
     (function(){
       const d = {anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
