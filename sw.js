@@ -1,5 +1,8 @@
-const CACHE='rw-v2';
-const ASSETS=['./','./index.html','./styles.css','./manifest.json','./icon.svg'];
+const CACHE = 'rw-v4';
+const ASSETS = [
+  './','./index.html','./styles.css','./manifest.json','./icon.svg',
+  './js/01.js','./js/02.js','./js/03.js','./js/04.js','./js/05.js','./js/06.js','./js/07.js'
+];
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
@@ -9,12 +12,13 @@ self.addEventListener('activate', e=>{
 self.addEventListener('fetch', e=>{
   const url = new URL(e.request.url);
   if(e.request.method!=='GET') return;
-  if(url.origin!==location.origin) return;
   e.respondWith(
-    fetch(e.request).then(r=>{
-      const copy=r.clone();
-      caches.open(CACHE).then(c=>c.put(e.request, copy));
+    caches.match(e.request).then(hit=> hit || fetch(e.request).then(r=>{
+      if(r.ok && url.origin===location.origin){
+        const copy=r.clone();
+        caches.open(CACHE).then(c=>c.put(e.request, copy));
+      }
       return r;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html')))
+    }).catch(()=>caches.match('./index.html')))
   );
 });

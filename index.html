@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F5F5F7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F5F5F7">
+<meta name="apple-mobile-web-app-title" content="Werkstatt">
 <title>Roman-Werkstatt</title>
-<link rel="stylesheet" href="styles.css">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -25,11 +26,16 @@
   <button data-tab="lesen">Lesen</button>
   <button data-tab="setup">Setup</button>
 </div></nav>
-  <script src="js/01.js"></script>
-  <script src="js/02.js"></script>
-  <script src="js/03.js"></script>
-  <script src="js/04.js"></script>
-  <script src="js/05.js"></script>
-  <script src="js/06.js"></script>
-</body>
-</html>
+<script src="js/01.js"></script>
+<script src="js/02.js"></script>
+<script src="js/03.js"></script>
+<script src="js/04.js"></script>
+<script src="js/05.js"></script>
+<script src="js/06.js"></script>
+<script src="js/07.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body></html>
