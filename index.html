@@ -1956,19 +1956,19 @@ const App = {
     if(CloudSync.enabled()){
       try{ await CloudSync.pullAll(); }catch(e){ console.warn('Cloud pull', e); if(typeof App!=='undefined' && App.toast) setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500); }
     }
-    // Prefer shared Fleisch & Thron project after cloud pull
-    {
+    // Nach Cloud-Pull immer Fleisch & Thron aktivieren, falls vorhanden
+    try{
       const wantId = 'isekai-6a9dc73e';
-      const liste = Store.list() || [];
-      const hit = liste.find(x => x && (x.id === wantId || x.name === 'Fleisch & Thron'));
+      const hit = (Store.list() || []).find(x => x && x.id === wantId);
       if(hit){
         const m = Store.meta();
-        m.aktiv = hit.id;
+        m.aktiv = wantId;
         Store.saveMeta(m);
+        this.p = Store.load(wantId);
       }
-    }
+    }catch(e){ console.warn('Aktiv-Projekt setzen', e); }
     let id = Store.aktivId();
-    this.p = id ? Store.load(id) : null;
+    if(!this.p) this.p = id ? Store.load(id) : null;
     if(!this.p) this.p = Store.create(NACHBILD);
     // Wo war ich zuletzt? Tab und ggf. offenes Kapitel wiederherstellen, statt
     // nach jedem Neuladen wieder bei "Werk" und der Kapitelliste zu landen.

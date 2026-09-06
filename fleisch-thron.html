@@ -3,30 +3,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#F5F5F7">
 <title>Fleisch &amp; Thron</title>
 <style>
-:root{--bg:#F5F5F7;--panel:#fff;--text:#3A3A3C;--head:#1D1D1F;--muted:#8E8E93;--deep:#FF9500;--serif:"Iowan Old Style",Palatino,Georgia,serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;padding:calc(16px + env(safe-area-inset-top)) 16px 48px}
-.wrap{max-width:680px;margin:0 auto}
-h1{font-size:28px;color:var(--head);letter-spacing:-.03em;margin:0 0 6px}
-.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
-nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
-nav a{background:#fff;color:var(--deep);text-decoration:none;font-weight:600;padding:10px 12px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-section{background:var(--panel);border-radius:14px;padding:18px 16px;margin:0 0 16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-h2{font-size:20px;color:var(--head);margin:0 0 6px}
-.meta{color:var(--muted);font-size:13px;margin:0 0 14px}
-section p{font-family:var(--serif);font-size:18px;line-height:1.65;margin:0 0 12px;color:var(--head)}
-.back{display:inline-block;margin-top:8px;color:var(--deep);font-weight:600;text-decoration:none}
+:root{
+  --bg:#F5F5F7; --panel:#FFFFFF; --panel2:#F2F2F7; --line:#E5E5EA;
+  --text:#3A3A3C; --head:#1D1D1F; --muted:#8E8E93;
+  --deep:#FF9500; --deep-d:#E68600;
+  --r:14px; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --serif:"New York","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--sans);
+  font-size:16px; line-height:1.47;
+  padding-bottom:calc(40px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased; letter-spacing:-0.01em;
+}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+header{
+  position:sticky;top:0;z-index:40;background:rgba(245,245,247,.82);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  padding:calc(14px + env(safe-area-inset-top)) 0 14px;
+}
+header .wrap{display:flex;flex-direction:column;gap:4px}
+h1{font-family:var(--sans);font-size:24px;font-weight:700;color:var(--head);margin:0;letter-spacing:-0.03em}
+h1 .accent{color:var(--deep)}
+.intro{font-size:14px;color:var(--muted);font-weight:500;margin:0}
+.nav{
+  display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px;
+}
+.nav a{
+  display:inline-block;background:var(--panel);color:var(--deep);text-decoration:none;
+  font-weight:600;font-size:13px;padding:10px 14px;border-radius:12px;
+  box-shadow:var(--shadow);min-height:40px;line-height:20px;
+}
+.nav a:active{opacity:.7;transform:scale(.98)}
+.chapter{
+  background:var(--panel);border-radius:var(--r);padding:22px 18px;margin:16px 0;
+  box-shadow:var(--shadow);
+}
+.kap{font-family:var(--sans);color:var(--muted);font-size:12px;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+h2{font-family:var(--sans);font-size:22px;font-weight:700;color:var(--head);margin:0 0 6px;letter-spacing:-0.02em}
+.wc{font-size:13px;color:var(--muted);margin:0 0 18px;font-weight:500}
+.reader{font-family:var(--serif);font-size:19px;line-height:1.7;color:var(--head);letter-spacing:0}
+.reader p{margin:0 0 1.1em;text-align:left}
+.reader p:last-child{margin-bottom:0}
+footer{
+  text-align:center;padding:28px 16px 12px;color:var(--muted);font-size:14px;
+}
+footer a{color:var(--deep);text-decoration:none;font-weight:600}
+footer a:active{opacity:.7}
+.top-link{
+  display:inline-block;margin-top:8px;font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;
+}
+@media (min-width:700px){
+  .reader{font-size:20px}
+  .chapter{padding:28px 28px}
+}
 </style>
 </head>
-<body><div class="wrap">
-<h1>Fleisch &amp; Thron</h1>
-<p class="sub">Dark Isekai · 5 Kapitel · ~9214 Wörter</p>
-<nav><a href="#k1">K1</a><a href="#k2">K2</a><a href="#k3">K3</a><a href="#k4">K4</a><a href="#k5">K5</a></nav>
-<section id="k1"><h2>Kapitel 1: Aufwachen im Fleisch</h2>
-<p class="meta">1201 Wörter</p>
+<body>
+<header>
+  <div class="wrap">
+    <h1><span class="accent">Fleisch</span> &amp; Thron</h1>
+    <p class="intro">Dark Isekai · 5 Kapitel</p>
+  </div>
+</header>
+<main class="wrap">
+  <nav class="nav" aria-label="Kapitel">
+      <a href="#kapitel-1">Kapitel 1</a>
+      <a href="#kapitel-2">Kapitel 2</a>
+      <a href="#kapitel-3">Kapitel 3</a>
+      <a href="#kapitel-4">Kapitel 4</a>
+      <a href="#kapitel-5">Kapitel 5</a>
+  </nav>
+
+<section class="chapter" id="kapitel-1">
+  <div class="kap">Kapitel 1</div>
+  <h2>Aufwachen im Fleisch</h2>
+  <p class="wc">1,201 Wörter</p>
+  <div class="reader">
 <p>Das Erwachen schmeckte nach Kupfer und altem Fett.</p>
 <p>Kael lag auf Stein, nackt, die Handgelenke über dem Kopf an eiserne Ringe geschmiedet. Nicht gefesselt – *durchbohrt*. Stahl durch die Knöchel, kalt, präzise, von jemandem eingebracht, der das oft getan hatte. Sein linker Arm hing schlaff. Nicht gebrochen. *Falsch angegossen*, dachte er, bevor er begriff, dass dieser Körper nicht der seine war. Länger. Dünner. Narben, die er nicht verdient hatte, zogen sich über die Innenseite seiner Oberschenkel wie Notizen in einer fremden Sprache.</p>
 <p>Der Raum roch nach Verwesung unter Weihrauch.</p>
@@ -58,9 +119,14 @@ section p{font-family:var(--serif);font-size:18px;line-height:1.65;margin:0 0 12
 <p>Hinter ihm, weit, zu weit für menschliche Ohren, hörte er eine Stimme – die Frau, vermutete er – sagen: „Der ist aufgewacht. Endlich einer, der aufwacht.&quot;</p>
 <p>Er lief schneller, in die Dunkelheit, in den Wald, der die Stadt umgab, in das Fleisch dieser Welt, das er noch nicht verstand, aber bereits bezahlte, Stück für Stück, Erinnerung für Erinnerung, ohne zu wissen, was er weggab.</p>
 <p>Der Geruch von Weihrauch blieb. Er drückte ihn weg. Wieder. Und wieder. Bis er vergaß, dass er ihn kannte.</p>
+  </div>
 </section>
-<section id="k2"><h2>Kapitel 2: Markt der Namen</h2>
-<p class="meta">1258 Wörter</p>
+
+<section class="chapter" id="kapitel-2">
+  <div class="kap">Kapitel 2</div>
+  <h2>Markt der Namen</h2>
+  <p class="wc">1,258 Wörter</p>
+  <div class="reader">
 <p>Der Markt roch nach Pisse und Zuckerwerk, eine Kombination, die Kael bewusst machte, dass er hier noch nicht genug gesehen hatte, um zu wissen, welche der beiden Substanzen die wertvollere war. Er war durch drei Tore gekommen, jedes mit einem anderen Gesicht, jedes mit einer anderen Lüge über seinen Namen. Der Körper schwitzte unter der Stoffkappe, die er sich von einem Toten genommen hatte – nicht von seinem ersten, sondern von einem, den er im Wald gefunden hatte, aufgehängt an einem Baum, dessen Zweige wie Finger aussahen. Der Tote hatte keine Schuhe gehabt. Kael trug sie jetzt. Sie passten zu gut.</p>
 <p>Die Gasse öffnete sich zu einem Hof, den Mondlicht und Fackeln zu gleichen Teilen beleuchteten. Käfige standen nicht in Reihen, sondern in einem Muster, das er fast erkannte, bevor es ihm wegrutschte wie der Name seiner Mutter, den er nicht mehr sagen konnte. Er wusste nur, dass er einen gehabt hatte. Eine Mutter. Einen Namen für sie. Beides weg, gegen was eingetauscht? Das System zeigte nichts an, nur die 0,7, pulsend, unvollständig, wie ein Zahn, an dem man leckt.</p>
 <p>In den Käfigen saßen keine Menschen. Das war der erste Fehler, den er beinahe machte. Sie saßen dort, atmeten, blinzelten, aber über ihren Gesichtern lag etwas, das er erst als Schmutz wahrnahm, dann als *Absenz* – Namen, ausgelöscht oder verkauft oder gestohlen, er wusste nicht, welches Verb hier zutraf. Ein Händler mit Ölflecken auf den Fingernägeln zeigte auf einen Jungen, vielleicht zwanzig, mit einer Narbe, die sein Gesicht in zwei ungleiche Hälften teilte. „Intakt&quot;, sagte der Händler. „Vollständige Identitätskette. Drei Generationen Vaelmark, bezeugt. Der Körper weiß, wer er ist.&quot; Er klopfte gegen den Käfig, und der Junge zuckte zusammen, nicht vor Schmerz, sondern vor *Erkennung* – er wusste, dass er geklopft werden sollte, erwartete es, und das war schlimmer als alles andere.</p>
@@ -87,9 +153,14 @@ section p{font-family:var(--serif);font-size:18px;line-height:1.65;margin:0 0 12
 <p>Seraphine zog sich zurück, und ihr Panzer machte ein Geräusch, das er später als *Hunger* identifizieren würde, als Fressen von innen, als Erinnerungen, die verschwanden, Tag für Tag, bis nichts übrig blieb als Rost und die Gewissheit, dass jemand zurückkommen würde, nicht neu, nicht alt, nur *wieder*.</p>
 <p>„Morgen&quot;, sagte sie. „Malvek. Bring das Loch in dir, Kael. Es ist scharfer als du denkst.&quot;</p>
 <p>Sie ging, und der Geruch von Eisen blieb, stärker als der Weihrauch vom Tempel, beständiger. Er drückte ihn nicht weg. Er atmete ihn ein, Stück für Stück, Erinnerung für Erinnerung, ohne zu wissen, was er damit bezahlte.</p>
+  </div>
 </section>
-<section id="k3"><h2>Kapitel 3: Knochenvertrag</h2>
-<p class="meta">912 Wörter</p>
+
+<section class="chapter" id="kapitel-3">
+  <div class="kap">Kapitel 3</div>
+  <h2>Knochenvertrag</h2>
+  <p class="wc">912 Wörter</p>
+  <div class="reader">
 <p>Das Knacken begann draußen, noch bevor Kael es als Bedrohung erkannte. Ein rhythmisches Klicken, das durch die feuchten Bretter der Schenke drang wie ein Herzschlag aus Metall und Holz. Er saß im Obergeschoss, Rücken zur Wand, und versuchte, das System zu *füttern*.</p>
 <p>0,7 Einheiten. Unter dem Transaktionsminimum, hatte es gesagt, aber nicht erklärt, was es wollte. Begehren. Er hatte versucht, sich selbst zu begehren – die Hand auf den eigenen Schenkel gelegt, mechanisch, die Atmung reguliert, die Erinnerung an einen Mund in einer anderen Welt heraufbeschworen. Nichts. Das System hatte nicht geblinzelt. Dann hatte er versucht, die Wirtin unten zu begehren, ihre Hände, die den Krug hielten wie eine Drohung, ihren Hals, der schweißnass war unter dem schmutzigen Haar. Er hatte es *gewollt*, absichtlich, kalkuliert, und das System hatte geschwiegen.</p>
 <p>Jetzt verstand er, oder glaubte zu verstehen. Begehren war nicht sein. Begehren war das, was er von anderen *nahm*, nicht was er in sich erzeugte. Die 0,7 Einheiten schmeckten nach etwas, das er nicht kannte – nach dem Blut des Ritualpriesters, vielleicht, oder nach dem Moment, als der Augenlose gestorben war und Kael seinen Namen gelogen hatte. Sie schmeckten nach *Fremdheit*, nach einem Verlangen, das nicht in seinem Schädel geboren war, sondern eingetreten war, wie ein Dieb.</p>
@@ -120,9 +191,14 @@ section p{font-family:var(--serif);font-size:18px;line-height:1.65;margin:0 0 12
 <p>„Nein&quot;, sagte Malvek. „Ich darf nicht. Aber ich darf *prüfen*, was noch übrig ist.&quot;</p>
 <p>Er griff nach Kaels Gesicht, nicht mit Gewalt, mit *Messung*, und Kael ließ es geschehen, weil das Porzellan kitzelte, weil etwas Wichtiges zurückwachsen wollte, weil Seraphines Zuckergeruch im Regen wie ein Versprechen schmeckte, das er nicht verstand, aber begehrte, fremd, endlich fremd, endlich *genug*.</p>
 <p>Die 0,7 Einheiten bebten. Fast. Noch nicht. Aber näher.</p>
+  </div>
 </section>
-<section id="k4"><h2>Kapitel 4: Rost und Lippen</h2>
-<p class="meta">2462 Wörter</p>
+
+<section class="chapter" id="kapitel-4">
+  <div class="kap">Kapitel 4</div>
+  <h2>Rost und Lippen</h2>
+  <p class="wc">2,462 Wörter</p>
+  <div class="reader">
 <p>Der Kanal stank nach totem Wasser und dem spezifischen Geruch von Eisen, das zu lange im Dunkeln gelegen hatte. Kael tastete sich vorwärts, die linke Hand an der feuchten Wand, die rechte um den Griff des gebogenen Messers, das er dem Toten im Wald abgenommen hatte. Er mochte das Messer. Es passte zu dem, was er in den letzten Tagen gelernt hatte: In Vaelmark starb man nicht sauber. Das gebrochene Tempelmesser hatte er in der ersten Nacht verloren, als er durch den Schlamm hinter den Toren gestürzt war und die Klinge endgültig abbrach; er hatte es nicht zurückgeholt, zu sehr hatte der Schlamm nach ihm gegriffen. Die Stoffkappe, ebenfalls von jenem Toten im Wald, trug er gefaltet in der Innentasche seiner Jacke, wo sie seit K2 aufbewahrt lag, der Stoff so durchtränkt von eingetrocknetem Blut und Moder, dass sie kaum mehr als Lumpen war. Er hatte sie in K3 nicht erwähnt, weil sie nutzlos schien, aber er hatte sie nicht weggeworfen.</p>
 <p>Seraphine ging vor ihm, ohne Licht, ohne Zögern. Ihr Panzer schabte leise gegen die verkrusteten Ränder der Tunnel, ein Rhythmus, der Kaels Herzschlag langsam synchronisierte. Sie trug den Rost nicht als Dekoration. Er wuchs aus den Gelenken, aus den Nähten, wo das Leder mit Metall verheilt war. Er hatte sie beobachtet, wie sie sich im Wald gegen einen Baum gelehnt hatte, wie der Rost sich in die Rinde gefressen hatte, wie sie es bemerkt hatte und nicht reagiert hatte, als wäre das Berührtwerden von Dingen, die sie zerstörten, der einzige Kontakt, den sie noch kannte.</p>
 <p>„Hier.&quot; Sie blieb stehen, wo der Tunnel sich zu einer Nische erweiterte, breit genug für zwei Körper, die nicht aneinander vorbeikamen ohne Berührung. An der Wand prangte eine verblasste Inschrift, die Umrisse einer Zahl noch erkennbar unter dem Schimmel: **17**. Seraphines linker Unterarm lag im diffusen Licht, das durch ein Gitter von oben fiel, und Kael sah die gleiche Zahl dort, nicht gemalt, eingeatmet, eingewachsen in Haut, die sich um das Tattoo geschwärzt hatte wie um eine Wunde, die nie heilte.</p>
@@ -154,9 +230,14 @@ section p{font-family:var(--serif);font-size:18px;line-height:1.65;margin:0 0 12
 <p>Oben, durch das Gitter, bewegte sich etwas. Nicht Malvek. Nichts Menschliches in seiner Geschwindigkeit. Ein Spiegel, zerbrochen, reflektierte Licht, das nicht von oben kam, und in dem Licht war keine Gestalt zu erkennen, nur die Reflexion von etwas, das beobachtete, das katalogisierte, das wartete auf den Moment, in dem das Bündnis brach, um einzutreten. Kael sah darin keine Zukunft. Er sah eine Wiederholung—Vorn, der lief, das Kind, das sich strangulierte, Seraphine, die zugesehen hatte, er selbst, der in einer anderen Welt zugesehen hatte, all verbunden durch das gleiche Nicht-Handeln, die gleiche beobachtete Verzweiflung.</p>
 <p>Kael schloss die Augen. Das System flackerte, hungrig, unbefriedigt. Fast. Noch nicht. Aber näher. Und das andere Flackern, das ältere, das korrupte, flackerte mit, nicht im Wettbewerb, im *Einklang*, zwei Frequenzen, die sich zu etwas verbanden, das größer war als beide.</p>
 <p>Der Rost fraß weiter. Langsam. Beständig. Er fraß nicht nur Metall. Er fraß die Zeit zwischen dem, was gewesen war, und dem, was wieder kommen würde, nicht neu, nicht alt, nur *wieder*.</p>
+  </div>
 </section>
-<section id="k5"><h2>Kapitel 5: Thron aus Tinte</h2>
-<p class="meta">3381 Wörter</p>
+
+<section class="chapter" id="kapitel-5">
+  <div class="kap">Kapitel 5</div>
+  <h2>Thron aus Tinte</h2>
+  <p class="wc">3,381 Wörter</p>
+  <div class="reader">
 <p>Der Kanal endete nicht in einem Becken, sondern in einem Schlund. Kael spürte den Übergang, bevor er ihn sah – die Luft wurde schwerer, tränkte sich mit einem Geruch, den er nicht benennen konnte, weil sein Körper ihn erkannte und sofort übel wurde. Nicht der Gestank von Fäulnis. Tiefer. Das Aroma von sich selbst, konserviert, verändert, *verdaut*.</p>
 <p>Er zog sich aus dem Rohr, das gebogene Messer in der rechten Hand. Die Halle erstreckte sich vor ihm, und sie war leer im Sinne von Menschen, aber voll im Sinne von *Anwesenheit*. Schreiber. Dutzende. Sie saßen im Lotus, nackt, die Haare zu festen, schwarzen Stäben gedreht, die in die eigenen Rücken ragten wie Antennen. Ihre Finger bewegten sich über Haut, die keine Haut mehr war – Pergament, ausgedünnt, durchschossen von Adern, die die Tinte transportierten, die sie produzierten. Sie schrieben auf sich selbst. Sie schwiegen. Sie beachteten ihn nicht.</p>
 <p>Kael trat näher. Der Boden war warm. Nicht beheizt – *atmend*. Er folgte der Wärme, und die Wärme folgte einem Rhythmus, der nicht sein eigener Herzschlag war, aber daran erinnerte, wie ein Echo in einer Sprache, die er vergessen hatte.</p>
@@ -207,7 +288,13 @@ section p{font-family:var(--serif);font-size:18px;line-height:1.65;margin:0 0 12
 <p>Es begann zu brennen. Nicht der Zettel. Er selbst. Nicht schmerzhaft, *notwendig*, die Tinte in ihm, die sich erwärmte, die sich *bewegte*, die sich auf den nächsten Sprung vorbereitete, auf den nächsten Körper, die nächste Welt, die nächste *VERSION*.</p>
 <p>Seraphines Stimme, oder was davon übrig war, oder was er von ihr erinnerte, oder was er von sich selbst *geschrieben* hatte, um sich zu erinnern: „Du wirst nichts mitnehmen. Du nimmst immer alles mit. Das ist der Vertrag. Das ist *du*.&quot;</p>
 <p>Er sprang, oder fiel, oder *wurde gelesen*, und der Thron speicherte, und die Schreiber schrieben, und die Welt, die keine Welt mehr war, nur noch Text, nur noch *er*, atmete weiter, hungrig, leer, *genug*, immer genug, immer *wieder*.</p>
+  </div>
 </section>
 
-<a class="back" href="./index.html">← Zur Roman-Werkstatt</a>
-</div></body></html>
+  <footer>
+    <a href="./index.html">Zurück zur Roman-Werkstatt</a>
+    <div><a class="top-link" href="../Kimi/">../Kimi/</a></div>
+  </footer>
+</main>
+</body>
+</html>
