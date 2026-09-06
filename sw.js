@@ -1,4 +1,4 @@
-const CACHE = 'rw-v8';
+const CACHE = 'rw-v9';
 const ASSETS = [
   './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json'
 ];
@@ -10,26 +10,33 @@ self.addEventListener('activate', e=>{
 });
 self.addEventListener('fetch', e=>{
   const url = new URL(e.request.url);
-  if(e.request.method!=='GET') return;
-  // index.html / navigation / bootstrap book: network first
+  // API / andere Domains (buch-engine, Proxy, …) nie anfassen
+  if(url.origin !== self.location.origin) return;
+  if(e.request.method !== 'GET') return;
+
+  const fallback = ()=> caches.match('./index.html').then(h=> h || new Response('Offline', {status:503, headers:{'content-type':'text/plain'}}));
+
   const isDoc = e.request.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/Kimi/') || url.pathname.endsWith('/Kimi');
   const isBoot = url.pathname.endsWith('/fleisch-thron.json');
   if(isDoc || isBoot){
     e.respondWith(
       fetch(e.request).then(r=>{
-        if(r.ok){ const copy=r.clone(); caches.open(CACHE).then(c=>c.put(e.request, copy)); }
-        return r;
-      }).catch(()=> caches.match(e.request).then(hit=> hit || caches.match('./index.html')))
+        if(r && r.ok){ const copy=r.clone(); caches.open(CACHE).then(c=>c.put(e.request, copy)); }
+        return r || fallback();
+      }).catch(()=> caches.match(e.request).then(hit=> hit || fallback()))
     );
     return;
   }
   e.respondWith(
-    caches.match(e.request).then(hit=> hit || fetch(e.request).then(r=>{
-      if(r.ok && url.origin===location.origin){
-        const copy=r.clone();
-        caches.open(CACHE).then(c=>c.put(e.request, copy));
-      }
-      return r;
-    }).catch(()=>hit))
+    caches.match(e.request).then(hit=>{
+      if(hit) return hit;
+      return fetch(e.request).then(r=>{
+        if(r && r.ok){
+          const copy=r.clone();
+          caches.open(CACHE).then(c=>c.put(e.request, copy));
+        }
+        return r || fallback();
+      }).catch(()=> fallback());
+    })
   );
 });

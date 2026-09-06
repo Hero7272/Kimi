@@ -791,7 +791,7 @@ const CloudSync = {
   },
   async req(method, path, body, extraHeaders){
     if(!this.enabled()) throw new Error('Cloud-Sync nicht konfiguriert (Hintergrund-Worker + Zugangswort)');
-    const opt = { method, headers: this.headers(extraHeaders) };
+    const opt = { method, headers: this.headers(extraHeaders), cache: 'no-store', mode: 'cors', credentials: 'omit' };
     if(body !== undefined) opt.body = JSON.stringify(body);
     const r = await fetch(this.base()+path, opt);
     const txt = await r.text();
@@ -3343,9 +3343,13 @@ Object.assign(App, {
       const a=document.getElementById('appleIcon'); if(a) a.href=icon;
     }catch(e){}
     // Cache-Bust: neue SW-Version loescht alte kaputte Offline-Kopien
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./sw.js?v=8',{updateViaCache:'none'}).then(reg=>{
+        if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(regs=>{
+        regs.forEach(r=>{ try{ r.update(); }catch(e){} });
+      }).catch(()=>{});
+      navigator.serviceWorker.register('./sw.js?v=9',{updateViaCache:'none'}).then(reg=>{
         try{ reg.update(); }catch(e){}
+try{ reg.update(); }catch(e){}
       }).catch(()=>{});
     }
   },
