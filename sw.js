@@ -1,7 +1,6 @@
-const CACHE = 'rw-v4';
+const CACHE = 'rw-v6';
 const ASSETS = [
-  './','./index.html','./styles.css','./manifest.json','./icon.svg',
-  './js/01.js','./js/02.js','./js/03.js','./js/04.js','./js/05.js','./js/06.js','./js/07.js'
+  './','./index.html','./styles.css','./manifest.json','./icon.svg'
 ];
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
@@ -12,6 +11,17 @@ self.addEventListener('activate', e=>{
 self.addEventListener('fetch', e=>{
   const url = new URL(e.request.url);
   if(e.request.method!=='GET') return;
+  // index.html / navigation: always try network first so fixes go live
+  const isDoc = e.request.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/Kimi/') || url.pathname.endsWith('/Kimi');
+  if(isDoc){
+    e.respondWith(
+      fetch(e.request).then(r=>{
+        if(r.ok){ const copy=r.clone(); caches.open(CACHE).then(c=>c.put(e.request, copy)); }
+        return r;
+      }).catch(()=> caches.match(e.request).then(hit=> hit || caches.match('./index.html')))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(hit=> hit || fetch(e.request).then(r=>{
       if(r.ok && url.origin===location.origin){
@@ -19,6 +29,6 @@ self.addEventListener('fetch', e=>{
         caches.open(CACHE).then(c=>c.put(e.request, copy));
       }
       return r;
-    }).catch(()=>caches.match('./index.html')))
+    }).catch(()=>hit))
   );
 });
