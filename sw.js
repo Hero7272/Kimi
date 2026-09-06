@@ -1,4 +1,4 @@
-const CACHE = 'rw-v7';
+const CACHE = 'rw-v8';
 const ASSETS = [
   './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json'
 ];

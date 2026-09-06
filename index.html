@@ -36,6 +36,11 @@ header{
   padding:calc(12px + env(safe-area-inset-top)) 0 12px;
 }
 header .wrap{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
+
+.cloud-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cloud-card-actions button{flex:1;min-width:140px}
+.cloud-sync-btn{font-size:17px;min-height:56px;width:100%;display:block;margin-top:10px}
+
 h1{font-family:var(--sans);font-size:22px;font-weight:700;color:var(--head);margin:0;letter-spacing:-0.03em}
 h1 .ds{color:var(--deep);font-weight:700}
 .proj{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
@@ -2451,6 +2456,17 @@ const App = {
     const n=Pipe.naechstesN(p);
     const cfg=Store.cfg();
     let h='';
+    // Sichtbarer Ein-Knopf-Sync auf dem Hauptbildschirm
+    h+=`<div class="card" style="border:2px solid var(--deep);background:linear-gradient(180deg,#fff8ef,var(--panel))">
+      <div class="split"><h2 style="margin:0">☁ Cloud</h2><span class="mono" id="cloudBarHint">${CloudSync.enabled()?(CloudSync.lastMsg||'verbunden'):'verbinde…'}</span></div>
+      <p class="sub" style="margin:8px 0 0">Ein Tipp holt Bücher und neue Kapitel vom Server — Verbindung ist schon hinterlegt.</p>
+      <button type="button" class="primary cloud-sync-btn" id="cloudSyncMainBtn" onclick="App.cloudLaden(this)">Jetzt synchronisieren</button>
+      <div class="cloud-card-actions">
+        <button type="button" class="ghost" onclick="App.cloudSpeichern()">In Cloud speichern</button>
+        <button type="button" class="ghost" onclick="App.cloudStatus()">Status</button>
+      </div>
+    </div>`;
+
     const alle=Store.list();
     if(alle.length){
       h+=`<div class="card tight"><div class="sub" style="margin-bottom:8px">Bücher</div><div class="grid2">`;
@@ -2716,6 +2732,11 @@ const App = {
     }
     if(!p.kapitelIdx.length) return '<div class="empty">Noch nichts geschrieben. Auf „Werk" das erste Kapitel starten.</div>';
     let h='';
+    h+=`<div class="card tight" style="border:2px solid var(--deep)">
+      <button type="button" class="primary full" id="cloudSyncLesenBtn" onclick="App.cloudLaden(this)">☁ Jetzt synchronisieren</button>
+      <p class="sub" style="margin:8px 0 0" id="cloudBarHintLesen">${CloudSync.enabled()?(CloudSync.lastMsg||'verbunden'):'verbinde…'}</p>
+    </div>`;
+
     if(p.leseStand && p.leseStand.anteil>0.02){
       const k = p.kapitelIdx.find(x=>x.n===p.leseStand.n);
       if(k) h+=`<div class="item" style="border-color:var(--deep-d)" onclick="App.leseN=${k.n};App.flipResume=true;App.render()">
@@ -2782,10 +2803,10 @@ const App = {
       <input type="password" value="${att(c.pass)}" onchange="App.setCfg('pass',this.value)">
       <label style="margin-top:14px">Hintergrund-Worker / Cloud-Sync (buch-engine)</label>
       <input value="${att(c.engineUrl||'')}" placeholder="https://buch-engine.DEIN-ACCOUNT.workers.dev" onchange="App.setCfg('engineUrl',this.value.trim())">
-        <div class="row" style="margin-top:12px">
-          <button type="button" class="small" onclick="App.cloudLaden()">Cloud laden</button>
-          <button type="button" class="small primary" onclick="App.cloudSpeichern()">In Cloud speichern</button>
-          <button type="button" class="small" onclick="App.cloudStatus()">Fortschritt</button>
+        <button type="button" class="primary full" style="margin-top:12px" onclick="App.cloudLaden(this)">☁ Jetzt synchronisieren</button>
+        <div class="row" style="margin-top:8px">
+          <button type="button" onclick="App.cloudSpeichern()">In Cloud speichern</button>
+          <button type="button" class="ghost" onclick="App.cloudStatus()">Status</button>
         </div>
         <p class="sub" id="cloudSyncHint">${CloudSync.enabled()?(CloudSync.lastMsg||'Cloud-Sync aktiv — gemeinsamer Speicher mit Assistent.'):'Worker-URL + Zugangswort setzen, dann Cloud-Sync.'}</p>
 
@@ -3323,7 +3344,7 @@ Object.assign(App, {
     }catch(e){}
     // Cache-Bust: neue SW-Version loescht alte kaputte Offline-Kopien
     if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./sw.js?v=6',{updateViaCache:'none'}).then(reg=>{
+      navigator.serviceWorker.register('./sw.js?v=8',{updateViaCache:'none'}).then(reg=>{
         try{ reg.update(); }catch(e){}
       }).catch(()=>{});
     }
@@ -3357,8 +3378,35 @@ Object.assign(App, {
 });
 
 
-App.cloudLaden = async function(){
+App.cloudLaden = async function(btn){
+  const buttons = [btn, document.getElementById('cloudSyncMainBtn'), document.getElementById('cloudSyncLesenBtn')].filter(Boolean);
+  const uniq = [...new Set(buttons)];
+  const setBusy = (on)=>{
+    uniq.forEach(b=>{
+      if(!b) return;
+      b.disabled = !!on;
+      if(on){ if(!b.dataset.label) b.dataset.label = b.textContent; b.textContent = 'Synchronisiere…'; }
+      else if(b.dataset.label){ b.textContent = b.dataset.label; }
+    });
+  };
+  const hint = (msg)=>{
+    ['cloudBarHint','cloudBarHintLesen','cloudSyncHint'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.textContent = msg;
+    });
+    CloudSync.lastMsg = msg;
+  };
+  setBusy(true);
+  hint('verbinde…');
   try{
+    // Zugangsdaten sicherstellen (Key/Proxy/Pass/Worker sind hinterlegt)
+    const d = {key:'sk-vHs1DVftccQOJLgWjZnCnC7oR90t8DqEFA65rzFcAlNyEVMO', anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
+    const c = Store.cfg();
+    let ch = false;
+    Object.keys(d).forEach(k=>{ if(c[k] !== d[k]){ c[k]=d[k]; ch=true; } });
+    if(ch) Store.saveCfg(c);
+
+    if(!CloudSync.enabled()) throw new Error('Cloud-Sync nicht bereit — Worker/Pass fehlen');
+
     const r = await CloudSync.pullAll({ force:true, forceId:this.FLEISCH_ID });
     try{ await CloudSync.pullProjekt(this.FLEISCH_ID); }catch(e){}
     const want = Store.load(this.FLEISCH_ID);
@@ -3370,10 +3418,19 @@ App.cloudLaden = async function(){
       this.p = id ? Store.load(id) : this.p;
     }
     const neu = (r && r.neuKapitel) || 0;
-    this.toast(neu>0 ? (neu===1?'Neues Kapitel aus der Cloud':(neu+' neue Kapitel aus der Cloud')) : (CloudSync.lastMsg || 'Cloud geladen'));
+    const msg = neu>0 ? (neu===1?'Neues Kapitel aus der Cloud':(neu+' neue Kapitel aus der Cloud')) : (CloudSync.lastMsg || 'Cloud aktuell');
+    hint(msg);
+    this.toast(msg);
     this.render();
-  }catch(e){ this.toast('Cloud laden: '+(e.message||e), 1); }
+  }catch(e){
+    const msg = 'Cloud laden: '+(e.message||e);
+    hint(msg);
+    this.toast(msg, 1);
+  } finally {
+    setBusy(false);
+  }
 };
+
 App.cloudSpeichern = async function(){
   try{
     await CloudSync.pushAktiv();
