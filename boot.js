@@ -1,11 +1,11 @@
 (async function(){
-  const parts = ['p01','p02','p03','p04','p05','p06','p07','p08','p09'];
+  const parts = ['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11'];
   try{
-    const texts = await Promise.all(parts.map(p => fetch('parts/'+p+'.txt').then(r=>{
+    const texts = await Promise.all(parts.map(p => fetch('parts/'+p+'.txt?v=3').then(r=>{
       if(!r.ok) throw new Error('Teil '+p+' fehlt ('+r.status+')');
       return r.text();
     })));
-    const b64 = texts.join('');
+    const b64 = texts.join('').replace(/\s+/g,'');
     const bin = atob(b64);
     const bytes = new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
