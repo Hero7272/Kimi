@@ -153,31 +153,105 @@ hr{border:none;border-top:1px solid var(--line);margin:18px 0}
 .row.pack>*{flex:0 1 auto;min-width:auto}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
-/* Apple-Books-like page flip */
-.flip-chrome{display:flex;align-items:center;gap:10px;margin:10px 0 8px}
-.flip-chrome .flip-meta{flex:1;min-width:0}
-.flip-chrome .flip-title{font-weight:700;color:var(--head);font-size:15px;letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.flip-pageind{flex:0 0 auto;font-size:13px;font-weight:600;color:var(--deep);background:rgba(255,149,0,.12);padding:6px 10px;border-radius:999px}
-.flip-stage{position:relative;margin:8px 0 0;border-radius:16px;perspective:1800px;-webkit-perspective:1800px;touch-action:pan-y}
-.flip-book{position:relative;width:100%;height:100%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
-.flip-page{position:absolute;inset:0;border-radius:16px;background:linear-gradient(180deg,#FFFDF8 0%,#FFF9F0 100%);box-shadow:var(--shadow), inset 0 0 0 1px rgba(0,0,0,.04);overflow:hidden;transform-origin:left center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+/* Apple Books–style fullscreen reader */
+body.reading{overflow:hidden;overscroll-behavior:none}
+body.reading > header,
+body.reading > nav{visibility:hidden !important;pointer-events:none !important}
+body.reading > main.wrap{opacity:0;pointer-events:none}
+body.reading #booksShell{opacity:1;pointer-events:auto}
+.books-shell{
+  position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+  background:var(--rb-bg,#FFFDF8);color:var(--rb-fg,#1D1D1F);
+  font-family:var(--serif);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.books-shell[data-theme="hell"]{--rb-bg:#FFFDF8;--rb-fg:#1D1D1F;--rb-muted:#8E8E93;--rb-chrome:rgba(245,245,247,.92);--rb-page:#FFFDF8;--rb-page2:#FFF9F0;--rb-back:#F3EADB;--rb-line:rgba(0,0,0,.08);--rb-accent:#FF9500}
+.books-shell[data-theme="sepia"]{--rb-bg:#F4ECD8;--rb-fg:#3B2F2F;--rb-muted:#8A7A66;--rb-chrome:rgba(244,236,216,.94);--rb-page:#F7F0E0;--rb-page2:#F1E6CF;--rb-back:#E8DCC4;--rb-line:rgba(90,60,20,.12);--rb-accent:#C47B2C}
+.books-shell[data-theme="dunkel"]{--rb-bg:#0E0E10;--rb-fg:#E8E8ED;--rb-muted:#8E8E93;--rb-chrome:rgba(22,22,24,.94);--rb-page:#161618;--rb-page2:#1C1C1E;--rb-back:#222226;--rb-line:rgba(255,255,255,.1);--rb-accent:#FF9F0A}
+.books-top,.books-bottom{
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;
+  padding:8px 12px;background:var(--rb-chrome);backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);
+  border-bottom:1px solid var(--rb-line);transition:opacity .2s, transform .2s;
+}
+.books-bottom{border-bottom:none;border-top:1px solid var(--rb-line);justify-content:space-between}
+.books-shell.chrome-hidden .books-top,
+.books-shell.chrome-hidden .books-bottom{opacity:0;pointer-events:none;transform:translateY(-6px)}
+.books-shell.chrome-hidden .books-bottom{transform:translateY(6px)}
+.books-btn{
+  appearance:none;border:none;background:transparent;color:var(--rb-accent);
+  font:600 16px/1 var(--sans);min-height:44px;min-width:44px;padding:8px 10px;border-radius:12px;cursor:pointer
+}
+.books-btn:active{opacity:.7;background:rgba(255,149,0,.1)}
+.books-btn.icon{font-size:22px;font-weight:500}
+.books-meta{flex:1;min-width:0;text-align:center}
+.books-kicker{font:600 11px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--rb-muted)}
+.books-title{font:700 15px/1.25 var(--sans);color:var(--rb-fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.books-pageind{font:600 12px/1 var(--sans);color:var(--rb-accent);background:rgba(255,149,0,.14);padding:6px 10px;border-radius:999px}
+.books-stage{position:relative;flex:1 1 auto;min-height:0;perspective:1800px;-webkit-perspective:1800px;touch-action:none;margin:0 6px}
+.books-book{position:relative;width:100%;height:100%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+.flip-page{
+  position:absolute;inset:0;border-radius:18px;
+  background:linear-gradient(180deg,var(--rb-page) 0%,var(--rb-page2) 100%);
+  box-shadow:0 10px 40px rgba(0,0,0,.12), inset 0 0 0 1px var(--rb-line);
+  overflow:hidden;transform-origin:left center;backface-visibility:hidden;-webkit-backface-visibility:hidden
+}
+.books-shell[data-theme="dunkel"] .flip-page{box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 0 0 1px var(--rb-line)}
 .flip-page.show,.flip-page.base{position:absolute}
-.flip-page-inner{height:100%;overflow:hidden;padding:22px 20px 18px;box-sizing:border-box}
-.flip-page-inner.reader{font-size:18px;line-height:1.65;color:#1D1D1F}
+.flip-page-inner{height:100%;overflow:hidden;padding:26px 22px 20px;box-sizing:border-box}
+.flip-page-inner.reader{
+  font-family:var(--serif);font-size:var(--rb-fs,18px);line-height:var(--rb-lh,1.65);
+  color:var(--rb-fg);letter-spacing:0.01em
+}
+.flip-page-inner.reader.sans{font-family:var(--sans)}
 .flip-page-inner.reader p{margin:0 0 0.95em}
 .flip-page-inner.reader p:last-child{margin-bottom:0}
-.flip-page-back{position:absolute;inset:0;border-radius:16px;background:linear-gradient(180deg,#F7F1E6 0%,#F3EADB 100%);transform:rotateY(180deg);backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
-.flip-page.flipping{z-index:3;transition:transform .5s cubic-bezier(.22,.61,.36,1);box-shadow:-8px 0 24px rgba(0,0,0,.12)}
+.flip-page-inner.reader .sep{text-align:center;color:var(--rb-muted);margin:1.4em 0;letter-spacing:.45em}
+.flip-page-back{
+  position:absolute;inset:0;border-radius:18px;
+  background:linear-gradient(180deg,var(--rb-back) 0%,var(--rb-page2) 100%);
+  transform:rotateY(180deg);backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:inset 0 0 0 1px var(--rb-line)
+}
+.flip-page.flipping{z-index:3;transition:transform .48s cubic-bezier(.22,.61,.36,1);box-shadow:-10px 0 28px rgba(0,0,0,.18)}
 .flip-page.flipping.turn-forward{transform:rotateY(0deg)}
 .flip-page.flipping.turn-forward.go{transform:rotateY(-180deg)}
 .flip-page.flipping.turn-back{transform:rotateY(-180deg)}
 .flip-page.flipping.turn-back.go{transform:rotateY(0deg)}
-.flip-hit{position:absolute;top:0;bottom:0;width:28%;border:none;background:transparent;padding:0;min-height:0;z-index:5;cursor:pointer;border-radius:0}
+.flip-hit{position:absolute;top:0;bottom:0;width:30%;border:none;background:transparent;padding:0;min-height:0;z-index:5;cursor:pointer;border-radius:0}
 .flip-hit.left{left:0}
 .flip-hit.right{right:0}
-.flip-hit:active{background:rgba(255,149,0,.04)}
-.flip-end{gap:10px}
-@media(min-width:700px){.flip-page-inner.reader{font-size:19px;padding:26px 28px}}
+.flip-hit.mid{left:30%;width:40%;z-index:4}
+.books-settings{
+  position:absolute;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom));
+  z-index:30;background:var(--rb-chrome);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--rb-line);border-radius:18px;padding:14px 14px 12px;box-shadow:0 16px 50px rgba(0,0,0,.22);
+  display:none
+}
+.books-settings.open{display:block}
+.books-settings h3{margin:0 0 10px;font:700 13px/1.2 var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--rb-muted)}
+.books-seg{display:flex;gap:6px;margin-bottom:12px}
+.books-seg button{
+  flex:1;min-height:42px;border:none;border-radius:12px;background:rgba(127,127,127,.12);
+  color:var(--rb-fg);font:600 14px/1 var(--sans);cursor:pointer
+}
+.books-seg button.on{background:var(--rb-accent);color:#fff}
+.books-settings .row-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
+.books-settings label{margin:0;color:var(--rb-muted);font:500 13px/1.2 var(--sans)}
+.books-end{
+  position:absolute;left:16px;right:16px;bottom:calc(72px + env(safe-area-inset-bottom));
+  z-index:25;display:none;flex-direction:column;gap:8px
+}
+.books-end.show{display:flex}
+.books-end button{
+  min-height:48px;border:none;border-radius:14px;font:600 16px/1 var(--sans);cursor:pointer;
+  background:var(--rb-accent);color:#fff
+}
+.books-end button.ghost{background:rgba(127,127,127,.16);color:var(--rb-fg)}
+@media(min-width:700px){
+  .flip-page-inner{padding:34px 40px 28px}
+  .books-stage{max-width:720px;margin:0 auto;width:100%}
+}
+
 
 </style>
 </head>
@@ -806,12 +880,14 @@ const CloudSync = {
     return data;
   },
   queuePush(){
-    if(this.pulling) return;
+    if(this.pulling || this.pushing) return;
     clearTimeout(this.timer);
-    this.timer = setTimeout(()=>{ this.pushAktiv().catch(()=>{}); }, 900);
+    this.timer = setTimeout(()=>{ this.pushAktiv().catch(()=>{}); }, 5000);
   },
   async pushAktiv(){
     if(!this.enabled() || !App || !App.p) return;
+    if(this.pulling || this.pushing) return;
+    this.pushing = true;
     const p = App.p;
     try{
       const res = await this.req('PUT', '/projekt', p, p.aktualisiert ? { 'If-Match': String(p.aktualisiert) } : undefined);
@@ -822,18 +898,29 @@ const CloudSync = {
         if(!ch) continue;
         const body = Object.assign({}, ch, { id: p.id, n: k.n });
         const cr = await this.req('PUT', '/kapitel', body, ch.aktualisiert ? { 'If-Match': String(ch.aktualisiert) } : undefined);
-        if(cr && cr.aktualisiert){ ch.aktualisiert = cr.aktualisiert; Store.saveKapitel(p.id, k.n, ch); }
+        if(cr && cr.aktualisiert){
+          ch.aktualisiert = cr.aktualisiert;
+          const was = this.pulling; this.pulling = true;
+          try{ Store.saveKapitel(p.id, k.n, ch); } finally { this.pulling = was; }
+        }
       }
       this.lastMsg = 'Cloud synchronisiert · '+new Date().toLocaleTimeString('de-DE');
       S.put(S.pk(p.id), p); // aktualisiert lokal merken
     }catch(e){
+      const msg = (e && e.message) ? e.message : String(e);
       if(e.status === 409 && e.data && e.data.serverAktualisiert){
         this.lastMsg = 'Konflikt — Server neuer. Tippe „Cloud laden“.';
-        if(App.toast) App.toast('Cloud-Konflikt: Server hat neuere Version. „Cloud laden“ nutzen.', 1);
+        const now = Date.now();
+        if(!this._toastAt || now - this._toastAt > 120000){
+          this._toastAt = now;
+          if(App.toast) App.toast('Cloud-Konflikt: Server neuer — „Jetzt synchronisieren“ tippen.', 1);
+        }
       } else {
-        this.lastMsg = 'Sync-Fehler: '+(e.message||e);
-        if(App.toast) App.toast('Cloud-Sync: '+(e.message||e), 1);
+        this.lastMsg = 'Sync-Fehler: '+msg;
+        console.warn('Cloud-Sync push', msg);
       }
+    } finally {
+      this.pushing = false;
     }
   },
   normalizeKapitel(raw){
@@ -2223,9 +2310,20 @@ const App = {
     const off=(p.state.offene_faeden||[]).filter(f=>f.status!=='geschlossen').length;
     document.getElementById('projline').textContent = `${p.kapitelIdx.length}/${p.toc.length} Kapitel · ${nf(p.state.woerter_gesamt||0)} W.`;
     document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===this.tab));
+    const reading = (this.tab==='lesen' && this.leseN!==null && !this.edit);
+    document.body.classList.toggle('reading', reading);
+    if(!reading){
+      const stale = document.getElementById('booksShell');
+      // shell lives inside #view; cleared by innerHTML below
+    }
     const v=document.getElementById('view');
     v.innerHTML = this['t_'+this.tab] ? this['t_'+this.tab](p) : '';
     if(this.tab==='werk') this.paintLog();
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if(metaTheme){
+      const rs = this.readerSettings();
+      metaTheme.setAttribute('content', reading ? ({hell:'#FFFDF8',sepia:'#F4ECD8',dunkel:'#0E0E10'}[rs.theme||'hell']||'#FFFDF8') : '#F5F5F7');
+    }
 
     // Lese-Stand merken (Tab + offenes Kapitel), damit ein Neuladen/Sitzungsende
     // nicht wieder ganz von vorne beginnt. Nur schreiben, wenn sich wirklich etwas
@@ -2240,8 +2338,16 @@ const App = {
 
     // Page-Flip-Reader aufbauen (misst Seiten nach DOM-Insert)
     if(this.tab==='lesen' && this.leseN!==null && !this.edit){
-      requestAnimationFrame(()=>this.setupFlipReader());
+      requestAnimationFrame(()=>{
+        const shell = document.getElementById('booksShell');
+        if(shell && shell.parentElement !== document.body){
+          document.body.appendChild(shell);
+        }
+        this.setupFlipReader();
+      });
     } else {
+      const orphan = document.getElementById('booksShell');
+      if(orphan && orphan.parentElement === document.body) orphan.remove();
       this.teardownFlipReader();
       this.scrollVerfolgen();
     }
@@ -2335,6 +2441,7 @@ const App = {
     return pages.length ? pages : ['<p></p>'];
   },
   setupFlipReader(){
+    this.openReaderHistory();
     const stage = document.getElementById('flipStage');
     const book = document.getElementById('flipBook');
     if(!stage || !book || !this.p || this.leseN===null) return;
@@ -2343,17 +2450,25 @@ const App = {
     if(!ch) return;
     const text = this.kapitelText(ch);
 
-    // Messfläche = sichtbare Buchseite
-    book.innerHTML = '<div class="flip-page"><div class="flip-page-inner reader" id="flipMeasure"></div></div>';
+    const rs = this.readerSettings();
+    const shell = document.getElementById('booksShell');
+    if(shell){
+      shell.dataset.theme = rs.theme || 'hell';
+      shell.style.setProperty('--rb-fs', (rs.fontSize||18)+'px');
+      document.body.classList.add('reading');
+    }
+    const fontCls = (rs.font==='sans') ? ' reader sans' : ' reader';
+    // Messfläche = sichtbare Buchseite (Vollbild)
+    book.innerHTML = '<div class="flip-page"><div class="flip-page-inner'+fontCls+'" id="flipMeasure"></div></div>';
     const measure = document.getElementById('flipMeasure');
-    // Höhe: Viewport minus Chrome/Nav
-    const chrome = document.querySelector('.flip-chrome');
-    const header = document.querySelector('header');
-    const nav = document.querySelector('nav');
-    const top = (header?header.getBoundingClientRect().bottom:0) + (chrome?chrome.getBoundingClientRect().height:0) + 12;
-    const bottom = (nav?nav.getBoundingClientRect().height:56) + 120;
-    const h = Math.max(280, window.innerHeight - top - bottom);
-    stage.style.height = h + 'px';
+    const topEl = document.getElementById('booksTop');
+    const botEl = document.getElementById('booksBottom');
+    const topH = topEl ? topEl.getBoundingClientRect().height : 52;
+    const botH = botEl ? botEl.getBoundingClientRect().height : 48;
+    const h = Math.max(300, stage.clientHeight || (window.innerHeight - topH - botH - 8));
+    // stage already flex:1; ensure book fills it
+    stage.style.height = '100%';
+    book.style.height = h + 'px';
     const pages = this.paginateChapter(text, measure);
     this._flipPages = pages;
 
@@ -2367,22 +2482,26 @@ const App = {
     this._flipAnimating = false;
 
     const paint = (withAnim, dir)=>{
+      const label = (this.flipPage+1)+' / '+pages.length;
       const ind = document.getElementById('flipPageInd');
-      if(ind) ind.textContent = (this.flipPage+1)+' / '+pages.length;
+      if(ind) ind.textContent = label;
+      const ind2 = document.getElementById('flipPageInd2');
+      if(ind2) ind2.textContent = label;
       const end = document.getElementById('flipEndNav');
-      if(end) end.style.display = (this.flipPage >= pages.length-1) ? 'flex' : 'none';
+      if(end) end.classList.toggle('show', this.flipPage >= pages.length-1);
 
       const cur = pages[this.flipPage] || '';
+      const fc = fontCls;
       if(!withAnim || pages.length<2){
-        book.innerHTML = '<div class="flip-page show"><div class="flip-page-inner reader">'+cur+'</div></div>';
+        book.innerHTML = '<div class="flip-page show"><div class="flip-page-inner'+fc+'">'+cur+'</div></div>';
         return;
       }
       const prevHtml = pages[this.flipPage - (dir>0?1:-1)] || cur;
       const front = dir>0 ? prevHtml : cur;
       const back = dir>0 ? cur : prevHtml;
       book.innerHTML =
-        '<div class="flip-page base"><div class="flip-page-inner reader">'+(dir>0?cur:prevHtml)+'</div></div>'+
-        '<div class="flip-page flipping '+(dir>0?'turn-forward':'turn-back')+'"><div class="flip-page-inner reader">'+front+'</div><div class="flip-page-back"><div class="flip-page-inner reader">'+back+'</div></div></div>';
+        '<div class="flip-page base"><div class="flip-page-inner'+fc+'">'+(dir>0?cur:prevHtml)+'</div></div>'+
+        '<div class="flip-page flipping '+(dir>0?'turn-forward':'turn-back')+'"><div class="flip-page-inner'+fc+'">'+front+'</div><div class="flip-page-back"><div class="flip-page-inner'+fc+'">'+back+'</div></div></div>';
       const flipEl = book.querySelector('.flipping');
       this._flipAnimating = true;
       requestAnimationFrame(()=>{
@@ -2391,7 +2510,7 @@ const App = {
         });
       });
       setTimeout(()=>{
-        book.innerHTML = '<div class="flip-page show"><div class="flip-page-inner reader">'+cur+'</div></div>';
+        book.innerHTML = '<div class="flip-page show"><div class="flip-page-inner'+fc+'">'+cur+'</div></div>';
         this._flipAnimating = false;
       }, 520);
     };
@@ -2410,8 +2529,11 @@ const App = {
     paint(false, 0);
     const prevBtn = document.getElementById('flipPrev');
     const nextBtn = document.getElementById('flipNext');
+    const midBtn = document.getElementById('flipMid');
     if(prevBtn) prevBtn.onclick = (e)=>{ e.preventDefault(); go(-1); };
     if(nextBtn) nextBtn.onclick = (e)=>{ e.preventDefault(); go(1); };
+    if(midBtn) midBtn.onclick = (e)=>{ e.preventDefault(); this.toggleReaderChrome(); };
+    this.bindReaderHistory();
 
     // Touch swipe
     let sx=0, sy=0, tracking=false;
@@ -2687,6 +2809,91 @@ const App = {
     return h;
   },
 
+
+  readerSettings(){
+    try{
+      const raw = localStorage.getItem('rw:reader');
+      const d = raw ? JSON.parse(raw) : {};
+      return {
+        theme: ['hell','sepia','dunkel'].includes(d.theme) ? d.theme : 'hell',
+        fontSize: Math.max(14, Math.min(28, Number(d.fontSize)||18)),
+        font: d.font === 'sans' ? 'sans' : 'serif'
+      };
+    }catch(e){ return {theme:'hell', fontSize:18, font:'serif'}; }
+  },
+  saveReaderSettings(partial){
+    const cur = Object.assign(this.readerSettings(), partial||{});
+    try{ localStorage.setItem('rw:reader', JSON.stringify(cur)); }catch(e){}
+    return cur;
+  },
+  closeReader(){
+    this.leseN = null;
+    this.edit = false;
+    document.body.classList.remove('reading');
+    const orphan = document.getElementById('booksShell');
+    if(orphan && orphan.parentElement === document.body) orphan.remove();
+    if(this._readerHist){
+      this._readerHist = false;
+      try{ if(location.hash === '#lesen') history.back(); }catch(e){}
+    }
+    this.render();
+  },
+  bindReaderHistory(){
+    if(this._readerHistBound) return;
+    this._readerHistBound = true;
+    window.addEventListener('popstate', ()=>{
+      if(this.tab==='lesen' && this.leseN!==null && !this.edit){
+        this.leseN = null;
+        document.body.classList.remove('reading');
+        this.render();
+      }
+    });
+  },
+  openReaderHistory(){
+    try{
+      if(location.hash !== '#lesen'){
+        history.pushState({rwReader:1}, '', '#lesen');
+        this._readerHist = true;
+      }
+    }catch(e){}
+  },
+  toggleReaderChrome(){
+    const shell = document.getElementById('booksShell');
+    if(!shell) return;
+    shell.classList.toggle('chrome-hidden');
+    const panel = document.getElementById('booksSettings');
+    if(panel) panel.classList.remove('open');
+  },
+  toggleReaderSettings(){
+    const panel = document.getElementById('booksSettings');
+    const shell = document.getElementById('booksShell');
+    if(!panel) return;
+    const open = !panel.classList.contains('open');
+    panel.classList.toggle('open', open);
+    if(shell) shell.classList.remove('chrome-hidden');
+  },
+  setReaderTheme(theme){
+    this.saveReaderSettings({theme});
+    const shell = document.getElementById('booksShell');
+    if(shell) shell.dataset.theme = theme;
+    document.querySelectorAll('#booksThemeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.theme===theme));
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if(metaTheme) metaTheme.setAttribute('content', ({hell:'#FFFDF8',sepia:'#F4ECD8',dunkel:'#0E0E10'}[theme]||'#FFFDF8'));
+  },
+  nudgeReaderFont(delta){
+    const cur = this.readerSettings();
+    const fontSize = Math.max(14, Math.min(28, (cur.fontSize||18) + delta));
+    this.saveReaderSettings({fontSize});
+    const shell = document.getElementById('booksShell');
+    if(shell) shell.style.setProperty('--rb-fs', fontSize+'px');
+    // re-paginate with new size
+    if(this.tab==='lesen' && this.leseN!==null && !this.edit) this.setupFlipReader();
+  },
+  setReaderFont(font){
+    this.saveReaderSettings({font});
+    if(this.tab==='lesen' && this.leseN!==null && !this.edit) this.setupFlipReader();
+  },
+
   t_lesen(p){
     if(this.leseN!==null){
       const ch=Store.kapitel(p.id,this.leseN);
@@ -2700,34 +2907,57 @@ const App = {
       }
       const ok = this.kapitelStatusOk(ch);
       const next = (p.kapitelIdx||[]).find(x=>x.n>ch.n);
-      let h=`<div class="flip-chrome">
-        <button class="small ghost" type="button" onclick="App.leseN=null;App.render()">← Kapitel</button>
-        <div class="flip-meta">
-          <div class="kap">${ch.n===0?'Prolog':'Kapitel '+ch.n}</div>
-          <div class="flip-title">${esc(ch.titel)}</div>
+      const prev = [...(p.kapitelIdx||[])].reverse().find(x=>x.n<ch.n);
+      const rs = this.readerSettings();
+      const theme = rs.theme || 'hell';
+      const fs = rs.fontSize || 18;
+      const font = rs.font || 'serif';
+      // Fullscreen Apple-Books shell (covers whole phone)
+      let h = `<div class="books-shell" id="booksShell" data-theme="${att(theme)}" style="--rb-fs:${fs}px">
+        <div class="books-top" id="booksTop">
+          <button type="button" class="books-btn icon" onclick="App.closeReader()" aria-label="Zurück">‹</button>
+          <div class="books-meta">
+            <div class="books-kicker">${ch.n===0?'Prolog':'Kapitel '+ch.n}</div>
+            <div class="books-title">${esc(ch.titel)}</div>
+          </div>
+          <button type="button" class="books-btn" onclick="App.toggleReaderSettings()" aria-label="Darstellung">Aa</button>
         </div>
-        <div class="flip-pageind" id="flipPageInd">—</div>
-      </div>`;
-      if(ch.audit && (ch.audit.verstoesse||[]).length){
-        h+=`<details style="margin:8px 0"><summary>${ch.audit.verstoesse.length} Anmerkungen des Auditors</summary><div class="sub" style="margin-top:8px">`;
-        ch.audit.verstoesse.forEach(v=>h+=`<div style="margin-bottom:8px"><span class="tag ${v.schwere==='hoch'?'bad':''}">${esc(v.typ)} · ${esc(v.schwere)}</span> ${esc(v.korrekturhinweis)}</div>`);
-        h+='</div></details>';
-      }
-      h+=`<div class="flip-stage" id="flipStage">
-        <div class="flip-book" id="flipBook" aria-live="polite"></div>
-        <button type="button" class="flip-hit left" id="flipPrev" aria-label="Vorherige Seite"></button>
-        <button type="button" class="flip-hit right" id="flipNext" aria-label="Nächste Seite"></button>
+        <div class="books-stage" id="flipStage">
+          <div class="books-book flip-book" id="flipBook" aria-live="polite"></div>
+          <button type="button" class="flip-hit left" id="flipPrev" aria-label="Vorherige Seite"></button>
+          <button type="button" class="flip-hit mid" id="flipMid" aria-label="Leiste ein-/ausblenden"></button>
+          <button type="button" class="flip-hit right" id="flipNext" aria-label="Nächste Seite"></button>
+          <div class="books-settings" id="booksSettings">
+            <h3>Darstellung</h3>
+            <div class="books-seg" id="booksThemeSeg">
+              <button type="button" data-theme="hell" class="${theme==='hell'?'on':''}" onclick="App.setReaderTheme('hell')">Hell</button>
+              <button type="button" data-theme="sepia" class="${theme==='sepia'?'on':''}" onclick="App.setReaderTheme('sepia')">Sepia</button>
+              <button type="button" data-theme="dunkel" class="${theme==='dunkel'?'on':''}" onclick="App.setReaderTheme('dunkel')">Dunkel</button>
+            </div>
+            <div class="books-seg">
+              <button type="button" onclick="App.nudgeReaderFont(-1)">A−</button>
+              <button type="button" onclick="App.nudgeReaderFont(1)">A+</button>
+              <button type="button" class="${font==='serif'?'on':''}" onclick="App.setReaderFont('serif')">Serif</button>
+              <button type="button" class="${font==='sans'?'on':''}" onclick="App.setReaderFont('sans')">Sans</button>
+            </div>
+            <div class="row-line"><label>Seite</label><span class="books-pageind" id="flipPageInd">—</span></div>
+            <div class="row-line" style="margin-top:10px">
+              <button type="button" class="books-btn" onclick="App.edit=true;App.render()">Bearbeiten</button>
+              <button type="button" class="books-btn" onclick="App.wuerfeln(${ch.n})">Neu würfeln</button>
+            </div>
+          </div>
+          <div class="books-end" id="flipEndNav">
+            ${next?`<button type="button" onclick="App.leseN=${next.n};App.flipPage=0;App.render()">Nächstes Kapitel</button>`:''}
+            ${prev?`<button type="button" class="ghost" onclick="App.leseN=${prev.n};App.flipPage=0;App.render()">Vorheriges Kapitel</button>`:''}
+            <button type="button" class="ghost" onclick="App.closeReader()">Zur Kapitelliste</button>
+          </div>
+        </div>
+        <div class="books-bottom" id="booksBottom">
+          <span class="books-kicker">${nf(ch.woerter||0)} Wörter · ${ok?'sauber':'prüfen'}</span>
+          <span class="books-pageind" id="flipPageInd2">—</span>
+        </div>
       </div>
-      <div class="flip-actions row" style="margin:14px 0 8px">
-        <button class="ghost small" onclick="App.edit=true;App.render()">Bearbeiten</button>
-        <button class="ghost small" onclick="App.wuerfeln(${ch.n})">Neu würfeln</button>
-        <button class="ghost small danger" onclick="App.loescheKapitel(${ch.n})">Löschen</button>
-      </div>
-      <div class="flip-end row" id="flipEndNav" style="display:none;margin-bottom:20px">
-        ${next?`<button class="primary full" onclick="App.leseN=${next.n};App.flipPage=0;App.render()">Nächstes Kapitel →</button>`
-              :`<button class="ghost full" onclick="App.leseN=null;App.render()">Zur Kapitelliste</button>`}
-      </div>
-      <p class="sub" style="text-align:center;margin:0 0 24px">${nf(ch.woerter||0)} Wörter · ${ok?'sauber':'prüfen'} · Wischen oder tippen zum Umblättern</p>`;
+      <div class="empty" style="margin-top:24px">Reader geöffnet …</div>`;
       return h;
     }
     if(!p.kapitelIdx.length) return '<div class="empty">Noch nichts geschrieben. Auf „Werk" das erste Kapitel starten.</div>';
@@ -3347,7 +3577,7 @@ Object.assign(App, {
       navigator.serviceWorker.getRegistrations().then(regs=>{
         regs.forEach(r=>{ try{ r.update(); }catch(e){} });
       }).catch(()=>{});
-      navigator.serviceWorker.register('./sw.js?v=9',{updateViaCache:'none'}).then(reg=>{
+      navigator.serviceWorker.register('./sw.js?v=11',{updateViaCache:'none'}).then(reg=>{
         try{ reg.update(); }catch(e){}
 try{ reg.update(); }catch(e){}
       }).catch(()=>{});
