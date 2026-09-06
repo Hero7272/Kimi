@@ -866,7 +866,7 @@ const Store = {
   loescheZwischenstand(id,n){ S.del(this.zwK(id,n)); },
   // proxyUrl: absolute URL deines Cloudflare Workers, z.B. https://silberwerk-proxy.DEINNAME.workers.dev
   // pass: Zugangswort, muss mit dem Secret SW_PASS im Worker übereinstimmen
-  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'', pass:'', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
+  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', pass:'1234', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
   saveCfg(c){ S.put('sw:cfg', c); }
 };
 
@@ -1940,8 +1940,28 @@ const App = {
     if(v) v.innerHTML = '<div class="card">Bibliothek wird geladen …</div>';
     await S.initialisieren();
     if(!S.ok()){ document.getElementById('view').innerHTML='<div class="card">Der Browser erlaubt keinen dauerhaften Speicher (privates Fenster?). Die App braucht IndexedDB oder localStorage.</div>'; return; }
+    // Bake-in: bestehende Installationen ohne engineUrl bekommen Cloud-Defaults
+    {
+      const cfg = Store.cfg();
+      if(!cfg.engineUrl){
+        cfg.engineUrl = 'https://buch-engine.lupinzerooo.workers.dev';
+        if(!cfg.pass) cfg.pass = '1234';
+        Store.saveCfg(cfg);
+      }
+    }
     if(CloudSync.enabled()){
       try{ await CloudSync.pullAll(); }catch(e){ console.warn('Cloud pull', e); if(typeof App!=='undefined' && App.toast) setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500); }
+    }
+    // Prefer shared Fleisch & Thron project after cloud pull
+    {
+      const wantId = 'isekai-6a9dc73e';
+      const liste = Store.list() || [];
+      const hit = liste.find(x => x && (x.id === wantId || x.name === 'Fleisch & Thron'));
+      if(hit){
+        const m = Store.meta();
+        m.aktiv = hit.id;
+        Store.saveMeta(m);
+      }
     }
     let id = Store.aktivId();
     this.p = id ? Store.load(id) : null;

@@ -1,5 +1,11 @@
 # Roman-Werkstatt
 
+## Defaults + Fleisch & Thron
+- `engineUrl` + `pass` als App-Defaults (buch-engine Worker), auch für bestehende Installs ohne engineUrl
+- Nach Cloud-pullAll: Projekt `isekai-6a9dc73e` / „Fleisch & Thron“ automatisch aktiv
+- Kapitel 1–3 in shared KV gepusht (gemeinsamer Speicher)
+
+
 ## Cloud-Sync (gemeinsamer Speicher)
 - Projekte und Kapitel werden bei gesetzter Worker-URL + Zugangswort zusätzlich in die Cloudflare KV am `buch-engine` Worker geschrieben
 - Beim Start: neuere Cloud-Projekte werden geladen
