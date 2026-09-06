@@ -18,7 +18,7 @@
   <h1 id="brand"><span class="ds">Roman</span>-Werkstatt</h1>
   <div class="proj" id="projline"></div>
 </div></header>
-<main class="wrap" id="view"></main>
+<main class="wrap" id="view"><div class="card"><p class="sub">Lade Werkstatt…</p></div></main>
 <nav><div class="wrap">
   <button data-tab="werk" class="on">Werk</button>
   <button data-tab="buch">Buch</button>
@@ -26,13 +26,7 @@
   <button data-tab="lesen">Lesen</button>
   <button data-tab="setup">Setup</button>
 </div></nav>
-<script src="js/01.js"></script>
-<script src="js/02.js"></script>
-<script src="js/03.js"></script>
-<script src="js/04.js"></script>
-<script src="js/05.js"></script>
-<script src="js/06.js"></script>
-<script src="js/07.js"></script>
+<script src="boot.js"></script>
 <script>
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
