@@ -616,6 +616,127 @@ const S = {
   }
 };
 
+/* ============ ANBIETER (austauschbar — beide OpenAI-kompatibel) ============ */
+const ANBIETER = {
+  kimi: {
+    label: 'Kimi (Moonshot AI)',
+    basisUrl: 'https://api.moonshot.ai/v1/chat/completions',
+    konsole: 'https://platform.kimi.ai',
+    preisSeite: 'https://platform.kimi.ai (Preise unter „Pricing")',
+    modelle: [
+      {id:'kimi-k2.6', label:'kimi-k2.6 — empfohlen, schnell & günstig'},
+      {id:'kimi-k3', label:'kimi-k3 — Flaggschiff, 1M Kontext, denkt immer (teurer)'},
+      {id:'kimi-k2.7-code', label:'kimi-k2.7-code — präziser, technischer'}
+    ],
+    tokenFeld: 'max_completion_tokens'
+  },
+  deepseek: {
+    label: 'DeepSeek',
+    basisUrl: 'https://api.deepseek.com/chat/completions',
+    konsole: 'https://platform.deepseek.com',
+    preisSeite: 'https://platform.deepseek.com/api-docs/pricing',
+    modelle: [
+      {id:'deepseek-chat', label:'deepseek-chat — besser für kreatives Schreiben'},
+      {id:'deepseek-coder', label:'deepseek-coder — präziser, technischer'}
+    ],
+    tokenFeld: 'max_tokens'
+  },
+  grok: {
+    label: 'Grok (xAI)',
+    basisUrl: 'https://api.x.ai/v1/chat/completions',
+    konsole: 'https://console.x.ai',
+    preisSeite: 'https://docs.x.ai/docs/models',
+    modelle: [
+      {id:'grok-4', label:'grok-4 — aktuell, stark beim Schreiben'},
+      {id:'grok-3', label:'grok-3 — schnell, gut für Entwürfe'},
+      {id:'grok-3-mini', label:'grok-3-mini — günstig und knapp'}
+    ],
+    tokenFeld: 'max_tokens'
+  }
+};
+
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const words = t => (String(t||'').trim().match(/[\wÄÖÜäöüß'’-]+/g)||[]).length;
+const esc = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const att = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const nf = n => (n||0).toLocaleString('de-DE');
+const lastWords = (t,n) => String(t||'').trim().split(/\s+/).slice(-n).join(' ');
+
+function neuesProjekt(vorlage){
+  const v = vorlage || NACHBILD;
+  return {
+    id: uid(),
+    name: v.name,
+    erstellt: new Date().toISOString(),
+    autor: '',
+    isbn: '',
+    cover: null,
+    letzterTab: 'werk',
+    leseStand: null, // { n: <Kapitelnummer>, anteil: 0..1 } — merkt sich Kapitel + Scrollposition
+    konzept: {
+      titel: v.titel, untertitel: v.untertitel, genre: v.genre,
+      praemisse: v.praemisse, kern: v.kern,
+      regeln: v.regeln.slice(), figuren: v.figuren.slice(),
+      schauplatz: v.schauplatz, twists: v.twists.slice(),
+      regelLabel: v.regelLabel || 'REGELWERK DES SPUKS',
+      vorlageSchluessel: v.schluessel || ''
+    },
+    system: systemPrompt(v),
+    blacklist: BLACKLIST_DEFAULT + (v.blacklistZusatz ? ('\n\n'+v.blacklistZusatz) : ''),
+    zielWoerter: v.zielWoerter,
+    kapitelZiel: v.kapitelZiel,
+    toc: v.toc.map(t=>({...t})),
+    bibel: null,
+    outline: {},
+    kapitelIdx: [],
+    state: {
+      aktuelles_kapitel: 0,
+      woerter_gesamt: 0,
+      figuren: [],
+      offene_faeden: [],
+      vorausdeutungen: [],
+      eskalationsstufe: 1,
+      loeschuhr: v.uhr ? { startjahr: v.uhr.start, endjahr: v.uhr.ende, aktuell_geloescht_bis_jahr: v.uhr.start } : null,
+      sonderzustand: v.sonderzustand ? { label: v.sonderzustand.label, ...JSON.parse(JSON.stringify(v.sonderzustand.start||{})) } : null,
+      physische_kontinuitaet: { wetter:'', tageszeit_ende_kapitel:'', objekte_bei_hauptfigur:[] },
+      bereits_verwendete_bilder: [],
+      sichere_orte: [],
+      letzter_schreck: null,
+      kapitel_summaries: [],
+      kosten: { tokenEin: 0, tokenAus: 0, aufrufe: 0 }
+    },
+    kdp: null
+  };
+}
+
+const Store = {
+  meta(){ return S.get(S.KM, {liste:[], aktiv:null}); },
+  saveMeta(m){ S.put(S.KM, m); },
+  list(){ return this.meta().liste; },
+  aktivId(){ const m=this.meta(); return m.aktiv || (m.liste[0] && m.liste[0].id) || null; },
+  load(id){ return S.get(S.pk(id), null); },
+  save(p){ S.put(S.pk(p.id), p); const m=this.meta(); const e=m.liste.find(x=>x.id===p.id);
+    if(e){ e.name=p.name } else { m.liste.push({id:p.id,name:p.name}); }
+    m.aktiv=p.id; this.saveMeta(m); },
+  create(vorlage){ const p=neuesProjekt(vorlage); this.save(p); return p; },
+  remove(id){ const p=this.load(id); if(p) p.kapitelIdx.forEach(k=>S.del(S.ck(id,k.n)));
+    S.del(S.pk(id)); const m=this.meta(); m.liste=m.liste.filter(x=>x.id!==id);
+    if(m.aktiv===id) m.aktiv = m.liste[0]?m.liste[0].id:null; this.saveMeta(m); },
+  kapitel(id,n){ return S.get(S.ck(id,n), null); },
+  saveKapitel(id,n,obj){ S.put(S.ck(id,n), obj); },
+  // Zwischenstand eines noch nicht fertigen Kapitels (Entwurf + Korrekturrunden-
+  // Zähler), damit bei einem Abbruch (Verbindung weg, App im Hintergrund pausiert)
+  // nicht wieder bei null angefangen werden muss — und keine Tokens für bereits
+  // bezahlte Entwürfe/Korrekturrunden verbrannt werden.
+  zwK:(id,n)=>'sw:zw:'+id+':'+n,
+  zwischenstand(id,n){ return S.get(this.zwK(id,n), null); },
+  saveZwischenstand(id,n,obj){ S.put(this.zwK(id,n), obj); },
+  loescheZwischenstand(id,n){ S.del(this.zwK(id,n)); },
+  // proxyUrl: absolute URL deines Cloudflare Workers, z.B. https://silberwerk-proxy.DEINNAME.workers.dev
+  // pass: Zugangswort, muss mit dem Secret SW_PASS im Worker übereinstimmen
+  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', pass:'1234', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
+  saveCfg(c){ S.put('sw:cfg', c); }
+};
 
 /* ============ CLOUD-SYNC (gemeinsamer Speicher am buch-engine Worker) ============ */
 const CloudSync = {
@@ -748,127 +869,6 @@ const CloudSync = {
   };
 })();
 
-/* ============ ANBIETER (austauschbar — beide OpenAI-kompatibel) ============ */
-const ANBIETER = {
-  kimi: {
-    label: 'Kimi (Moonshot AI)',
-    basisUrl: 'https://api.moonshot.ai/v1/chat/completions',
-    konsole: 'https://platform.kimi.ai',
-    preisSeite: 'https://platform.kimi.ai (Preise unter „Pricing")',
-    modelle: [
-      {id:'kimi-k2.6', label:'kimi-k2.6 — empfohlen, schnell & günstig'},
-      {id:'kimi-k3', label:'kimi-k3 — Flaggschiff, 1M Kontext, denkt immer (teurer)'},
-      {id:'kimi-k2.7-code', label:'kimi-k2.7-code — präziser, technischer'}
-    ],
-    tokenFeld: 'max_completion_tokens'
-  },
-  deepseek: {
-    label: 'DeepSeek',
-    basisUrl: 'https://api.deepseek.com/chat/completions',
-    konsole: 'https://platform.deepseek.com',
-    preisSeite: 'https://platform.deepseek.com/api-docs/pricing',
-    modelle: [
-      {id:'deepseek-chat', label:'deepseek-chat — besser für kreatives Schreiben'},
-      {id:'deepseek-coder', label:'deepseek-coder — präziser, technischer'}
-    ],
-    tokenFeld: 'max_tokens'
-  },
-  grok: {
-    label: 'Grok (xAI)',
-    basisUrl: 'https://api.x.ai/v1/chat/completions',
-    konsole: 'https://console.x.ai',
-    preisSeite: 'https://docs.x.ai/docs/models',
-    modelle: [
-      {id:'grok-4', label:'grok-4 — aktuell, stark beim Schreiben'},
-      {id:'grok-3', label:'grok-3 — schnell, gut für Entwürfe'},
-      {id:'grok-3-mini', label:'grok-3-mini — günstig und knapp'}
-    ],
-    tokenFeld: 'max_tokens'
-  }
-};
-
-const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const words = t => (String(t||'').trim().match(/[\wÄÖÜäöüß'’-]+/g)||[]).length;
-const esc = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const att = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-const nf = n => (n||0).toLocaleString('de-DE');
-const lastWords = (t,n) => String(t||'').trim().split(/\s+/).slice(-n).join(' ');
-
-function neuesProjekt(vorlage){
-  const v = vorlage || NACHBILD;
-  return {
-    id: uid(),
-    name: v.name,
-    erstellt: new Date().toISOString(),
-    autor: '',
-    isbn: '',
-    cover: null,
-    letzterTab: 'werk',
-    leseStand: null, // { n: <Kapitelnummer>, anteil: 0..1 } — merkt sich Kapitel + Scrollposition
-    konzept: {
-      titel: v.titel, untertitel: v.untertitel, genre: v.genre,
-      praemisse: v.praemisse, kern: v.kern,
-      regeln: v.regeln.slice(), figuren: v.figuren.slice(),
-      schauplatz: v.schauplatz, twists: v.twists.slice(),
-      regelLabel: v.regelLabel || 'REGELWERK DES SPUKS',
-      vorlageSchluessel: v.schluessel || ''
-    },
-    system: systemPrompt(v),
-    blacklist: BLACKLIST_DEFAULT + (v.blacklistZusatz ? ('\n\n'+v.blacklistZusatz) : ''),
-    zielWoerter: v.zielWoerter,
-    kapitelZiel: v.kapitelZiel,
-    toc: v.toc.map(t=>({...t})),
-    bibel: null,
-    outline: {},
-    kapitelIdx: [],
-    state: {
-      aktuelles_kapitel: 0,
-      woerter_gesamt: 0,
-      figuren: [],
-      offene_faeden: [],
-      vorausdeutungen: [],
-      eskalationsstufe: 1,
-      loeschuhr: v.uhr ? { startjahr: v.uhr.start, endjahr: v.uhr.ende, aktuell_geloescht_bis_jahr: v.uhr.start } : null,
-      sonderzustand: v.sonderzustand ? { label: v.sonderzustand.label, ...JSON.parse(JSON.stringify(v.sonderzustand.start||{})) } : null,
-      physische_kontinuitaet: { wetter:'', tageszeit_ende_kapitel:'', objekte_bei_hauptfigur:[] },
-      bereits_verwendete_bilder: [],
-      sichere_orte: [],
-      letzter_schreck: null,
-      kapitel_summaries: [],
-      kosten: { tokenEin: 0, tokenAus: 0, aufrufe: 0 }
-    },
-    kdp: null
-  };
-}
-
-const Store = {
-  meta(){ return S.get(S.KM, {liste:[], aktiv:null}); },
-  saveMeta(m){ S.put(S.KM, m); },
-  list(){ return this.meta().liste; },
-  aktivId(){ const m=this.meta(); return m.aktiv || (m.liste[0] && m.liste[0].id) || null; },
-  load(id){ return S.get(S.pk(id), null); },
-  save(p){ S.put(S.pk(p.id), p); const m=this.meta(); const e=m.liste.find(x=>x.id===p.id);
-    if(e){ e.name=p.name } else { m.liste.push({id:p.id,name:p.name}); }
-    m.aktiv=p.id; this.saveMeta(m); },
-  create(vorlage){ const p=neuesProjekt(vorlage); this.save(p); return p; },
-  remove(id){ const p=this.load(id); if(p) p.kapitelIdx.forEach(k=>S.del(S.ck(id,k.n)));
-    S.del(S.pk(id)); const m=this.meta(); m.liste=m.liste.filter(x=>x.id!==id);
-    if(m.aktiv===id) m.aktiv = m.liste[0]?m.liste[0].id:null; this.saveMeta(m); },
-  kapitel(id,n){ return S.get(S.ck(id,n), null); },
-  saveKapitel(id,n,obj){ S.put(S.ck(id,n), obj); },
-  // Zwischenstand eines noch nicht fertigen Kapitels (Entwurf + Korrekturrunden-
-  // Zähler), damit bei einem Abbruch (Verbindung weg, App im Hintergrund pausiert)
-  // nicht wieder bei null angefangen werden muss — und keine Tokens für bereits
-  // bezahlte Entwürfe/Korrekturrunden verbrannt werden.
-  zwK:(id,n)=>'sw:zw:'+id+':'+n,
-  zwischenstand(id,n){ return S.get(this.zwK(id,n), null); },
-  saveZwischenstand(id,n,obj){ S.put(this.zwK(id,n), obj); },
-  loescheZwischenstand(id,n){ S.del(this.zwK(id,n)); },
-  // proxyUrl: absolute URL deines Cloudflare Workers, z.B. https://silberwerk-proxy.DEINNAME.workers.dev
-  // pass: Zugangswort, muss mit dem Secret SW_PASS im Worker übereinstimmen
-  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', pass:'1234', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
-  saveCfg(c){ S.put('sw:cfg', c); }
-};
 
 /* ============ PROMPTS (gekürzt) ============ */
 const P = {
