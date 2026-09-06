@@ -2181,7 +2181,12 @@ const App = {
     this.leseN = (this.tab==='lesen' && this.p.leseStand) ? this.p.leseStand.n : null;
     document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
       const tab=b.dataset.tab;
+      if(this.leseN!==null && !this.edit) this.persistLeseStand();
+      if(tab!=='lesen') this.leseN=null;
       this.tab=tab; this.edit=false;
+      document.body.classList.remove('reading');
+      const orphan = document.getElementById('booksShell');
+      if(orphan && orphan.parentElement === document.body) orphan.remove();
       if(tab==='lesen'||tab==='buch') this.cloudRefreshDebounced();
       this.render(); window.scrollTo(0,0);
     });
@@ -2325,16 +2330,19 @@ const App = {
       metaTheme.setAttribute('content', reading ? ({hell:'#FFFDF8',sepia:'#F4ECD8',dunkel:'#0E0E10'}[rs.theme||'hell']||'#FFFDF8') : '#F5F5F7');
     }
 
-    // Lese-Stand merken (Tab + offenes Kapitel), damit ein Neuladen/Sitzungsende
-    // nicht wieder ganz von vorne beginnt. Nur schreiben, wenn sich wirklich etwas
-    // geändert hat — render() läuft während der Generierung sehr oft.
-    const neuerStand = (this.tab==='lesen' && this.leseN!==null)
-      ? {n:this.leseN, anteil:(p.leseStand && p.leseStand.n===this.leseN) ? p.leseStand.anteil : 0}
-      : null;
-    const aendertSich = p.letzterTab!==this.tab
-      || (!!p.leseStand)!==(!!neuerStand)
-      || (p.leseStand && neuerStand && p.leseStand.n!==neuerStand.n);
-    if(aendertSich){ p.letzterTab=this.tab; p.leseStand=neuerStand; Store.save(p); }
+    // Lese-Stand merken — beim Schließen des Readers NICHT löschen (Weiterlesen).
+    // Nur aktualisieren, wenn gerade ein Kapitel offen ist.
+    if(this.tab==='lesen' && this.leseN!==null){
+      const anteil = (p.leseStand && p.leseStand.n===this.leseN) ? (p.leseStand.anteil||0) : 0;
+      const neu = {n:this.leseN, anteil};
+      if(p.letzterTab!==this.tab || !p.leseStand || p.leseStand.n!==neu.n){
+        p.letzterTab=this.tab; p.leseStand=neu; Store.save(p);
+      } else if(p.letzterTab!==this.tab){
+        p.letzterTab=this.tab; Store.save(p);
+      }
+    } else if(p.letzterTab!==this.tab){
+      p.letzterTab=this.tab; Store.save(p);
+    }
 
     // Page-Flip-Reader aufbauen (misst Seiten nach DOM-Insert)
     if(this.tab==='lesen' && this.leseN!==null && !this.edit){
@@ -2522,6 +2530,7 @@ const App = {
       this.flipPage = next;
       const anteil = pages.length<=1 ? 0 : this.flipPage/Math.max(1,pages.length-1);
       this.p.leseStand = {n:this.leseN, anteil};
+      this.p.letzterTab = 'lesen';
       Store.save(this.p);
       paint(true, delta);
     };
@@ -2827,6 +2836,7 @@ const App = {
     return cur;
   },
   closeReader(){
+    this.persistLeseStand();
     this.leseN = null;
     this.edit = false;
     document.body.classList.remove('reading');
@@ -2838,13 +2848,38 @@ const App = {
     }
     this.render();
   },
+  persistLeseStand(){
+    if(!this.p || this.leseN===null) return;
+    let anteil = 0;
+    if(this._flipPages && this._flipPages.length>1){
+      anteil = (this.flipPage||0) / Math.max(1, this._flipPages.length-1);
+    } else if(this.p.leseStand && this.p.leseStand.n===this.leseN){
+      anteil = this.p.leseStand.anteil||0;
+    }
+    this.p.leseStand = {n:this.leseN, anteil: Math.max(0, Math.min(1, anteil))};
+    this.p.letzterTab = 'lesen';
+    Store.save(this.p);
+  },
+  openChapter(n, opts){
+    opts = opts || {};
+    const resume = opts.resume===true || (!opts.forceStart && this.p && this.p.leseStand && this.p.leseStand.n===n && (this.p.leseStand.anteil||0)>0.01);
+    this.leseN = n;
+    this.edit = false;
+    if(resume){ this.flipResume = true; }
+    else { this.flipPage = 0; this.flipResume = false; }
+    this.tab = 'lesen';
+    this.render();
+  },
   bindReaderHistory(){
     if(this._readerHistBound) return;
     this._readerHistBound = true;
     window.addEventListener('popstate', ()=>{
       if(this.tab==='lesen' && this.leseN!==null && !this.edit){
+        this.persistLeseStand();
         this.leseN = null;
         document.body.classList.remove('reading');
+        const orphan = document.getElementById('booksShell');
+        if(orphan && orphan.parentElement === document.body) orphan.remove();
         this.render();
       }
     });
@@ -2967,15 +3002,16 @@ const App = {
       <p class="sub" style="margin:8px 0 0" id="cloudBarHintLesen">${CloudSync.enabled()?(CloudSync.lastMsg||'verbunden'):'verbinde…'}</p>
     </div>`;
 
-    if(p.leseStand && p.leseStand.anteil>0.02){
+    if(p.leseStand && p.leseStand.n!=null && (p.leseStand.anteil||0)>=0){
       const k = p.kapitelIdx.find(x=>x.n===p.leseStand.n);
-      if(k) h+=`<div class="item" style="border-color:var(--deep-d)" onclick="App.leseN=${k.n};App.flipResume=true;App.render()">
+      if(k) h+=`<div class="item" style="border-color:var(--deep-d)" onclick="App.openChapter(${k.n},{resume:true})">
         <div class="split"><div><div class="kap">Weiterlesen</div><div class="t">${k.n===0?'Prolog':'Kapitel '+k.n} — ${esc(k.titel)}</div>
         <div class="sub">bei ${Math.round(p.leseStand.anteil*100)} %</div></div></div></div>`;
     }
     p.kapitelIdx.forEach(k=>{
       const ok = this.kapitelStatusOk(k);
-      h+=`<div class="item" onclick="App.leseN=${k.n};App.flipPage=0;App.render()">
+      const same = p.leseStand && p.leseStand.n===k.n && (p.leseStand.anteil||0)>0.01;
+      h+=`<div class="item" onclick="App.openChapter(${k.n},{resume:${same?'true':'false'}})">
         <div class="split"><div><div class="kap">${k.n===0?'Prolog':'Kapitel '+k.n}</div><div class="t">${esc(k.titel)}</div>
         <div class="sub">${nf(k.woerter)} Wörter · ca. ${Math.max(1,Math.round(k.woerter/220))} Min.</div></div>
         <span class="tag ${ok?'ok':'bad'}">${ok?'sauber':'prüfen'}</span></div></div>`;
@@ -3577,7 +3613,7 @@ Object.assign(App, {
       navigator.serviceWorker.getRegistrations().then(regs=>{
         regs.forEach(r=>{ try{ r.update(); }catch(e){} });
       }).catch(()=>{});
-      navigator.serviceWorker.register('./sw.js?v=11',{updateViaCache:'none'}).then(reg=>{
+      navigator.serviceWorker.register('./sw.js?v=12',{updateViaCache:'none'}).then(reg=>{
         try{ reg.update(); }catch(e){}
 try{ reg.update(); }catch(e){}
       }).catch(()=>{});
