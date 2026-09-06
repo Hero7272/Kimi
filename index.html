@@ -2897,6 +2897,12 @@ Object.assign(App, {
       const m=document.getElementById('manifestLink'); if(m) m.href=url;
       const a=document.getElementById('appleIcon'); if(a) a.href=icon;
     }catch(e){}
+    // Cache-Bust: neue SW-Version loescht alte kaputte Offline-Kopien
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('./sw.js?v=6',{updateViaCache:'none'}).then(reg=>{
+        try{ reg.update(); }catch(e){}
+      }).catch(()=>{});
+    }
   },
 
   coverWaehlen(ev){
