@@ -1,0 +1,10 @@
+{
+  "name": "Roman-Werkstatt",
+  "short_name": "Werkstatt",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F5F7",
+  "theme_color": "#FF9500",
+  "icons": [{"src":"icon.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any"}]
+}
