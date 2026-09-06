@@ -616,6 +616,138 @@ const S = {
   }
 };
 
+
+/* ============ CLOUD-SYNC (gemeinsamer Speicher am buch-engine Worker) ============ */
+const CloudSync = {
+  timer: null,
+  lastMsg: '',
+  enabled(){
+    const c = Store.cfg();
+    return !!(String(c.engineUrl||'').trim() && String(c.pass||'').replace(/[\s\u00A0]/g,''));
+  },
+  base(){ return String(Store.cfg().engineUrl||'').trim().replace(/\/$/,''); },
+  headers(extra){
+    const h = {
+      'content-type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': 'Mozilla/5.0 Roman-Werkstatt'
+    };
+    const pw = String(Store.cfg().pass||'').replace(/[\s\u00A0]/g,'');
+    if(pw) h['x-sw-pass'] = pw;
+    return Object.assign(h, extra||{});
+  },
+  async req(method, path, body, extraHeaders){
+    if(!this.enabled()) throw new Error('Cloud-Sync nicht konfiguriert (Hintergrund-Worker + Zugangswort)');
+    const opt = { method, headers: this.headers(extraHeaders) };
+    if(body !== undefined) opt.body = JSON.stringify(body);
+    const r = await fetch(this.base()+path, opt);
+    const txt = await r.text();
+    let data = null;
+    try{ data = txt ? JSON.parse(txt) : null; }catch(e){ data = { roh: txt }; }
+    if(!r.ok){
+      const msg = (data && (data.fehler || data.error)) || ('HTTP '+r.status);
+      const err = new Error(msg);
+      err.status = r.status; err.data = data;
+      throw err;
+    }
+    return data;
+  },
+  queuePush(){
+    if(this.pulling) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(()=>{ this.pushAktiv().catch(()=>{}); }, 900);
+  },
+  async pushAktiv(){
+    if(!this.enabled() || !App || !App.p) return;
+    const p = App.p;
+    try{
+      const res = await this.req('PUT', '/projekt', p, p.aktualisiert ? { 'If-Match': String(p.aktualisiert) } : undefined);
+      if(res && res.aktualisiert) p.aktualisiert = res.aktualisiert;
+      // Projekt ohne Kapiteltexte lokal speichern bleibt; Kapitel separat pushen
+      for(const k of (p.kapitelIdx||[])){
+        const ch = Store.kapitel(p.id, k.n);
+        if(!ch) continue;
+        const body = Object.assign({}, ch, { id: p.id, n: k.n });
+        const cr = await this.req('PUT', '/kapitel', body, ch.aktualisiert ? { 'If-Match': String(ch.aktualisiert) } : undefined);
+        if(cr && cr.aktualisiert){ ch.aktualisiert = cr.aktualisiert; Store.saveKapitel(p.id, k.n, ch); }
+      }
+      this.lastMsg = 'Cloud synchronisiert · '+new Date().toLocaleTimeString('de-DE');
+      S.put(S.pk(p.id), p); // aktualisiert lokal merken
+    }catch(e){
+      if(e.status === 409 && e.data && e.data.serverAktualisiert){
+        this.lastMsg = 'Konflikt — Server neuer. Tippe „Cloud laden“.';
+        if(App.toast) App.toast('Cloud-Konflikt: Server hat neuere Version. „Cloud laden“ nutzen.', 1);
+      } else {
+        this.lastMsg = 'Sync-Fehler: '+(e.message||e);
+        if(App.toast) App.toast('Cloud-Sync: '+(e.message||e), 1);
+      }
+    }
+  },
+  async pullProjekt(id){
+    const data = await this.req('GET', '/projekt?id='+encodeURIComponent(id));
+    const projekt = data.projekt || data;
+    if(!projekt || !projekt.id) throw new Error('Projekt leer');
+    // Kapitel nachziehen
+    for(const k of (projekt.kapitelIdx||[])){
+      try{
+        const ch = await this.req('GET', '/kapitel?id='+encodeURIComponent(id)+'&n='+k.n);
+        const kapitel = ch.kapitel || ch;
+        if(kapitel && (kapitel.text || kapitel.titel)) Store.saveKapitel(id, k.n, kapitel);
+      }catch(e){ /* kapitel optional */ }
+    }
+    Store.save(projekt);
+    return projekt;
+  },
+  async pullAll(){
+    if(!this.enabled()) return { ok:false, grund:'aus' };
+    this.pulling = true;
+    try{
+      const data = await this.req('GET', '/projekte');
+      const liste = data.projekte || [];
+      let gezogen = 0;
+      for(const meta of liste){
+        const lokal = Store.load(meta.id);
+        const lokalTs = lokal && lokal.aktualisiert ? Date.parse(lokal.aktualisiert) : 0;
+        const cloudTs = meta.aktualisiert ? Date.parse(meta.aktualisiert) : 0;
+        if(!lokal || (cloudTs && cloudTs > lokalTs)){
+          await this.pullProjekt(meta.id);
+          gezogen++;
+        }
+      }
+      this.lastMsg = gezogen ? (gezogen+' Projekt(e) aus der Cloud geladen') : 'Cloud aktuell';
+      return { ok:true, gezogen, liste };
+    } finally { this.pulling = false; }
+  },
+  async liste(){
+    if(!this.enabled()) return [];
+    const data = await this.req('GET', '/projekte');
+    return data.projekte || [];
+  }
+};
+
+// Store-Hooks: lokal zuerst, dann Cloud
+(function wrapStore(){
+  const _save = Store.save.bind(Store);
+  const _remove = Store.remove.bind(Store);
+  const _saveKapitel = Store.saveKapitel.bind(Store);
+  const _saveZwischenstand = Store.saveZwischenstand.bind(Store);
+  const _loescheZwischenstand = Store.loescheZwischenstand.bind(Store);
+  Store.save = function(p){ _save(p); CloudSync.queuePush(); };
+  Store.remove = function(id){
+    _remove(id);
+    if(CloudSync.enabled()) CloudSync.req('DELETE', '/projekt?id='+encodeURIComponent(id)).catch(e=>{ if(App.toast) App.toast('Cloud löschen: '+e.message,1); });
+  };
+  Store.saveKapitel = function(id,n,obj){ _saveKapitel(id,n,obj); CloudSync.queuePush(); };
+  Store.saveZwischenstand = function(id,n,obj){
+    _saveZwischenstand(id,n,obj);
+    if(CloudSync.enabled()) CloudSync.req('PUT', '/zwischenstand', Object.assign({}, obj, {id,n})).catch(()=>{});
+  };
+  Store.loescheZwischenstand = function(id,n){
+    _loescheZwischenstand(id,n);
+    if(CloudSync.enabled()) CloudSync.req('DELETE', '/zwischenstand?id='+encodeURIComponent(id)+'&n='+n).catch(()=>{});
+  };
+})();
+
 /* ============ ANBIETER (austauschbar — beide OpenAI-kompatibel) ============ */
 const ANBIETER = {
   kimi: {
@@ -1808,6 +1940,9 @@ const App = {
     if(v) v.innerHTML = '<div class="card">Bibliothek wird geladen …</div>';
     await S.initialisieren();
     if(!S.ok()){ document.getElementById('view').innerHTML='<div class="card">Der Browser erlaubt keinen dauerhaften Speicher (privates Fenster?). Die App braucht IndexedDB oder localStorage.</div>'; return; }
+    if(CloudSync.enabled()){
+      try{ await CloudSync.pullAll(); }catch(e){ console.warn('Cloud pull', e); if(typeof App!=='undefined' && App.toast) setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500); }
+    }
     let id = Store.aktivId();
     this.p = id ? Store.load(id) : null;
     if(!this.p) this.p = Store.create(NACHBILD);
@@ -2203,8 +2338,15 @@ const App = {
       <input value="${att(c.proxyUrl)}" placeholder="https://deepseek-proxy-cj6.pages.dev" onchange="App.setCfg('proxyUrl',this.value.trim())">
       <label style="margin-top:10px">Zugangswort (muss zum Worker-Secret SW_PASS passen)</label>
       <input type="password" value="${att(c.pass)}" onchange="App.setCfg('pass',this.value)">
-      <label style="margin-top:14px">Hintergrund-Worker (buch-engine, optional)</label>
+      <label style="margin-top:14px">Hintergrund-Worker / Cloud-Sync (buch-engine)</label>
       <input value="${att(c.engineUrl||'')}" placeholder="https://buch-engine.DEIN-ACCOUNT.workers.dev" onchange="App.setCfg('engineUrl',this.value.trim())">
+        <div class="row" style="margin-top:12px">
+          <button type="button" class="small" onclick="App.cloudLaden()">Cloud laden</button>
+          <button type="button" class="small primary" onclick="App.cloudSpeichern()">In Cloud speichern</button>
+          <button type="button" class="small" onclick="App.cloudStatus()">Fortschritt</button>
+        </div>
+        <p class="sub" id="cloudSyncHint">${CloudSync.enabled()?(CloudSync.lastMsg||'Cloud-Sync aktiv — gemeinsamer Speicher mit Assistent.'):'Worker-URL + Zugangswort setzen, dann Cloud-Sync.'}</p>
+
       <p class="sub" style="margin:6px 0 0">Damit Kapitel weitergeschrieben werden, wenn das Handy aus ist. Gleicher Pass wie oben.</p>
       <button class="ghost small full" style="margin-top:10px" onclick="App.testKey()">Verbindung testen</button>
       </div>`;
@@ -2763,6 +2905,32 @@ Object.assign(App, {
 
   coverWeg(){ if(!confirm('Cover entfernen?')) return; this.p.cover=null; this.save(); this.render(); }
 });
+
+
+App.cloudLaden = async function(){
+  try{
+    const r = await CloudSync.pullAll();
+    const id = Store.aktivId();
+    this.p = id ? Store.load(id) : this.p;
+    this.toast(CloudSync.lastMsg || 'Cloud geladen');
+    this.render();
+  }catch(e){ this.toast('Cloud laden: '+(e.message||e), 1); }
+};
+App.cloudSpeichern = async function(){
+  try{
+    await CloudSync.pushAktiv();
+    this.toast(CloudSync.lastMsg || 'In Cloud gespeichert');
+    this.render();
+  }catch(e){ this.toast('Cloud speichern: '+(e.message||e), 1); }
+};
+App.cloudStatus = async function(){
+  try{
+    const liste = await CloudSync.liste();
+    if(!liste.length) return this.toast('Cloud leer — noch keine Projekte.');
+    const zeilen = liste.map(p => (p.name||p.id)+' · K'+(p.aktuelles_kapitel||0)+' · '+(p.woerter_gesamt||0)+' W.').join('\n');
+    alert('Gemeinsamer Speicher:\n\n'+zeilen);
+  }catch(e){ this.toast('Cloud-Status: '+(e.message||e), 1); }
+};
 
 App.setupPWA();
 App.init();
