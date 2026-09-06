@@ -734,7 +734,7 @@ const Store = {
   loescheZwischenstand(id,n){ S.del(this.zwK(id,n)); },
   // proxyUrl: absolute URL deines Cloudflare Workers, z.B. https://silberwerk-proxy.DEINNAME.workers.dev
   // pass: Zugangswort, muss mit dem Secret SW_PASS im Worker übereinstimmen
-  cfg(){ return S.get('sw:cfg', {key:'sk-vHs1DVftccQOJLgWjZnCnC7oR90t8DqEFA65rzFcAlNyEVMO', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
+  cfg(){ return S.get('sw:cfg', {key:'', anbieter:'kimi', model:'kimi-k2.6', maxRetry:2, autolauf:false, noTemp:['kimi-k3','kimi-k2.7-code'], noPrefill:[], proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev', preisEinProMio:0, preisAusProMio:0, reflexion:true, thinkingOff:true}); },
   saveCfg(c){ S.put('sw:cfg', c); }
 };
 
@@ -1322,12 +1322,15 @@ const API = {
   async call({system, user, temp=1, maxTokens=8000, onRetry, onProgress, prefill, timeoutMs=600000}){
     const cfg = Store.cfg();
     const anbieter = ANBIETER[cfg.anbieter] || ANBIETER.kimi;
-    if(!cfg.key) throw new Error('Kein API-Key hinterlegt. Setup öffnen.');
     if(!cfg.proxyUrl) throw new Error('Keine Proxy-Adresse hinterlegt. Setup öffnen und die Worker-URL eintragen.');
-    const sauber = String(cfg.key).replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g,'');
-    if(!/^[\x21-\x7E]+$/.test(sauber))
-      throw new Error('Der API-Key enthält ungültige Zeichen.');
-    if(sauber !== cfg.key){ const c=Store.cfg(); c.key=sauber; Store.saveCfg(c); cfg.key=sauber; }
+    const pwGate = String(cfg.pass||'').replace(/[\s\u00A0]/g,'');
+    if(!cfg.key && !(cfg.proxyUrl && pwGate)) throw new Error('Proxy-Adresse und Zugangswort fehlen. Setup öffnen.');
+    if(cfg.key){
+      const sauber = String(cfg.key).replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g,'');
+      if(!/^[\x21-\x7E]+$/.test(sauber))
+        throw new Error('Der API-Key enthält ungültige Zeichen.');
+      if(sauber !== cfg.key){ const c=Store.cfg(); c.key=sauber; Store.saveCfg(c); cfg.key=sauber; }
+    }
 
     // Kimi-Thinking-Modelle: kimi-k3 denkt IMMER (nicht abschaltbar).
     // kimi-k2.6 kann Thinking abschalten — das spart Budget und verhindert leere content-Felder.
@@ -1365,7 +1368,8 @@ const API = {
       let r;
       // Immer über den eigenen Cloudflare-Worker-Proxy — die meisten Anbieter blocken Direktaufrufe aus dem Browser per CORS.
       const ziel = cfg.proxyUrl.replace(/\/+$/,'');
-      const kopf = {'content-type':'application/json','x-api-key':cfg.key,'x-sw-target':anbieter.basisUrl};
+      const kopf = {'content-type':'application/json','x-sw-target':anbieter.basisUrl};
+      if(cfg.key) kopf['x-api-key'] = cfg.key;
       const pw = String(cfg.pass||'').replace(/[\s\u00A0]/g,'');
       if(pw) kopf['x-sw-pass'] = pw;
 
@@ -1940,28 +1944,15 @@ const App = {
     if(v) v.innerHTML = '<div class="card">Bibliothek wird geladen …</div>';
     await S.initialisieren();
     if(!S.ok()){ document.getElementById('view').innerHTML='<div class="card">Der Browser erlaubt keinen dauerhaften Speicher (privates Fenster?). Die App braucht IndexedDB oder localStorage.</div>'; return; }
-    // Fest hinterlegte Zugangsdaten nachziehen (auch wenn altes leeres cfg im Speicher liegt)
+    // Fest hinterlegte Werkstatt-Defaults (Proxy/Pass/Engine) — Key bleibt server-seitig am Proxy
     (function(){
-      const d = {key:'sk-vHs1DVftccQOJLgWjZnCnC7oR90t8DqEFA65rzFcAlNyEVMO', anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
+      const d = {anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
       const c = Store.cfg();
       let ch = false;
-      Object.keys(d).forEach(k=>{ if(!c[k]){ c[k]=d[k]; ch=true; } });
-      // pass/engineUrl/proxy immer auf unsere Werkstatt-Werte setzen, wenn leer oder Platzhalter
-      if(!String(c.engineUrl||'').trim()){ c.engineUrl=d.engineUrl; ch=true; }
-      if(!String(c.pass||'').trim()){ c.pass=d.pass; ch=true; }
-      if(!String(c.proxyUrl||'').trim()){ c.proxyUrl=d.proxyUrl; ch=true; }
-      if(!String(c.key||'').trim()){ c.key=d.key; ch=true; }
+      // proxyUrl/pass/engineUrl/anbieter/model immer auf bekannte gute Werte setzen
+      ['proxyUrl','pass','engineUrl','anbieter','model'].forEach(k=>{ if(c[k] !== d[k]){ c[k]=d[k]; ch=true; } });
       if(ch) Store.saveCfg(c);
     })();
-    // Bake-in: bestehende Installationen ohne engineUrl bekommen Cloud-Defaults
-    {
-      const cfg = Store.cfg();
-      if(!cfg.engineUrl){
-        cfg.engineUrl = 'https://buch-engine.lupinzerooo.workers.dev';
-        if(!cfg.pass) cfg.pass = '1234';
-        Store.saveCfg(cfg);
-      }
-    }
     if(CloudSync.enabled()){
       try{ await CloudSync.pullAll(); }catch(e){ console.warn('Cloud pull', e); if(typeof App!=='undefined' && App.toast) setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500); }
     }
@@ -2087,7 +2078,7 @@ const App = {
         <button class="ghost full" style="margin-top:8px" onclick="App.entwurfModus=false;App.render()">Abbrechen</button>`}
       </div>`;
 
-    if(!cfg.key || !cfg.proxyUrl) h+=`<div class="card"><h2>Erst Setup</h2><p class="sub">Die App braucht deinen API-Key (Kimi oder DeepSeek) und die Adresse deines Proxys (Cloudflare Worker). Ohne beides läuft nichts.</p><button class="primary full" onclick="App.tab='setup';App.render()">Zum Setup</button></div>`;
+    if(!cfg.proxyUrl || !String(cfg.pass||'').trim()) h+=`<div class="card"><h2>Erst Setup</h2><p class="sub">Die App braucht die Proxy-Adresse und das Zugangswort. Der API-Key liegt serverseitig am Proxy (optional im Setup überschreibbar).</p><button class="primary full" onclick="App.tab='setup';App.render()">Zum Setup</button></div>`;
     if(cfg.engineUrl){
       const job=p.state.hintergrundJob;
       h+=`<div class="card"><h2>Ohne Handy weiter</h2>
@@ -2470,9 +2461,9 @@ Object.assign(App, {
     Pipe.logs.length=0;
     const c = Store.cfg();
     Pipe.log('Selbsttest — Modell '+c.model);
-    if(!c.key){ Pipe.log('Kein API-Key hinterlegt.','e'); return this.toast('Kein Key im Setup.',1); }
     if(!c.proxyUrl){ Pipe.log('Keine Proxy-Adresse hinterlegt.','e'); return this.toast('Keine Worker-URL im Setup.',1); }
-    Pipe.log(/^sk-[\x21-\x7E]+$/.test(c.key) ? 'Key sieht sauber aus.' : 'Key hat ein ungewöhnliches Format.','k');
+    if(!String(c.pass||'').trim()){ Pipe.log('Kein Zugangswort hinterlegt.','e'); return this.toast('Kein Passwort im Setup.',1); }
+    Pipe.log(c.key ? (/^sk-[\x21-\x7E]+$/.test(c.key) ? 'Client-Key gesetzt.' : 'Client-Key hat ungewöhnliches Format.') : 'Kein Client-Key — Proxy-Secret wird genutzt.','k');
     try{
       Pipe.log('1/2 — einfache Antwort …');
       const a = await API.call({user:'Antworte mit genau einem Wort: bereit', temp:0, maxTokens:200});
@@ -2572,7 +2563,7 @@ Object.assign(App, {
     if(!genre) return this.toast('Bitte ein Genre/Ton eintragen.',1);
     if(idee.length<20) return this.toast('Bitte die Idee etwas ausführlicher beschreiben (ein paar Sätze).',1);
     const cfg = Store.cfg();
-    if(!cfg.key || !cfg.proxyUrl) return this.toast('Erst Setup ausfüllen (API-Key + Proxy-Adresse).',1);
+    if(!cfg.proxyUrl || !String(cfg.pass||'').trim()) return this.toast('Erst Setup ausfüllen (Proxy-Adresse + Zugangswort).',1);
     this.entwurfLaeuft = true; this.render();
     try{
       Pipe.log('Buchkonzept wird entworfen …');
