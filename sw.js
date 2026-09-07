@@ -1,7 +1,7 @@
-const CACHE = 'rw-v13';
+const CACHE = 'rw-v14';
 const ASSETS = [
   './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json',
-  './webtoon/k1.html','./webtoon/reader.css','./webtoon/reader.js','./webtoon/data/k1-script.json'
+  './webtoon/index.html','./webtoon/k1.html','./webtoon/reader.css','./webtoon/reader.js','./webtoon/data/k1-script.json'
 ];
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
