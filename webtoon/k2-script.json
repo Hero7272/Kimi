@@ -1,0 +1,83 @@
+{
+  "serie": "Fleisch & Thron",
+  "episode": "K2 — Markt der Namen",
+  "stil": "2D Anime/Manhwa Webtoon — fließende Szenenführung wie Anime",
+  "format": "16:9 panels, text ON image, original Kapitel lines",
+  "pacing": "Market cold open smell→gates/cap→shoes insert→courtyard cages. No abrupt skips.",
+  "regeln_locked": [
+    "Anatomie QA (Hände) vor Accept",
+    "Texte ON-IMAGE composited wie echtes Webtoon",
+    "2D Anime/Manhwa, kein 3D",
+    "Artist review jedes Panel",
+    "Null Abweichung vom Original-Kapitel",
+    "Markt-Leser-Test",
+    "Fließende Anime-Szene: keine abrupten Zeitsprünge"
+  ],
+  "hook": "Namen sind teurer als Fleisch — und Kael ist schon Loch.",
+  "panels": [
+    {
+      "n": 1,
+      "beat": "Marktgeruch",
+      "file": "01.png",
+      "caption": "Der Markt roch nach Pisse und Zuckerwerk, eine Kombination, die Kael bewusst machte, dass er hier noch nicht genug gesehen hatte, um zu wissen, welche der beiden Substanzen die wertvollere war.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Night market alley atmosphere: steam, sticky sweets stall glow vs foul puddles; Kael entering frame in stolen cloth cap and ill-fitting dead-man's shoes, dark cloak/chainmail from escape. Continuous approach. 2D manhwa.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "cold open smell before faces"
+    },
+    {
+      "n": 2,
+      "beat": "Drei Tore / Kappe",
+      "file": "02.png",
+      "caption": "Er war durch drei Tore gekommen, jedes mit einem anderen Gesicht, jedes mit einer anderen Lüge über seinen Namen. Der Körper schwitzte unter der Stoffkappe, die er sich von einem Toten genommen hatte – nicht von seinem ersten, sondern von einem, den er im Wald gefunden hatte, aufgehängt an einem Baum, dessen Zweige wie Finger aussahen.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "CU Kael under cloth cap sweating, icy blue eyes wary; behind him layered gate arches night market. Continuity clothing from K1 escape plus cap+shoes. No text baked.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "same arrival — no time skip"
+    },
+    {
+      "n": 3,
+      "beat": "Schuhe vom Toten",
+      "file": "03.png",
+      "caption": "Der Tote hatte keine Schuhe gehabt. Kael trug sie jetzt. Sie passten zu gut.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Insert CU: Kael's feet in worn stolen shoes on wet cobble, slight wrong-fit intimacy. Continuous from walking.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "detail insert"
+    },
+    {
+      "n": 4,
+      "beat": "Hof / Käfigmuster",
+      "file": "04.png",
+      "caption": "Die Gasse öffnete sich zu einem Hof, den Mondlicht und Fackeln zu gleichen Teilen beleuchteten. Käfige standen nicht in Reihen, sondern in einem Muster, das er fast erkannte, bevor es ihm wegrutschte wie der Name seiner Mutter, den er nicht mehr sagen konnte.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Wide: courtyard opens; irregular cage pattern under moon+torches; Kael small in foreground entering. Unsettling geometry. 2D manhwa.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "camera follows him into yard"
+    }
+  ]
+}

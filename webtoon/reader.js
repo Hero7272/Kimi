@@ -17,13 +17,16 @@
   });
   btnBack.addEventListener("click", () => {
     if (history.length > 1) history.back();
-    else location.href = "../index.html";
+    else location.href = "./index.html";
   });
+
+  const ep = (document.body.dataset.ep || "k1").toLowerCase();
+  const panelDir = ep === "k1" ? "panels/" : ("panels/" + ep + "/");
 
   let data;
   try {
-    let res = await fetch("data/k1-script.json", { cache: "no-store" });
-    if (!res.ok) res = await fetch("k1-script.json", { cache: "no-store" });
+    let res = await fetch("data/" + ep + "-script.json", { cache: "no-store" });
+    if (!res.ok) res = await fetch(ep + "-script.json", { cache: "no-store" });
     if (!res.ok) throw new Error("script " + res.status);
     data = await res.json();
   } catch (e) {
@@ -32,8 +35,8 @@
   }
 
   document.getElementById("serie").textContent = data.serie || "Fleisch & Thron";
-  document.getElementById("episode").textContent = data.episode || "K1";
-  document.title = `${data.serie || "Webtoon"} — ${data.episode || "K1"}`;
+  document.getElementById("episode").textContent = data.episode || ep.toUpperCase();
+  document.title = `${data.serie || "Webtoon"} — ${data.episode || ep.toUpperCase()}`;
 
   const panels = (data.panels || []).slice().sort((a, b) => a.n - b.n);
   const frag = document.createDocumentFragment();
@@ -47,7 +50,7 @@
     const img = document.createElement("img");
     img.loading = "lazy";
     img.alt = p.beat || ("Panel " + p.n);
-    img.src = "panels/" + file;
+    img.src = panelDir + file;
     img.onerror = () => {
       const m = document.createElement("div");
       m.className = "missing";

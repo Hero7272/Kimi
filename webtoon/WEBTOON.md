@@ -1,13 +1,6 @@
-# Fleisch & Thron — Webtoon K1
+# Fleisch & Thron — Webtoon
 
-Vertikaler Scroll-Reader unter `webtoon/k1.html`.
+- K1: `webtoon/k1.html` — 30 lettered panels
+- K2: `webtoon/k2.html` — in progress (`panels/k2/`)
 
-## Panels
-Lege 16:9 PNGs als `panels/01.png` … `panels/10.png` ab.
-Script/Texte: `data/k1-script.json` (Captions + Dialoge müssen Kap.1 folgen).
-
-## Lokal
-```bash
-cd webtoon && python3 -m http.server 8765
-# http://localhost:8765/k1.html
-```
+Script: `data/k1-script.json` / `data/k2-script.json`. Captions are also baked ON the PNGs.
