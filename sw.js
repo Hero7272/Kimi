@@ -1,6 +1,6 @@
-const CACHE = 'rw-v19';
+const CACHE = 'rw-v20';
 const ASSETS = [
-  './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json',
+  './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json','./check.html',
   './webtoon/index.html','./webtoon/k1.html','./webtoon/reader.css','./webtoon/reader.js','./webtoon/data/k1-script.json'
 ];
 self.addEventListener('install', e=>{

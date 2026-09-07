@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Fleisch & Thron — Textstand</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:40rem;margin:1.5rem auto;padding:0 1rem;line-height:1.45}
+.ok{background:#e8f8ee;border:1px solid #1a7f37;padding:1rem;border-radius:10px}
+.bad{background:#fdecea;border:1px solid #b42318;padding:1rem;border-radius:10px}
+code{background:#f4f4f5;padding:.1rem .35rem;border-radius:4px}
+pre{white-space:pre-wrap;background:#111;color:#eee;padding:1rem;border-radius:10px;font-size:.9rem}
+a{color:#0b57d0}
+</style>
+</head>
+<body>
+<h1>Textstand-Check</h1>
+<p>Lädt Kap.1 aus der App-Datei (ohne Cache-Tricks). Wenn hier <strong>NEU</strong> steht, ist der Server-Stand neu — die Geschichte wirkt trotzdem ähnlich, weil nur System-/Währungsstellen umgeschrieben wurden.</p>
+<div id="out">prüfe…</div>
+<pre id="snip"></pre>
+<p><a href="./">Zurück zur Werkstatt</a></p>
+<script>
+(async()=>{
+  const out=document.getElementById('out');
+  const snip=document.getElementById('snip');
+  try{
+    const r=await fetch('./fleisch-thron.json?ts='+Date.now(),{cache:'no-store'});
+    const d=await r.json();
+    const k=(d.kapitel||[]).find(x=>x.n===1)||(d.kapitel||[])[0];
+    const t=(k&&(k.text||k.body))||'';
+    const neu=t.includes('Brand unter der Haut')||t.includes('Schuld gegen den Thron');
+    const alt=t.includes('BEGEHREN GESAMMELT')||t.includes('0,7 Einheiten')||t.includes('Transaktionsminimum');
+    let html='';
+    if(neu && !alt){
+      html='<div class="ok"><b>NEU</b> — Canon-Rewrite ist auf dem Server.<br>Wörter Kap.1: '+(k.woerter||'?')+' · Kapitel gesamt: '+(d.kapitel||[]).length+'</div>';
+    } else if(alt){
+      html='<div class="bad"><b>ALT</b> — LitRPG/Erinnerungs-Währung noch im Server-File.</div>';
+    } else {
+      html='<div class="bad"><b>Unklar</b> — weder klare Neu- noch Alt-Marker.</div>';
+    }
+    html+='<p>In der Werkstatt in Kap.1 suchen:</p><ul><li>Neu: <code>Brand unter der Haut</code></li><li>Alt (soll weg): <code>BEGEHREN GESAMMELT</code></li></ul>';
+    out.innerHTML=html;
+    const i=t.indexOf('Brand unter der Haut');
+    snip.textContent = i>=0 ? t.slice(i,i+220) : t.slice(0,220);
+  }catch(e){
+    out.innerHTML='<div class="bad">Fehler: '+String(e.message||e)+'</div>';
+  }
+})();
+</script>
+</body>
+</html>
