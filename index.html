@@ -688,6 +688,7 @@ const IDB = {
 
 const MEM = {};
 let MEM_BEREIT = false;
+const RW_DATA_VER = 'ft-os-rewrite-1'; // bump = wipe Fleisch local cache once
 
 const S = {
   KM:'sw:meta', pk:id=>'sw:proj:'+id, ck:(id,n)=>'sw:ch:'+id+':'+n,
@@ -749,6 +750,27 @@ const S = {
     }
     Object.assign(MEM, daten);
     MEM_BEREIT = true;
+  },
+  async migrateFleischIfNeeded(){
+    const cur = MEM['sw:dataVer'];
+    if(cur === RW_DATA_VER) return false;
+    const id = 'isekai-6a9dc73e';
+    const keys = Object.keys(MEM).filter(k => k === 'sw:proj:'+id || k.startsWith('sw:ch:'+id+':') || k.startsWith('sw:zw:'+id+':'));
+    for(const k of keys){
+      delete MEM[k];
+      try{ await IDB.loeschen(k); }catch(e){}
+    }
+    // Meta: Projekt aus Liste nehmen
+    try{
+      const m = MEM['sw:meta'] || {liste:[], aktiv:null};
+      if(m && Array.isArray(m.liste)) m.liste = m.liste.filter(x=>x && x.id!==id);
+      if(m.aktiv===id) m.aktiv = m.liste[0]?m.liste[0].id:null;
+      MEM['sw:meta'] = m;
+      await IDB.setzen('sw:meta', m).catch(()=>{});
+    }catch(e){}
+    MEM['sw:dataVer'] = RW_DATA_VER;
+    try{ await IDB.setzen('sw:dataVer', RW_DATA_VER); }catch(e){}
+    return true;
   }
 };
 
@@ -2193,6 +2215,9 @@ const App = {
     if(v) v.innerHTML = '<div class="card">Bibliothek wird geladen …</div>';
     await S.initialisieren();
     if(!S.ok()){ document.getElementById('view').innerHTML='<div class="card">Der Browser erlaubt keinen dauerhaften Speicher (privates Fenster?). Die App braucht IndexedDB oder localStorage.</div>'; return; }
+    let wiped = false;
+    try{ wiped = await S.migrateFleischIfNeeded(); }catch(e){ console.warn('migrate', e); }
+    if(wiped){ try{ setTimeout(()=>App.toast && App.toast('Lokaler Fleisch-&-Thron-Cache geleert — lade Cloud…'), 300); }catch(e){} }
     // Zugangsdaten fest setzen (Key, Proxy, Pass, Worker)
     (function(){
       const d = {key:'sk-vHs1DVftccQOJLgWjZnCnC7oR90t8DqEFA65rzFcAlNyEVMO', anbieter:'kimi', model:'kimi-k2.6', proxyUrl:'https://deepseek-proxy-cj6.pages.dev/', pass:'1234', engineUrl:'https://buch-engine.lupinzerooo.workers.dev'};
@@ -2226,6 +2251,20 @@ const App = {
         setTimeout(()=>App.toast('Cloud laden: '+(e.message||e),1), 500);
       }
     }
+    // Falls noch Altstand (~9214 W. / nur 5 Kapitel): nochmal hart leeren und ziehen
+    try{
+      const chk = Store.load(WANT);
+      const w = chk && chk.state && chk.state.woerter_gesamt;
+      const nKap = chk && Array.isArray(chk.kapitelIdx) ? chk.kapitelIdx.length : 0;
+      if(chk && (nKap < 6 || (typeof w === 'number' && w > 0 && w < 10000))){
+        MEM['sw:dataVer'] = 'pending';
+        await S.migrateFleischIfNeeded();
+        if(CloudSync.enabled()){
+          await CloudSync.pullProjekt(WANT, { force:true });
+        }
+      }
+    }catch(e){ console.warn('altstand-check', e); }
+
     // Bootstrap aus eingebettetem JSON, falls Projekt lokal fehlt oder ohne Kapiteltexte
     let bootImport = false;
     try{
@@ -2238,8 +2277,11 @@ const App = {
         m.aktiv = WANT;
         Store.saveMeta(m);
         this.p = hit;
-        if(bootImport) setTimeout(()=>App.toast('Fleisch & Thron geladen'), 400);
-        else if(cloudNeu>0) setTimeout(()=>App.toast(cloudNeu===1?'Neues Kapitel aus der Cloud':(cloudNeu+' neue Kapitel aus der Cloud')), 400);
+        const ww = (hit.state && hit.state.woerter_gesamt) || 0;
+        const kk = (hit.kapitelIdx||[]).length;
+        if(bootImport) setTimeout(()=>App.toast('Fleisch & Thron geladen · '+kk+' Kap. · '+ww+' W.'), 400);
+        else if(cloudNeu>0) setTimeout(()=>App.toast((cloudNeu===1?'Update aus der Cloud':(cloudNeu+' Updates aus der Cloud'))+' · '+kk+' Kap. · '+ww+' W.'), 400);
+        else if(wiped) setTimeout(()=>App.toast('Cloud neu geladen · '+kk+' Kap. · '+ww+' W.'), 400);
       }
     }catch(e){ console.warn('Aktiv-Projekt setzen', e); }
     let id = Store.aktivId();
