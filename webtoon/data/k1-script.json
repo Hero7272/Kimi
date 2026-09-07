@@ -1,171 +1,614 @@
 {
   "serie": "Fleisch & Thron",
   "episode": "K1 — Aufwachen im Fleisch",
-  "stil": "2D Manhwa, flach, Cel-Shading, kein 3D/CGI",
-  "format": "Bilder 16:9 erzeugen, Reader vertikal stapeln + deutsche Blasen/Captions",
-  "canon_regeln": [
-    "Kael: länger/dünner Körper, zu langes dunkles Haar, eisblaue Augen, Narben an Oberschenkel-Innenseiten, linker Arm falsch/schlaff bis er frei ist",
-    "Fesseln: Eisenringe DURCH die Handgelenks-Knöchel gebohrt, Arme ÜBER dem Kopf — keine Kettenmanschetten, keine Seile",
-    "Nackt im Tempel bis er Wächter-Kleidung findet (erst Panel 9)",
-    "Priester: junge Augen in altem Gesicht, rote Roben, nasses Ritualmesser — KEIN christliches Kreuz",
-    "System-Texte rot schwebend, fantasy-runisch, exakt wie Kapitel",
-    "Seraphine nur Silhouette: rostige Rüstung, Stimme am Ende",
-    "Anatomie: Hände immer 5 Finger, QA vor Accept"
+  "stil": "2D Anime/Manhwa Webtoon — fließende Szenenführung wie Anime",
+  "format": "16:9 panels, text ON image, original Kapitel lines",
+  "pacing": "Anime scene flow: black/taste → eye opens → POV ceiling → pierce insert → wrong arm → body pan → smell → blood in hair → THEN wide priest. No abrupt skips.",
+  "regeln_locked": [
+    "Anatomie QA (Hände) vor Accept",
+    "Texte ON-IMAGE composited wie echtes Webtoon",
+    "2D Anime/Manhwa, kein 3D",
+    "Artist review jedes Panel",
+    "Null Abweichung vom Original-Kapitel",
+    "Markt-Leser-Test: wie ein Mensch lesen — fühlt sich an wie Webtoon vom Markt? Sonst reject",
+    "Fließende Anime-Szene: keine abrupten Zeitsprünge; Opening = Geschmack → Auge → Fokus Schritt für Schritt"
   ],
-  "hook": "Er stirbt nicht als Held — er wacht als Werkzeug auf. Und das System bezahlt mit dem, was er noch ist.",
+  "hook": "Er stirbt nicht als Held — er wacht als Werkzeug auf.",
   "panels": [
     {
       "n": 1,
-      "beat": "Erwachen — durchbohrte Handgelenke",
+      "beat": "Schwarz — Kupfer",
       "caption": "Das Erwachen schmeckte nach Kupfer und altem Fett.",
       "dialogue": [],
-      "visual": "Wide establishing: Kael NACKT auf dunklem Steinboden, Arme ÜBER dem Kopf, Handgelenke IMPALIERT — dicke Eisenbolzen/Ringe DURCH die Handgelenks-Knöchel in Bodenringe, Blut läuft ins sehr lange dunkle Haar. Linker Arm schlaff/falsch. Schlanker/länger Körper, Narben. Priester in karmesinroten Roben mit RÜCKEN zu Kael. Weihrauch. Nur zerrissenes Hüfttuch. Kein Kimono, kein Hemd. 16:9 2D Manhwa.",
-      "chars": [
-        "kael"
-      ],
-      "file": "01.png",
-      "transition_to_next": "Schnitt auf seine fremden Hände/Arme"
+      "sfx": [],
+      "visual": "Near-total black with faint copper warmth, soft blur, almost no detail. Anime cold open. Lower caption band.",
+      "chars": [],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "hold 1 beat — taste before sight",
+      "file": "01.png"
     },
     {
       "n": 2,
-      "beat": "Fremder Körper",
-      "caption": "Länger. Dünner. Narben, die er nicht verdient hatte.",
+      "beat": "Auge öffnet sich",
+      "caption": null,
       "dialogue": [],
-      "visual": "Close-up: Kael starrt schockiert auf eigene fremde Hände/Unterarme — Arme noch ÜBER dem Kopf angeschnitten, Eisenbolzen DURCH Handgelenke sichtbar. Barer Oberkörper, sehr langes dunkles Haar, Blut aus Handgelenken, eisblaue Augen. Hände 5 Finger. Keine Kleidung. Continuity Stein/Ringe Panel 1.",
+      "sfx": [],
+      "visual": "Extreme CU: Kael's icy pale-blue eye slowly opening through messy black hair strands, blood flecks, soft focus sharpening. Anime focus pull. NO text.",
       "chars": [
         "kael"
       ],
-      "file": "02.png",
-      "transition_to_next": "Priester dreht sich um"
+      "text_layout": {},
+      "flow": "first sight — continuous from black",
+      "file": "02.png"
     },
     {
       "n": 3,
+      "beat": "Unscharf — Stein über ihm",
+      "caption": "Kael lag auf Stein, nackt, die Handgelenke über dem Kopf an eiserne Ringe geschmiedet.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "His POV looking UP: dark stone ceiling blurry then sharper, arms raised into frame edges, iron at wrists half-seen. Lying on back.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "POV continue — still lying",
+      "file": "03.png"
+    },
+    {
+      "n": 4,
+      "beat": "Durchbohrt — Nah",
+      "caption": "Nicht gefesselt – durchbohrt. Stahl durch die Knöchel, kalt, präzise.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Insert CU: iron spike THROUGH wrist knuckle into ring, blood trail, anatomy 5 fingers. Lying continuity. No ropes.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "detail insert — no time skip",
+      "file": "04.png"
+    },
+    {
+      "n": 5,
+      "beat": "Linker Arm falsch",
+      "caption": "Sein linker Arm hing schlaff. Nicht gebrochen. Falsch angegossen, dachte er, bevor er begriff, dass dieser Körper nicht der seine war.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Gaze travels: limp left arm still impaled, wrong proportions. Shock dawning. Lying.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "same moment — realization begins",
+      "file": "05.png"
+    },
+    {
+      "n": 6,
+      "beat": "Länger. Dünner. Narben.",
+      "caption": "Länger. Dünner. Narben, die er nicht verdient hatte, zogen sich über die Innenseite seiner Oberschenkel wie Notizen in einer fremden Sprache.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Camera pans down lean foreign body on stone — scars on inner thighs hinted tastefully, arms still above. Continuous shot feel.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "continuous pan — still awakening",
+      "file": "06.png"
+    },
+    {
+      "n": 7,
+      "beat": "Geruch",
+      "caption": "Der Raum roch nach Verwesung unter Weihrauch.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Same room: incense smoke drifting, braziers — sensory beat.",
+      "chars": [],
+      "text_layout": {
+        "caption": "center"
+      },
+      "flow": "sensory — same scene",
+      "file": "07.png"
+    },
+    {
+      "n": 8,
+      "beat": "Blut ins Haar",
+      "caption": "Er drückte den Geruch weg. Konzentrierte sich auf das Blut, das ihm aus den Handgelenken in die Haare lief, die Haare, die zu lang waren, zu dunkel, nicht seine.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "CU blood from pierced wrists into too-long dark hair on stone.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "same body — hair not his",
+      "file": "08.png"
+    },
+    {
+      "n": 9,
+      "beat": "Priester Rücken — weite",
+      "caption": "Ein Mann in roten Roben stand mit dem Rücken zu ihm, murmelte in eine Sprache, die Kaels neues Gehirn halb verstand.",
+      "dialogue": [
+        {
+          "who": "Priester",
+          "text": "Gefäß… Hülle… Auserwählter…",
+          "style": "murmur"
+        }
+      ],
+      "sfx": [],
+      "visual": "Wider: Kael still lying pierced in foreground; priest crimson BACK at altar. First clear establishing AFTER sensory build. No cross.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "NOW pull back — earned wide shot",
+      "file": "09.png"
+    },
+    {
+      "n": 10,
       "beat": "Priester dreht sich",
+      "caption": "Der Mann drehte sich um. Junge Augen in einem alten Gesicht. Ein Messer in der Hand, das noch feucht war von jemandem, der vor Kael hier gelegen hatte.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Priest turns — young eyes old face, wet knife, crimson no cross. Kael still lying pierced. Continuous turn.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "same room — he turns",
+      "file": "10.png"
+    },
+    {
+      "n": 11,
+      "beat": "Noch lebendig",
       "caption": null,
       "dialogue": [
         {
           "who": "Priester",
-          "text": "Noch lebendig. Gut. Das Fleisch nimmt an."
+          "text": "Noch lebendig.",
+          "style": "speech"
+        },
+        {
+          "who": "Priester",
+          "text": "Gut. Das Fleisch nimmt an.",
+          "style": "speech"
         }
       ],
-      "visual": "Priester dreht sich: JUNGE Augen in ALTEM faltigem Gesicht, karmesinrote Ritualrobe OHNE Kreuz/Kruzifix, nasses blutiges Ritualmesser. Kael unten noch mit Handgelenken IMPALIERT auf Eisenbolzen über dem Kopf, nackt bis auf Hüfttuch, langes Haar blutig. Continuity. 16:9 Manhwa.",
+      "sfx": [],
+      "visual": "Closer on priest speaking down at Kael; knife. Upper clear for bubbles.",
       "chars": [
         "kael"
       ],
-      "file": "03.png",
-      "transition_to_next": "Kael greift an"
+      "text_layout": {},
+      "flow": "dialogue beat — no skip",
+      "file": "11.png"
     },
     {
-      "n": 4,
-      "beat": "Gewalt — speien und würgen",
-      "caption": "Schmerz, stumpf, weit weg, als gehörte er einem anderen.",
+      "n": 12,
+      "beat": "Ringe / Messer",
+      "caption": "Kael riss an den Ringen. Schmerz, stumpf, weit weg, als gehörte er einem anderen. Der Mann lachte, kam näher, das Messer zielte auf Kaels Brust — nicht tödlich, öffnend.",
       "dialogue": [],
-      "visual": "Action: Kael speit Blut dem Priester in die Augen; RECHTER Arm freigerissen um den Hals; Ritualmesser zwischen ihnen. LINKER Arm noch IMPALIERT am Eisenbolzen/Ring über Kopf. Barer Oberkörper, KEINE Seile, KEINE Kettenmanschetten, KEIN Kreuz. Dynamisch, Hände 5 Finger. Continuity Haar/Gesicht.",
+      "sfx": [],
+      "visual": "Priest steps closer; knife to chest; Kael strains at IMPALED wrists.",
       "chars": [
         "kael"
       ],
-      "file": "04.png",
-      "transition_to_next": "Begehren-Geschmack im Blut"
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "flow": "approach — build tension",
+      "file": "12.png"
     },
     {
-      "n": 5,
-      "beat": "Begehren als Geschmack",
-      "caption": "Das Blut schmeckte nach Eisen. Aber darunter lag etwas anderes — Begehren, fremd, verzweifelt.",
+      "n": 13,
+      "beat": "Angriff",
+      "caption": "Kael wartete nicht. Er spuckte Blut direkt in die Augen des Mannes — und dann war sein freier Arm um den Hals, das Messer zwischen ihnen.",
       "dialogue": [],
-      "visual": "Extreme Close-up Kaels Mund und eisblaue Augen, Blut am Kinn, unheimlicher elektrischer Schimmer/Funke — Begehren sickert ein. Unheimlich, nicht sexy. Sehr langes Haar, Narben. Continuity nach Tötung.",
+      "sfx": [
+        "KRRK"
+      ],
+      "visual": "Action continuous: spit blood, right arm throat, left still impaled. No ropes no cross.",
       "chars": [
         "kael"
       ],
-      "file": "05.png",
-      "transition_to_next": "Frei sägen"
+      "text_layout": {
+        "caption": "top"
+      },
+      "flow": "eruption from previous beat",
+      "file": "13.png"
     },
     {
-      "n": 6,
+      "beat": "Nicht würgen",
+      "source": "P8",
+      "caption": "Er biss sich durch die Lippe, um nicht zu würgen.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Extreme CU Kael face bloodied, biting lip, priest body collapsing edge.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "14.png",
+      "n": 14,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Begehren",
+      "source": "P9",
+      "caption": "Das Blut schmeckte nach Eisen. Aber darunter lag etwas anderes — Begehren, fremd, verzweifelt, der letzte Geschmack eines Mannes, der noch etwas wollte, als das Licht ausging.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "CU mouth/eyes icy blue, uncanny shimmer of desire — not sexy kitsch. Bare.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "15.png",
+      "n": 15,
+      "flow": "continue chapter — no skip"
+    },
+    {
       "beat": "Frei sägen",
-      "caption": "Die Klinge war stumpf vom vorherigen Toten. Er arbeitete methodisch.",
+      "source": "P10",
+      "caption": "Kael rollte den Toten ab, zog das Messer, sägte an dem Stahl in seinem linken Handgelenk. Die Klinge war stumpf vom vorherigen Toten. Er arbeitete methodisch.",
       "dialogue": [],
-      "visual": "Kael barhäutig sägt mit stumpfem Ritualmesser am Eisenbolzen im linken Handgelenk; Zähne zusammen; toter Priester in Rot neben ihm. Fokus Wille nicht Gore. Hände 5 Finger. Steinboden Tempel.",
+      "sfx": [],
+      "visual": "Kael sawing iron bolt at left wrist; crimson corpse beside; bare; will not gore-porn.",
       "chars": [
         "kael"
       ],
-      "file": "06.png",
-      "transition_to_next": "System erscheint am Türrahmen"
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "16.png",
+      "n": 16,
+      "flow": "continue chapter — no skip"
     },
     {
-      "n": 7,
-      "beat": "System",
+      "beat": "Türrahmen / System beginnt",
+      "source": "P11-P12",
+      "caption": "Die Stimme kam, als er bereits am Türrahmen lehnte.",
+      "dialogue": [
+        {
+          "who": "System",
+          "text": "[BEGEHREN GESAMMELT: 1,3 EINHEITEN]",
+          "style": "system"
+        }
+      ],
+      "sfx": [],
+      "visual": "Kael leans in doorway bare bleeding knife; red floating system glyphs. Opportunistic not heroic.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "top",
+        "bubbles": [
+          {
+            "who": "System",
+            "anchor": "center"
+          }
+        ]
+      },
+      "file": "17.png",
+      "n": 17,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Erkenntnis",
+      "source": "P13",
+      "caption": "Er erstarrte. Nicht aus Angst. Aus Erkenntnis, dass etwas in seinem Kopf sprach, das nicht er war — und dass es sich richtig anfühlte.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Freeze on Kael's face, system glow in eyes/reflection.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "18.png",
+      "n": 18,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "System + Fick dich",
+      "source": "P14-P15",
       "caption": null,
       "dialogue": [
         {
           "who": "System",
-          "text": "[BEGEHREN GESAMMELT: 1,3 EINHEITEN]"
-        },
-        {
-          "who": "System",
-          "text": "[SYSTEM INITIALISIERT. HOST: KAEL VEYR. STATUS: AUSERWÄHLTER / VERBRECHEN GEGEN DEN THRON.]"
+          "text": "[SYSTEM INITIALISIERT. HOST: KAEL VEYR. STATUS: AUSERWÄHLTER / VERBRECHEN GEGEN DEN THRON. ANPASSUNG ERFORDERLICH.]",
+          "style": "system"
         },
         {
           "who": "Kael",
-          "text": "Fick dich."
+          "text": "Fick dich.",
+          "style": "speech"
         }
       ],
-      "visual": "Kael lehnt am Türrahmen, nackt blutend Messer in Hand, opportunistisch nicht heldenhaft. Rote schwebende Fantasy-Systemworte in Luft (dezent, rot wie Blut am Kinn). Continuity. Kein Sci-Fi HUD.",
+      "sfx": [],
+      "visual": "Kael snarling at floating red system text. Bare. Space for system box center and speech bubble.",
       "chars": [
         "kael"
       ],
-      "file": "07.png",
-      "transition_to_next": "Erinnerung gegen LIST"
+      "text_layout": {
+        "bubbles": [
+          {
+            "who": "System",
+            "anchor": "center"
+          },
+          {
+            "who": "Kael",
+            "anchor": "lower-left"
+          }
+        ]
+      },
+      "file": "19.png",
+      "n": 19,
+      "flow": "continue chapter — no skip"
     },
     {
-      "n": 8,
-      "beat": "Preis — Erinnerung gegen LIST",
-      "caption": "Etwas zog sich aus seinem Kopf. Nicht schmerzhaft. Leise.",
+      "beat": "Optionen",
+      "source": "P16-P17",
+      "caption": "Vor ihm materialisierte etwas, das nur er sehen konnte — Worte, schwebend, rot wie das Blut auf seinem Kinn.",
       "dialogue": [
         {
           "who": "System",
-          "text": "[OPTIONEN VERFÜGBAR. KOSTEN: ERINNERUNG. GEWINN: STAT-ANPASSUNG.]"
+          "text": "[OPTIONEN VERFÜGBAR. KOSTEN: ERINNERUNG. GEWINN: STAT-ANPASSUNG.]",
+          "style": "system"
         },
         {
           "who": "System",
-          "text": "[LIST: +2]"
+          "text": "[STÄRKE]   [WAHRSAGUNG]   [LIST]",
+          "style": "system"
         }
       ],
-      "visual": "Split-Emotion: Kaels Gesicht + abstrakte Lücke/Faden der aus dem Kopf gezogen wird; rot [LIST +2]. Dunkel, Punch. Continuity Haar/Augen/Narben.",
+      "sfx": [],
+      "visual": "Three red floating option glyphs before Kael. Fantasy not sci-fi HUD.",
       "chars": [
         "kael"
       ],
-      "file": "08.png",
-      "transition_to_next": "Flucht Hof/Mauer"
+      "text_layout": {
+        "caption": "bottom",
+        "bubbles": [
+          {
+            "who": "System",
+            "anchor": "center"
+          }
+        ]
+      },
+      "file": "20.png",
+      "n": 20,
+      "flow": "continue chapter — no skip"
     },
     {
-      "n": 9,
-      "beat": "Flucht — Nordmauer / Graben",
-      "caption": "Nacht. Echter Himmel. Die Stadt dahinter war ein Fleckwerk aus Feuer und Dunkelheit.",
+      "beat": "Wählt LIST",
+      "source": "P18",
+      "caption": "Er wählte blind. Tippte auf LIST, weil der Tote in den Roben intelligent gewirkt hatte — und Intelligenz hatte ihn nicht gerettet.",
       "dialogue": [],
-      "visual": "Kael JETZT in zu großem Kettenhemd/Wächterkleidung, springt von Nordmauer in schlammigen Graben bei Nacht; Tempel mit schimmerndem Schuppen-Dach hinter ihm; Stadtlichter Vaelmark fern. Continuity Gesicht/Haar.",
+      "sfx": [],
+      "visual": "Kael's hand reaching/tapping glowing [LIST] option.",
       "chars": [
         "kael"
       ],
-      "file": "09.png",
-      "transition_to_next": "Seraphine Hook"
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "21.png",
+      "n": 21,
+      "flow": "continue chapter — no skip"
     },
     {
-      "n": 10,
-      "beat": "Seraphine beobachtet",
-      "caption": null,
+      "beat": "Erinnerung weg",
+      "source": "P19",
+      "caption": "Etwas zog sich aus seinem Kopf. Nicht schmerzhaft. Leise. Wie ein Name, den man vergisst.",
       "dialogue": [
         {
-          "who": "Seraphine",
-          "text": "Der ist aufgewacht. Endlich einer, der aufwacht."
+          "who": "System",
+          "text": "[LIST: +2]",
+          "style": "system"
         }
       ],
-      "visual": "Weit: Kael klein im Schlamm/Waldrand fliehend; am Bildrand Silhouette Frau in absichtlich rostiger Rüstung (Seraphine), Blickrichtung zu ihm. Versprechen K2. 2D Manhwa.",
+      "sfx": [],
+      "visual": "Abstract memory thread leaving head; quiet punch; [LIST +2].",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom",
+        "bubbles": [
+          {
+            "who": "System",
+            "anchor": "upper-right"
+          }
+        ]
+      },
+      "file": "22.png",
+      "n": 22,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Korridor / Wächterkleidung",
+      "source": "P20",
+      "caption": "Kael lief durch den Korridor, nackt, blutend, das Messer in der Hand. In einer Nische: ein toter Wächter. Er zog Hemd, Hosen, Stiefel an — zwei Nummern zu groß.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Split beat or sequence: corridor black stone crystals; then putting on oversized chainmail/guard clothes.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "23.png",
+      "n": 23,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Zwei Priester",
+      "source": "P21",
+      "caption": "Zwei Männer, rote Roben, jünger, nicht bereit. Kael wartete nicht auf Gnade.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Ambush: Kael from niche, dagger throat / knife gut, now in oversized guard gear.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "top"
+      },
+      "file": "24.png",
+      "n": 24,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Begehren unter Minimum",
+      "source": "P22-P23",
+      "caption": "Münzen, die er nicht kannte. Ein Zettel mit einem Symbol, das seine Augen brannten. Ein Schlüsselbund.",
+      "dialogue": [
+        {
+          "who": "System",
+          "text": "[BEGEHREN GESAMMELT: 0,7 EINHEITEN. GESAMT: 0,7. UNTER MINIMUM FÜR TRANSAKTION.]",
+          "style": "system"
+        }
+      ],
+      "sfx": [],
+      "visual": "Kael looting; system warning red.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom",
+        "bubbles": [
+          {
+            "who": "System",
+            "anchor": "center"
+          }
+        ]
+      },
+      "file": "25.png",
+      "n": 25,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Treppe / Schlüssel",
+      "source": "P24",
+      "caption": "Der Korridor endete an einer Treppe. Oben eine Tür, Holz, verstärkt mit Eisen. Der Schlüssel passte.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Climbing stairs foreign long legs; key in iron-reinforced door.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "26.png",
+      "n": 26,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Nacht Hof / Stadt",
+      "source": "P25-P26",
+      "caption": "Nacht. Echter Himmel. Die Stadt dahinter war ein Fleckwerk aus Feuer und Dunkelheit, Türme wie gebrochene Zähne — etwas Großes bewegte sich in der Ferne.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Courtyard night sky; city between battlements; huge distant shape.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "27.png",
+      "n": 27,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Nordmauer / Seraphine",
+      "source": "P27",
+      "caption": "Oben auf der Mauer blickte er zurück. Vor dem Tempel stand eine Frau in Rüstung, die rostig aussah, absichtlich, als Deklaration.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Kael on wall looking back; temple scale roof; Seraphine rust armor distant silhouette.",
       "chars": [
         "kael",
         "seraphine"
       ],
-      "file": "10.png",
-      "transition_to_next": null
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "28.png",
+      "n": 28,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Sprung / Stimme",
+      "source": "P28-P29",
+      "caption": "Er sprang, fiel, landete im Graben. Lief.",
+      "dialogue": [
+        {
+          "who": "Seraphine",
+          "text": "Der ist aufgewacht. Endlich einer, der aufwacht.",
+          "style": "distant"
+        }
+      ],
+      "sfx": [],
+      "visual": "Jump into muddy ditch; Seraphine far; her line as distant bubble.",
+      "chars": [
+        "kael",
+        "seraphine"
+      ],
+      "text_layout": {
+        "caption": "top",
+        "bubbles": [
+          {
+            "who": "Seraphine",
+            "anchor": "upper-right"
+          }
+        ]
+      },
+      "file": "29.png",
+      "n": 29,
+      "flow": "continue chapter — no skip"
+    },
+    {
+      "beat": "Wald / Weihrauch vergisst",
+      "source": "P30-P31",
+      "caption": "Er lief schneller, in die Dunkelheit, in den Wald — in das Fleisch dieser Welt, das er noch nicht verstand, aber bereits bezahlte. Der Geruch von Weihrauch blieb. Er drückte ihn weg. Wieder. Und wieder. Bis er vergaß, dass er ihn kannte.",
+      "dialogue": [],
+      "sfx": [],
+      "visual": "Kael fleeing into dark forest; fading incense; final quiet panel.",
+      "chars": [
+        "kael"
+      ],
+      "text_layout": {
+        "caption": "bottom"
+      },
+      "file": "30.png",
+      "n": 30,
+      "flow": "continue chapter — no skip"
     }
   ]
 }
