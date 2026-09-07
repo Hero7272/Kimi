@@ -695,8 +695,37 @@ const S = {
   get(k,f){ return (k in MEM) ? MEM[k] : f; },
   put(k,v){
     MEM[k] = v;
-    IDB.setzen(k, v).catch(e=>{
-      if(typeof App!=='undefined' && App.toast) App.toast('Konnte nicht dauerhaft speichern (Speicher voll?): '+e.message, 1);
+    IDB.setzen(k, v).catch(async e=>{
+      // In-Memory behalten — Sync/Lesen darf trotz vollem IDB weiterlaufen
+      try{
+        const keys = Object.keys(MEM).filter(x=>x.startsWith('sw:proj:') || x.startsWith('sw:ch:'));
+        // ältere Nicht-Aktiv-Projekte und deren Kapitel rausschmeißen, Platz schaffen
+        const meta = MEM[S.KM] || {liste:[], aktiv:null};
+        const aktiv = meta.aktiv;
+        for(const key of keys){
+          if(aktiv && (key===S.pk(aktiv) || key.startsWith('sw:ch:'+aktiv+':'))) continue;
+          if(key.startsWith('sw:proj:') || key.startsWith('sw:ch:')){
+            delete MEM[key];
+            try{ await IDB.loeschen(key); }catch(_e){}
+          }
+        }
+        await IDB.setzen(k, v);
+        if(typeof App!=='undefined' && App.toast){
+          const now = Date.now();
+          if(!S._idbToastAt || now - S._idbToastAt > 60000){
+            S._idbToastAt = now;
+            App.toast('Lokaler Speicher voll — Cloud-Daten sind trotzdem geladen. Alte Bücher bereinigt.', 0);
+          }
+        }
+        return;
+      }catch(_e){}
+      if(typeof App!=='undefined' && App.toast){
+        const now = Date.now();
+        if(!S._idbToastAt || now - S._idbToastAt > 60000){
+          S._idbToastAt = now;
+          App.toast('Konnte nicht dauerhaft speichern (Speicher voll?): '+(e && e.message ? e.message : e)+' — Daten bleiben im Arbeitsspeicher.', 1);
+        }
+      }
     });
     return true;
   },
@@ -943,7 +972,19 @@ const CloudSync = {
     if(!projekt || !projekt.id) throw new Error('Projekt leer');
     let neuKapitel = 0;
     const idx = [];
-    for(const k of (projekt.kapitelIdx||[])){
+    // kapitelIdx muss eine Liste sein; Worker/Jobs speichern manchmal nur eine Zahl (höchste Nr.)
+    let kapitelListe = projekt.kapitelIdx;
+    if(!Array.isArray(kapitelListe)){
+      const maxN = (typeof kapitelListe === 'number' && kapitelListe > 0)
+        ? kapitelListe
+        : Math.max(0, ...((projekt.toc||[]).map(t=>Number(t.n)||0)));
+      kapitelListe = [];
+      for(let n=1; n<=maxN; n++){
+        const toc = (projekt.toc||[]).find(t=>Number(t.n)===n);
+        kapitelListe.push({ n, titel: (toc && toc.titel) || ('Kapitel '+n) });
+      }
+    }
+    for(const k of kapitelListe){
       try{
         const ch = await this.req('GET', '/kapitel?id='+encodeURIComponent(id)+'&n='+k.n);
         const kapitel = this.normalizeKapitel(ch.kapitel || ch);
