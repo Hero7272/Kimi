@@ -926,6 +926,22 @@ const CloudSync = {
       for(const k of (p.kapitelIdx||[])){
         const ch = Store.kapitel(p.id, k.n);
         if(!ch) continue;
+        // Nie stille Cloud mit älterem Lokalstand überschreiben
+        try{
+          const remote = await this.req('GET', '/kapitel?id='+encodeURIComponent(p.id)+'&n='+k.n);
+          const rk = remote && (remote.kapitel || remote);
+          if(rk && rk.aktualisiert){
+            const serverTs = Date.parse(rk.aktualisiert) || 0;
+            const lokalTs = ch.aktualisiert ? Date.parse(ch.aktualisiert) : 0;
+            const remoteText = String(rk.body||rk.text||'').trim();
+            const lokalText = String(ch.body||ch.text||'').trim();
+            if(serverTs && (!lokalTs || serverTs > lokalTs) && remoteText && remoteText !== lokalText){
+              const was = this.pulling; this.pulling = true;
+              try{ Store.saveKapitel(p.id, k.n, this.normalizeKapitel(rk)); } finally { this.pulling = was; }
+              continue;
+            }
+          }
+        }catch(e){ /* remote fehlt — lokal pushen */ }
         const body = Object.assign({}, ch, { id: p.id, n: k.n });
         const cr = await this.req('PUT', '/kapitel', body, ch.aktualisiert ? { 'If-Match': String(ch.aktualisiert) } : undefined);
         if(cr && cr.aktualisiert){
@@ -966,11 +982,14 @@ const CloudSync = {
     });
     return out;
   },
-  async pullProjekt(id){
+  async pullProjekt(id, opts){
+    opts = opts || {};
+    const force = !!opts.force;
     const data = await this.req('GET', '/projekt?id='+encodeURIComponent(id));
     const projekt = data.projekt || data;
     if(!projekt || !projekt.id) throw new Error('Projekt leer');
     let neuKapitel = 0;
+    let updatedKapitel = 0;
     const idx = [];
     // kapitelIdx muss eine Liste sein; Worker/Jobs speichern manchmal nur eine Zahl (höchste Nr.)
     let kapitelListe = projekt.kapitelIdx;
@@ -988,12 +1007,17 @@ const CloudSync = {
       try{
         const ch = await this.req('GET', '/kapitel?id='+encodeURIComponent(id)+'&n='+k.n);
         const kapitel = this.normalizeKapitel(ch.kapitel || ch);
-        if(kapitel && (kapitel.body || kapitel.titel)){
+        if(kapitel && (kapitel.body || kapitel.text || kapitel.titel)){
           const vorher = Store.kapitel(id, k.n);
           const vorherText = vorher ? String(vorher.body||vorher.text||'').trim() : '';
-          const neuText = String(kapitel.body||'').trim();
-          if(!vorher || vorherText!==neuText){
+          const neuText = String(kapitel.body||kapitel.text||'').trim();
+          const cloudTs = kapitel.aktualisiert ? Date.parse(kapitel.aktualisiert) : 0;
+          const lokalTs = vorher && vorher.aktualisiert ? Date.parse(vorher.aktualisiert) : 0;
+          const newer = !!(cloudTs && (!lokalTs || cloudTs > lokalTs));
+          const different = vorherText !== neuText;
+          if(force || !vorher || different || newer){
             if(neuText && !vorherText) neuKapitel++;
+            else if(different || newer) updatedKapitel++;
             Store.saveKapitel(id, k.n, kapitel);
           }
           idx.push({
@@ -1023,7 +1047,7 @@ const CloudSync = {
     this.pulling = true;
     try{ Store.save(projekt); }
     finally{ this.pulling = wasPulling; }
-    return { projekt, neuKapitel };
+    return { projekt, neuKapitel, updatedKapitel };
   },
   async pullAll(opts){
     if(!this.enabled()) return { ok:false, grund:'aus', neuKapitel:0 };
@@ -1044,18 +1068,20 @@ const CloudSync = {
         const force = opts.force || meta.id===wantId;
         if(force || !lokal || (cloudTs && cloudTs > lokalTs)){
           try{
-            const r = await this.pullProjekt(meta.id);
+            const r = await this.pullProjekt(meta.id, { force: !!force });
             gezogen++;
             neuKapitel += (r && r.neuKapitel) || 0;
+            neuKapitel += (r && r.updatedKapitel) || 0;
           }catch(e){ console.warn('pull', meta.id, e); }
         }
       }
       // Falls Fleisch & Thron nicht in /projekte-Liste, trotzdem gezielt ziehen
       if(wantId && !seen[wantId]){
         try{
-          const r = await this.pullProjekt(wantId);
+          const r = await this.pullProjekt(wantId, { force: true });
           gezogen++;
           neuKapitel += (r && r.neuKapitel) || 0;
+          neuKapitel += (r && r.updatedKapitel) || 0;
         }catch(e){ /* optional */ }
       }
       this.lastMsg = gezogen ? (gezogen+' Projekt(e) aus der Cloud geladen') : 'Cloud aktuell';
@@ -2192,8 +2218,8 @@ const App = {
         cloudNeu = (r && r.neuKapitel) || 0;
         // Explizit Fleisch & Thron inkl. aller Kapitel nachziehen
         try{
-          const r2 = await CloudSync.pullProjekt(WANT);
-          cloudNeu += (r2 && r2.neuKapitel) || 0;
+          const r2 = await CloudSync.pullProjekt(WANT, { force:true });
+          cloudNeu += ((r2 && r2.neuKapitel) || 0) + ((r2 && r2.updatedKapitel) || 0);
         }catch(e2){ console.warn('pullProjekt Fleisch', e2); }
       }catch(e){
         console.warn('Cloud pull', e);
@@ -2315,8 +2341,8 @@ const App = {
       const want = this.FLEISCH_ID;
       let neu = 0;
       try{
-        const r = await CloudSync.pullProjekt(want);
-        neu += (r && r.neuKapitel) || 0;
+        const r = await CloudSync.pullProjekt(want, { force:true });
+        neu += ((r && r.neuKapitel) || 0) + ((r && r.updatedKapitel) || 0);
       }catch(e){
         try{
           const r2 = await CloudSync.pullAll({ forceId: want });
@@ -2634,6 +2660,7 @@ const App = {
       <div class="split"><h2 style="margin:0">☁ Cloud</h2><span class="mono" id="cloudBarHint">${CloudSync.enabled()?(CloudSync.lastMsg||'verbunden'):'verbinde…'}</span></div>
       <p class="sub" style="margin:8px 0 0">Ein Tipp holt Bücher und neue Kapitel vom Server — Verbindung ist schon hinterlegt.</p>
       <button type="button" class="primary cloud-sync-btn" id="cloudSyncMainBtn" onclick="App.cloudLaden(this)">Jetzt synchronisieren</button>
+        <button type="button" class="ghost full" style="margin-top:8px" onclick="App.cloudErzwingen()">Lokalen Stand verwerfen · Cloud erzwingen</button>
       <div class="cloud-card-actions">
         <button type="button" class="ghost" onclick="App.cloudSpeichern()">In Cloud speichern</button>
         <button type="button" class="ghost" onclick="App.cloudStatus()">Status</button>
@@ -3721,7 +3748,7 @@ App.cloudLaden = async function(btn){
     if(!CloudSync.enabled()) throw new Error('Cloud-Sync nicht bereit — Worker/Pass fehlen');
 
     const r = await CloudSync.pullAll({ force:true, forceId:this.FLEISCH_ID });
-    try{ await CloudSync.pullProjekt(this.FLEISCH_ID); }catch(e){}
+    try{ await CloudSync.pullProjekt(this.FLEISCH_ID, { force:true }); }catch(e){}
     const want = Store.load(this.FLEISCH_ID);
     if(want){
       const meta = Store.meta(); meta.aktiv=this.FLEISCH_ID; Store.saveMeta(meta);
@@ -3744,6 +3771,23 @@ App.cloudLaden = async function(btn){
   }
 };
 
+App.cloudErzwingen = async function(){
+  if(!confirm('Lokalen Stand von Fleisch & Thron verwerfen und Cloud neu laden?')) return;
+  const id = this.FLEISCH_ID;
+  const lokal = Store.load(id);
+  const nums = new Set();
+  if(lokal && Array.isArray(lokal.kapitelIdx)) lokal.kapitelIdx.forEach(k=>nums.add(k.n));
+  for(let n=1;n<=80;n++) nums.add(n);
+  nums.forEach(n=>{ try{ S.del(S.ck(id, n)); }catch(e){} });
+  try{ S.del(S.pk(id)); }catch(e){}
+  const m = Store.meta();
+  m.liste = (m.liste||[]).filter(x=>x.id!==id);
+  if(m.aktiv===id) m.aktiv = m.liste[0]?m.liste[0].id:null;
+  Store.saveMeta(m);
+  this.p = null;
+  this.leseN = null;
+  await this.cloudLaden();
+};
 App.cloudSpeichern = async function(){
   try{
     await CloudSync.pushAktiv();

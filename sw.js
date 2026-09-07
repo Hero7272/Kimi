@@ -1,4 +1,4 @@
-const CACHE = 'rw-v17';
+const CACHE = 'rw-v18';
 const ASSETS = [
   './','./index.html','./styles.css','./manifest.json','./icon.svg','./fleisch-thron.json',
   './webtoon/index.html','./webtoon/k1.html','./webtoon/reader.css','./webtoon/reader.js','./webtoon/data/k1-script.json'
