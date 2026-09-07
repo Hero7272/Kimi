@@ -1,0 +1,171 @@
+{
+  "serie": "Fleisch & Thron",
+  "episode": "K1 — Aufwachen im Fleisch",
+  "stil": "2D Manhwa, flach, Cel-Shading, kein 3D/CGI",
+  "format": "Bilder 16:9 erzeugen, Reader vertikal stapeln + deutsche Blasen/Captions",
+  "canon_regeln": [
+    "Kael: länger/dünner Körper, zu langes dunkles Haar, eisblaue Augen, Narben an Oberschenkel-Innenseiten, linker Arm falsch/schlaff bis er frei ist",
+    "Fesseln: Eisenringe DURCH die Handgelenks-Knöchel gebohrt, Arme ÜBER dem Kopf — keine Kettenmanschetten, keine Seile",
+    "Nackt im Tempel bis er Wächter-Kleidung findet (erst Panel 9)",
+    "Priester: junge Augen in altem Gesicht, rote Roben, nasses Ritualmesser — KEIN christliches Kreuz",
+    "System-Texte rot schwebend, fantasy-runisch, exakt wie Kapitel",
+    "Seraphine nur Silhouette: rostige Rüstung, Stimme am Ende",
+    "Anatomie: Hände immer 5 Finger, QA vor Accept"
+  ],
+  "hook": "Er stirbt nicht als Held — er wacht als Werkzeug auf. Und das System bezahlt mit dem, was er noch ist.",
+  "panels": [
+    {
+      "n": 1,
+      "beat": "Erwachen — durchbohrte Handgelenke",
+      "caption": "Das Erwachen schmeckte nach Kupfer und altem Fett.",
+      "dialogue": [],
+      "visual": "Wide establishing: Kael NACKT auf dunklem Steinboden, Arme ÜBER dem Kopf, Handgelenke IMPALIERT — dicke Eisenbolzen/Ringe DURCH die Handgelenks-Knöchel in Bodenringe, Blut läuft ins sehr lange dunkle Haar. Linker Arm schlaff/falsch. Schlanker/länger Körper, Narben. Priester in karmesinroten Roben mit RÜCKEN zu Kael. Weihrauch. Nur zerrissenes Hüfttuch. Kein Kimono, kein Hemd. 16:9 2D Manhwa.",
+      "chars": [
+        "kael"
+      ],
+      "file": "01.png",
+      "transition_to_next": "Schnitt auf seine fremden Hände/Arme"
+    },
+    {
+      "n": 2,
+      "beat": "Fremder Körper",
+      "caption": "Länger. Dünner. Narben, die er nicht verdient hatte.",
+      "dialogue": [],
+      "visual": "Close-up: Kael starrt schockiert auf eigene fremde Hände/Unterarme — Arme noch ÜBER dem Kopf angeschnitten, Eisenbolzen DURCH Handgelenke sichtbar. Barer Oberkörper, sehr langes dunkles Haar, Blut aus Handgelenken, eisblaue Augen. Hände 5 Finger. Keine Kleidung. Continuity Stein/Ringe Panel 1.",
+      "chars": [
+        "kael"
+      ],
+      "file": "02.png",
+      "transition_to_next": "Priester dreht sich um"
+    },
+    {
+      "n": 3,
+      "beat": "Priester dreht sich",
+      "caption": null,
+      "dialogue": [
+        {
+          "who": "Priester",
+          "text": "Noch lebendig. Gut. Das Fleisch nimmt an."
+        }
+      ],
+      "visual": "Priester dreht sich: JUNGE Augen in ALTEM faltigem Gesicht, karmesinrote Ritualrobe OHNE Kreuz/Kruzifix, nasses blutiges Ritualmesser. Kael unten noch mit Handgelenken IMPALIERT auf Eisenbolzen über dem Kopf, nackt bis auf Hüfttuch, langes Haar blutig. Continuity. 16:9 Manhwa.",
+      "chars": [
+        "kael"
+      ],
+      "file": "03.png",
+      "transition_to_next": "Kael greift an"
+    },
+    {
+      "n": 4,
+      "beat": "Gewalt — speien und würgen",
+      "caption": "Schmerz, stumpf, weit weg, als gehörte er einem anderen.",
+      "dialogue": [],
+      "visual": "Action: Kael speit Blut dem Priester in die Augen; RECHTER Arm freigerissen um den Hals; Ritualmesser zwischen ihnen. LINKER Arm noch IMPALIERT am Eisenbolzen/Ring über Kopf. Barer Oberkörper, KEINE Seile, KEINE Kettenmanschetten, KEIN Kreuz. Dynamisch, Hände 5 Finger. Continuity Haar/Gesicht.",
+      "chars": [
+        "kael"
+      ],
+      "file": "04.png",
+      "transition_to_next": "Begehren-Geschmack im Blut"
+    },
+    {
+      "n": 5,
+      "beat": "Begehren als Geschmack",
+      "caption": "Das Blut schmeckte nach Eisen. Aber darunter lag etwas anderes — Begehren, fremd, verzweifelt.",
+      "dialogue": [],
+      "visual": "Extreme Close-up Kaels Mund und eisblaue Augen, Blut am Kinn, unheimlicher elektrischer Schimmer/Funke — Begehren sickert ein. Unheimlich, nicht sexy. Sehr langes Haar, Narben. Continuity nach Tötung.",
+      "chars": [
+        "kael"
+      ],
+      "file": "05.png",
+      "transition_to_next": "Frei sägen"
+    },
+    {
+      "n": 6,
+      "beat": "Frei sägen",
+      "caption": "Die Klinge war stumpf vom vorherigen Toten. Er arbeitete methodisch.",
+      "dialogue": [],
+      "visual": "Kael barhäutig sägt mit stumpfem Ritualmesser am Eisenbolzen im linken Handgelenk; Zähne zusammen; toter Priester in Rot neben ihm. Fokus Wille nicht Gore. Hände 5 Finger. Steinboden Tempel.",
+      "chars": [
+        "kael"
+      ],
+      "file": "06.png",
+      "transition_to_next": "System erscheint am Türrahmen"
+    },
+    {
+      "n": 7,
+      "beat": "System",
+      "caption": null,
+      "dialogue": [
+        {
+          "who": "System",
+          "text": "[BEGEHREN GESAMMELT: 1,3 EINHEITEN]"
+        },
+        {
+          "who": "System",
+          "text": "[SYSTEM INITIALISIERT. HOST: KAEL VEYR. STATUS: AUSERWÄHLTER / VERBRECHEN GEGEN DEN THRON.]"
+        },
+        {
+          "who": "Kael",
+          "text": "Fick dich."
+        }
+      ],
+      "visual": "Kael lehnt am Türrahmen, nackt blutend Messer in Hand, opportunistisch nicht heldenhaft. Rote schwebende Fantasy-Systemworte in Luft (dezent, rot wie Blut am Kinn). Continuity. Kein Sci-Fi HUD.",
+      "chars": [
+        "kael"
+      ],
+      "file": "07.png",
+      "transition_to_next": "Erinnerung gegen LIST"
+    },
+    {
+      "n": 8,
+      "beat": "Preis — Erinnerung gegen LIST",
+      "caption": "Etwas zog sich aus seinem Kopf. Nicht schmerzhaft. Leise.",
+      "dialogue": [
+        {
+          "who": "System",
+          "text": "[OPTIONEN VERFÜGBAR. KOSTEN: ERINNERUNG. GEWINN: STAT-ANPASSUNG.]"
+        },
+        {
+          "who": "System",
+          "text": "[LIST: +2]"
+        }
+      ],
+      "visual": "Split-Emotion: Kaels Gesicht + abstrakte Lücke/Faden der aus dem Kopf gezogen wird; rot [LIST +2]. Dunkel, Punch. Continuity Haar/Augen/Narben.",
+      "chars": [
+        "kael"
+      ],
+      "file": "08.png",
+      "transition_to_next": "Flucht Hof/Mauer"
+    },
+    {
+      "n": 9,
+      "beat": "Flucht — Nordmauer / Graben",
+      "caption": "Nacht. Echter Himmel. Die Stadt dahinter war ein Fleckwerk aus Feuer und Dunkelheit.",
+      "dialogue": [],
+      "visual": "Kael JETZT in zu großem Kettenhemd/Wächterkleidung, springt von Nordmauer in schlammigen Graben bei Nacht; Tempel mit schimmerndem Schuppen-Dach hinter ihm; Stadtlichter Vaelmark fern. Continuity Gesicht/Haar.",
+      "chars": [
+        "kael"
+      ],
+      "file": "09.png",
+      "transition_to_next": "Seraphine Hook"
+    },
+    {
+      "n": 10,
+      "beat": "Seraphine beobachtet",
+      "caption": null,
+      "dialogue": [
+        {
+          "who": "Seraphine",
+          "text": "Der ist aufgewacht. Endlich einer, der aufwacht."
+        }
+      ],
+      "visual": "Weit: Kael klein im Schlamm/Waldrand fliehend; am Bildrand Silhouette Frau in absichtlich rostiger Rüstung (Seraphine), Blickrichtung zu ihm. Versprechen K2. 2D Manhwa.",
+      "chars": [
+        "kael",
+        "seraphine"
+      ],
+      "file": "10.png",
+      "transition_to_next": null
+    }
+  ]
+}

@@ -266,6 +266,7 @@ body.reading #booksShell{opacity:1;pointer-events:auto}
   <button data-tab="buch">Buch</button>
   <button data-tab="faeden">Fäden</button>
   <button data-tab="lesen">Lesen</button>
+  <a class="nav-ext" href="webtoon/k1.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;padding:0 8px;font:inherit">Webtoon</a>
   <button data-tab="setup">Setup</button>
 </div></nav>
 <script>
@@ -2999,6 +3000,7 @@ const App = {
     let h='';
     h+=`<div class="card tight" style="border:2px solid var(--deep)">
       <button type="button" class="primary full" id="cloudSyncLesenBtn" onclick="App.cloudLaden(this)">☁ Jetzt synchronisieren</button>
+      <p class="sub" style="margin:10px 0 0"><a href="webtoon/k1.html">Webtoon K1 — Aufwachen im Fleisch</a></p>
       <p class="sub" style="margin:8px 0 0" id="cloudBarHintLesen">${CloudSync.enabled()?(CloudSync.lastMsg||'verbunden'):'verbinde…'}</p>
     </div>`;
 
